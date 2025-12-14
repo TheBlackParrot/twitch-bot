@@ -17,17 +17,17 @@ export class WebSocketListener {
 
 	onOpen = function() {
 		clearTimeout(this.restartTimeout);
-		global.log("SOCKET", `Established connection to ${this.url}`);
+		global.log("SOCKET", `Established connection to ${this.url}`, false, ['greenBright']);
 	}
 
 	onClose = function() {
-		global.log("SOCKET", `Connection to ${this.url} closed`);
+		global.log("SOCKET", `Connection to ${this.url} closed`, false, ['redBright']);
 
 		if(this.restart) {
 			clearTimeout(this.restartTimeout);
 			this.restartTimeout = setTimeout(() => { this.initializeWebsocket() }, this.restartDelay * 1000);
 		} else {
-			global.log("SOCKET", `Not restarting connection to ${this.url}`);
+			global.log("SOCKET", `Not restarting connection to ${this.url}`, false, ['yellow']);
 		}
 	}
 
@@ -53,7 +53,7 @@ export class WebSocketListener {
 		if(typeof(this.socket) === "undefined") {
 			return -1;
 		}
-		
+
 		return this.socket.readyState;
 	}
 

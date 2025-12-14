@@ -99,7 +99,6 @@ export class BetterTTV {
 
 	async preInitialize() {
 		while(global.broadcasterUser == null) {
-			global.log("BTTV", "global.broadcasterUser was null, waiting");
 			await delay(1000);
 		}
 
@@ -109,7 +108,7 @@ export class BetterTTV {
 	async #getGlobalEmotes() {
 		const response = await axios.get("https://api.betterttv.net/3/cached/emotes/global").catch((err) => {
 			console.error(err);
-			global.log("BTTV", "Unable to fetch global BTTV emotes - BTTV is probably down");
+			global.log("BTTV", "Unable to fetch global BTTV emotes - BTTV is probably down", false, ['yellow']);
 		});
 
 		if(response) {
@@ -126,7 +125,7 @@ export class BetterTTV {
 	async #getChannelEmotes() {
 		let response = await axios.get(`https://api.betterttv.net/3/cached/users/twitch/${global.broadcasterUser.id}?sigh=${Date.now()}`).catch((err) => {
 			console.error(err);
-			global.log("BTTV", `Unable to fetch BTTV emotes - BTTV is probably down`);
+			global.log("BTTV", `Unable to fetch BTTV emotes - BTTV is probably down`, false, ['yellow']);
 		});
 
 		if(response) {
@@ -159,14 +158,14 @@ export class BetterTTV {
 					return;
 				}
 
-				global.log("BTTV", `Updating emote ${emote.id} to "${emote.code}"`);
+				global.log("BTTV", `Updating emote ${emote.id} to "${emote.code}"`, false, ['whiteBright']);
 				global.emotes.update(emote.id, emote.code);
 				break;
 
 			case "emote_delete":
 				const oldEmote = global.emotes.getByID(data.data.emoteId);
 
-				global.log("BTTV", `Deleting emote ${data.data.emoteId} ("${oldEmote.name}")`);
+				global.log("BTTV", `Deleting emote ${data.data.emoteId} ("${oldEmote.name}")`, false, ['whiteBright']);
 				global.emotes.delete(data.data.emoteId);
 				break;
 
@@ -181,7 +180,7 @@ export class BetterTTV {
 					return;
 				}
 
-				global.log("BTTV", `Adding emote ${emote.id} ("${emote.code}")`);
+				global.log("BTTV", `Adding emote ${emote.id} ("${emote.code}")`, false, ['whiteBright']);
 				global.emotes.add(new Emote("BTTV", emote.id, emote.code));
 				break;
 		}
@@ -196,7 +195,7 @@ export class BetterTTV {
 		};
 
 		while(this.listener.readyState != 1) {
-			global.log("BTTV", "Waiting for socket to be ready before joining room...");
+			global.log("BTTV", "Waiting for socket to be ready before joining room...", false, ['gray']);
 			await delay(1000);
 		}
 
@@ -208,7 +207,7 @@ export class BetterTTV {
 		await this.#getGlobalEmotes();
 		await this.#getChannelEmotes();
 
-		global.log("BTTV", `Added ${global.emotes.lengthFromService("BTTV")} emotes`);
+		global.log("BTTV", `Added ${global.emotes.lengthFromService("BTTV")} emotes`, false, ['whiteBright']);
 
 		this.listener = new WebSocketListener('wss://sockets.betterttv.net/ws', this.onMessage.bind(this), { restartDelay: 60 });
 		await this.join();
@@ -222,7 +221,6 @@ export class FrankerFaceZ {
 
 	async preInitialize() {
 		while(global.broadcasterUser == null) {
-			global.log("FFZ", "global.broadcasterUser was null, waiting");
 			await delay(1000);
 		}
 
@@ -232,7 +230,7 @@ export class FrankerFaceZ {
 	async #getGlobalEmotes() {
 		const response = await axios.get("https://api.frankerfacez.com/v1/set/global").catch((err) => {
 			console.error(err);
-			global.log("FFZ", "Unable to fetch global FFZ emotes - FFZ is probably down");
+			global.log("FFZ", "Unable to fetch global FFZ emotes - FFZ is probably down", false, ['yellow']);
 		});
 
 		if(response) {
@@ -253,7 +251,7 @@ export class FrankerFaceZ {
 	async #getChannelEmotes() {
 		let response = await axios.get(`https://api.frankerfacez.com/v1/room/id/${global.broadcasterUser.id}?sigh=${Date.now()}`).catch((err) => {
 			console.error(err);
-			global.log("FFZ", `Unable to fetch FFZ emotes - FFZ is probably down`);
+			global.log("FFZ", `Unable to fetch FFZ emotes - FFZ is probably down`, false, ['yellow']);
 		});
 
 		if(response) {
@@ -274,7 +272,7 @@ export class FrankerFaceZ {
 		await this.#getGlobalEmotes();
 		await this.#getChannelEmotes();
 
-		global.log("FFZ", `Added ${global.emotes.lengthFromService("FFZ")} emotes`);
+		global.log("FFZ", `Added ${global.emotes.lengthFromService("FFZ")} emotes`, false, ['whiteBright']);
 	}
 }
 
@@ -286,7 +284,6 @@ export class SevenTV {
 
 	async preInitialize() {
 		while(global.broadcasterUser == null) {
-			global.log("7TV", "global.broadcasterUser was null, waiting");
 			await delay(1000);
 		}
 
@@ -296,7 +293,7 @@ export class SevenTV {
 	async #getGlobalEmotes() {
 		const response = await axios.get("https://7tv.io/v3/emote-sets/global").catch((err) => {
 			console.error(err);
-			global.log("7TV", "Unable to fetch global 7TV emotes - 7TV is probably down");
+			global.log("7TV", "Unable to fetch global 7TV emotes - 7TV is probably down", false, ['yellow']);
 		});
 
 		if(response) {
@@ -304,7 +301,7 @@ export class SevenTV {
 				const data = response.data;
 
 				if(!("emotes" in data)) {
-					global.log("7TV", "Unable to fetch global 7TV emotes - this specific error is 7TV's fault as they didn't actually give us any emotes to parse");
+					global.log("7TV", "Unable to fetch global 7TV emotes - this specific error is 7TV's fault as they didn't actually give us any emotes to parse", false, ['yellow']);
 					return;
 				}
 
@@ -319,7 +316,7 @@ export class SevenTV {
 	async #getChannelEmotes() {
 		let response = await axios.get(`https://7tv.io/v3/users/twitch/${global.broadcasterUser.id}?sigh=${Date.now()}`).catch((err) => {
 			console.error(err);
-			global.log("7TV", `Unable to fetch 7TV emotes - 7TV is probably down`);
+			global.log("7TV", `Unable to fetch 7TV emotes - 7TV is probably down`, false, ['yellow']);
 		});
 
 		if(response) {
@@ -327,10 +324,10 @@ export class SevenTV {
 				const data = response.data;
 
 				if(data.emote_set === null) {
-					global.log("7TV", `Unable to fetch channel's 7TV emotes, active emote set is... empty?`);
+					global.log("7TV", `Unable to fetch channel's 7TV emotes, active emote set is... empty?`, false, ['yellow']);
 					return;
 				} else if(!("emotes" in data.emote_set)) {
-					global.log("7TV", `Unable to fetch channel's 7TV emotes, emotes aren't in the emote set (this is 7TV's fault)`);
+					global.log("7TV", `Unable to fetch channel's 7TV emotes, emotes aren't in the emote set (this is 7TV's fault)`, false, ['yellow']);
 					return;
 				}
 
@@ -341,11 +338,11 @@ export class SevenTV {
 					global.emotes.add(new Emote("7TV", emoteData.id, (emote.name || emoteData.name)));
 				}
 			} else {
-				global.log("7TV", `Unable to fetch channel's 7TV emotes, response from 7TV was not OK`);
+				global.log("7TV", `Unable to fetch channel's 7TV emotes, response from 7TV was not OK`, false, ['yellow']);
 				return;
 			}
 		} else {
-			global.log("7TV", `Unable to fetch channel's 7TV emotes, initial fetch completely failed`);
+			global.log("7TV", `Unable to fetch channel's 7TV emotes, initial fetch completely failed`, false, ['yellow']);
 			return;
 		}
 	}
@@ -354,7 +351,7 @@ export class SevenTV {
 		await this.#getGlobalEmotes();
 		await this.#getChannelEmotes();
 
-		global.log("7TV", `Added ${global.emotes.lengthFromService("7TV")} emotes`);
+		global.log("7TV", `Added ${global.emotes.lengthFromService("7TV")} emotes`, false, ['whiteBright']);
 
 		this.listener = new WebSocketListener('wss://events.7tv.io/v3', this.onMessage.bind(this), { restartDelay: 60 });
 		this.subscribe("emote_set.*", global.broadcasterUser.id, this.emoteSetIDs[0]);
@@ -384,7 +381,7 @@ export class SevenTV {
 		};
 
 		while(this.listener.readyState != 1) {
-			global.log("7TV", "Waiting for socket to be ready before sending subscription...");
+			global.log("7TV", "Waiting for socket to be ready before sending subscription...", false, ['gray']);
 			await delay(1000);
 		}
 
@@ -412,7 +409,7 @@ export class SevenTV {
 					for(const objectData of data.pushed) {
 						const emoteData = objectData.value.data;
 
-						global.log("7TV", `Adding emote ${emoteData.id} ("${(objectData.value.name || emoteData.name)}")`);
+						global.log("7TV", `Adding emote ${emoteData.id} ("${(objectData.value.name || emoteData.name)}")`, false, ['whiteBright']);
 						global.emotes.add(new Emote("7TV", emoteData.id, (objectData.value.name || emoteData.name)));
 					}
 				}
@@ -420,7 +417,7 @@ export class SevenTV {
 					for(const objectData of data.pulled) {
 						const emoteData = objectData.old_value;
 
-						global.log("7TV", `Deleting emote ${emoteData.id} ("${emoteData.name}")`);
+						global.log("7TV", `Deleting emote ${emoteData.id} ("${emoteData.name}")`, false, ['whiteBright']);
 						global.emotes.delete(emoteData.id);
 					}
 				}

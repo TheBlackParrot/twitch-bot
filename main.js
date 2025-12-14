@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import { Console } from 'node:console';
+import { styleText } from 'node:util';
 import axios from 'axios';
 import { Player } from "cli-sound";
 const sound = new Player();
@@ -48,16 +49,18 @@ const logWriter = new Console({ stdout: logOutput });
 
 // ====== SYSTEM STUFF ======
 
-function log(type, data, showTrace = false) {
+function log(type, data, showTrace = false, style = []) {
 	let date = new Date();
 	let timestamp = `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}`;
 
+	const header = `[${timestamp}]${type != "" ? ` [${type}]` : ''}`;
+
 	if(typeof(data) != "object") {
-		console.log(`[${timestamp}] [${type}] ${data}`);
-		logWriter.log(`[${timestamp}] [${type}] ${data}`);
+		console.log(styleText(style, `${header} ${data}`));
+		logWriter.log(`${header} ${data}`);
 	} else {
-		console.log(`[${timestamp}] [${type}]`);
-		logWriter.log(`[${timestamp}] [${type}]`);
+		console.log(header);
+		logWriter.log(header);
 		console.log(data);
 		logWriter.log(data);
 	}
@@ -668,6 +671,8 @@ function onUserFirstSeenForSession(channel, user) {
 }
 
 function onStandardMessage(channel, user, message) {
+	global.log("", `${user.displayName}: ${message}`, false, ['gray']);
+
 	let filtered = message.split(" ").filter((part) => !part.startsWith('http:') && !part.startsWith('https:')).join(" ");
 
 	//if(!message.startsWith('@') && initialCategory != "VRChat") {
@@ -678,11 +683,11 @@ function onStandardMessage(channel, user, message) {
 }
 
 chatClient.onJoin(async (channel, user) => {
-	log("CHAT", `Joined channel #${channel} as ${user}`);
+	log("CHAT", `Joined channel #${channel} as ${user}`, false, ['whiteBright']);
 	global.botUserName = user;
 
-	log("COMMANDS", `There are ${commandList.length} registered commands, ${commandList.uniqueLength} of which are unique`);
-	log("COMMANDS", `There are ${commandList.regexLength} registered regex matchers, with ${commandList.uniqueRegexLength} unique functions`);
+	log("COMMANDS", `There are ${commandList.length} registered commands, ${commandList.uniqueLength} of which are unique`, false, ['whiteBright']);
+	log("COMMANDS", `There are ${commandList.regexLength} registered regex matchers, with ${commandList.uniqueRegexLength} unique functions`, false, ['whiteBright']);
 
 	broadcasterUser = await apiClient.users.getUserByName(channel);
 	if(broadcasterUser != null) {
@@ -763,7 +768,7 @@ const thanksParts = [
 ];
 
 function onBitsCheered(bits, message) {
-	log("EVENTSUB", `${message.chatterName} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`);
+	log("EVENTSUB", `${message.chatterName} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`, false, ['whiteBright']);
 
 	tts(settings.tts.voices.system, `${message.chatterName} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`);
 
@@ -773,11 +778,11 @@ function onBitsCheered(bits, message) {
 }
 
 function onChannelRewardRedemption(rewardId, message) {
-	log("EVENTSUB", `Reward redeemed: ${rewardId}`);
+	log("EVENTSUB", `Reward redeemed: ${rewardId}`, false, ['whiteBright']);
 }
 
 function onChannelFollowed(follow) {
-	log("EVENTSUB", "User followed");
+	log("EVENTSUB", "User followed", false, ['whiteBright']);
 
 	say(follow.broadcasterName, `${thanksParts[0][Math.floor(Math.random() * thanksParts[0].length)]} for the follow! Feel free to say ${thanksParts[1][Math.floor(Math.random() * thanksParts[1].length)]} in chat! RareChar`);
 }
