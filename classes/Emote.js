@@ -30,6 +30,17 @@ export class EmoteList {
 		return true;
 	}
 
+	update(id, newName) {
+		for(const emote of this.emotes) {
+			if(emote.id == id) {
+				emote.name = newName;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	getByID(id) {
 		for(const emote of this.emotes) {
 			if(emote.id == id) {
@@ -131,14 +142,71 @@ export class BetterTTV {
 		}
 	}
 
+	onMessage = async function(data) {
+		data = JSON.parse(data.toString('utf8'));
+
+		let emote = null;
+
+		switch(data.name) {
+			case "emote_update":
+				if("data" in data) {
+					if("emote" in data.data) {
+						emote = data.data.emote;
+					} else {
+						return;
+					}
+				} else {
+					return;
+				}
+
+				global.emotes.update(emote.id, emote.code);
+				break;
+
+			case "emote_delete":
+				global.emotes.delete(data.data.emoteId);
+				break;
+
+			case "emote_create":
+				if("data" in data) {
+					if("emote" in data.data) {
+						emote = data.data.emote;
+					} else {
+						return;
+					}
+				} else {
+					return;
+				}
+
+				global.emotes.add(new Emote("BTTV", emote.id, emote.code));
+				break;
+		}
+	}
+
+	join = async function() {
+		let msg = {
+			name: "join_channel",
+			data: {
+				name: `twitch:${global.broadcasterUser.id}`
+			}
+		};
+
+		while(this.listener.readyState != 1) {
+			global.log("BTTV", "Waiting for socket to be ready before joining room...");
+			await delay(1000);
+		}
+
+		this.listener.send(JSON.stringify(msg));
+		global.log("BTTV", `Joined channel twitch:${global.broadcasterUser.id}`);
+	}
+
 	async initialize() {
 		await this.#getGlobalEmotes();
 		await this.#getChannelEmotes();
 
 		global.log("BTTV", `Added ${global.emotes.lengthFromService("BTTV")} emotes`);
 
-		//this.listener = new WebSocketListener('wss://events.7tv.io/v3', this.onMessage.bind(this), { restartDelay: 60 });
-		//this.subscribe("emote_set.*", global.broadcasterUser.id, this.emoteSetIDs[0]);
+		this.listener = new WebSocketListener('wss://sockets.betterttv.net/ws', this.onMessage.bind(this), { restartDelay: 60 });
+		await this.join();
 	}
 }
 
