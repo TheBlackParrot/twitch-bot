@@ -54,6 +54,10 @@ export class EmoteList {
 		return this.emotes.length;
 	}
 
+	lengthFromService(service) {
+		return this.emotes.filter((emote) => { return emote.service == service; }).length;
+	}
+
 	getFilteredString(string) {
 		let filtered = string.split(" ").filter((word) => {
 			for(const emote of this.emotes) {
@@ -74,6 +78,67 @@ class Emote {
 		this.name = name;
 		this.id = id;
 		this.service = service;
+	}
+}
+
+export class BetterTTV {
+	constructor() {
+		this.preInitialize();
+	}
+
+	async preInitialize() {
+		while(global.broadcasterUser == null) {
+			global.log("BTTV", "global.broadcasterUser was null, waiting");
+			await delay(1000);
+		}
+
+		await this.initialize();
+	}
+
+	async #getGlobalEmotes() {
+		const response = await axios.get("https://api.betterttv.net/3/cached/emotes/global").catch((err) => {
+			console.error(err);
+			global.log("BTTV", "Unable to fetch global BTTV emotes - BTTV is probably down");
+		});
+
+		if(response) {
+			if(response.statusText == "OK") {
+				const data = response.data;
+
+				for(const emote of data) {
+					global.emotes.add(new Emote("BTTV", emote.id, emote.code));
+				}
+			}
+		}
+	}
+
+	async #getChannelEmotes() {
+		let response = await axios.get(`https://api.betterttv.net/3/cached/users/twitch/${global.broadcasterUser.id}?sigh=${Date.now()}`).catch((err) => {
+			console.error(err);
+			global.log("BTTV", `Unable to fetch BTTV emotes - BTTV is probably down`);
+		});
+
+		if(response) {
+			if(response.statusText == "OK") {
+				const data = response.data;
+
+				let allEmotes = data.sharedEmotes.concat(data.channelEmotes);
+
+				for(const emote of allEmotes) {
+					global.emotes.add(new Emote("BTTV", emote.id, emote.code));
+				}
+			}
+		}
+	}
+
+	async initialize() {
+		await this.#getGlobalEmotes();
+		await this.#getChannelEmotes();
+
+		global.log("BTTV", `Added ${global.emotes.lengthFromService("BTTV")} emotes`);
+
+		//this.listener = new WebSocketListener('wss://events.7tv.io/v3', this.onMessage.bind(this), { restartDelay: 60 });
+		//this.subscribe("emote_set.*", global.broadcasterUser.id, this.emoteSetIDs[0]);
 	}
 }
 
@@ -150,14 +215,10 @@ export class SevenTV {
 	}
 
 	async initialize() {
-		let before = global.emotes.length;
-
 		await this.#getGlobalEmotes();
 		await this.#getChannelEmotes();
 
-		let after = global.emotes.length;
-
-		global.log("7TV", `Added ${after - before} emotes`);
+		global.log("7TV", `Added ${global.emotes.lengthFromService("7TV")} emotes`);
 
 		this.listener = new WebSocketListener('wss://events.7tv.io/v3', this.onMessage.bind(this), { restartDelay: 60 });
 		this.subscribe("emote_set.*", global.broadcasterUser.id, this.emoteSetIDs[0]);
@@ -190,6 +251,8 @@ export class SevenTV {
 			global.log("7TV", "Waiting for socket to be ready before sending subscription...");
 			await delay(1000);
 		}
+
+		global.log("7TV", `Sent subscription for ${type} in ${roomID}`);
 
 		this.listener.send(JSON.stringify(msg));
 	}
