@@ -2,6 +2,8 @@ import { promises as fs } from 'fs';
 import { Console } from 'node:console';
 import { styleText } from 'node:util';
 import axios from 'axios';
+import { OBSWebSocket } from 'obs-websocket-js';
+const obs = new OBSWebSocket();
 import { Player } from "cli-sound";
 const sound = new Player();
 
@@ -14,6 +16,7 @@ import { UserList } from "./classes/User.js";
 import { CommandList } from "./classes/Command.js";
 import { WebSocketListener } from "./classes/WebSocketListener.js";
 import { EmoteList, SevenTV, BetterTTV, FrankerFaceZ } from "./classes/Emote.js";
+import { ChannelRedeemList } from "./classes/ChannelRedeem.js";
 
 const settings = JSON.parse(await fs.readFile('./settings.json'));
 const clientId = settings.auth.twitch.clientID;
@@ -31,6 +34,7 @@ const weatherConditionCodes = JSON.parse(await fs.readFile('./static/weatherCond
 
 const users = new UserList();
 const commandList = new CommandList();
+const redeemList = new ChannelRedeemList();
 var broadcasterUser = null;
 
 const apiClient = new ApiClient({
@@ -704,6 +708,12 @@ chatClient.onJoin(async (channel, user) => {
 		initialCategory = channelInfo.gameName;
 		log("SYSTEM", `Initial category is ${initialCategory}`);
 
+		let allRedeems = await apiClient.channelPoints.getCustomRewards(broadcasterUser.id);
+		for(const redeem of allRedeems) {
+			redeemList.add(redeem);
+		}
+		log("SYSTEM", `Found ${redeemList.length} channel point redeems`);
+
 		initSpinRequestsSocket();
 	}
 });
@@ -826,3 +836,89 @@ function startEventSub() {
 	eventSubListener.start();
 	log("SYSTEM", `Started EventSub listeners`);
 }
+
+// ====== OBS ======
+
+var obsConnectionTimeout;
+
+async function initOBS() {
+	const address = `ws://${settings.obs.address}`;
+
+	try {
+		if(settings.obs.password != "") {
+			await obs.connect(address, settings.obs.password);
+		} else {
+			await obs.connect(address);
+		}
+	} catch(err) {
+		// ignored
+	}
+}
+
+function onOBSConnectionOpened() {
+	const address = `ws://${settings.obs.address}`;
+
+	clearTimeout(obsConnectionTimeout);
+	global.log("OBS", `Established connection to OBS at ${address}`, false, ['greenBright']);
+}
+
+function onOBSConnectionClosed() {
+	const address = `ws://${settings.obs.address}`;
+
+	clearTimeout(obsConnectionTimeout);
+	global.log("OBS", `Connection to OBS at ${address} closed`, false, ['redBright']);
+	obsConnectionTimeout = setTimeout(initOBS, settings.obs.reconnectDelay * 1000);
+}
+
+async function onOBSSceneChanged(sceneObject) {
+	const name = sceneObject.sceneName;
+	
+	global.log("OBS", `Scene changed to ${name}`, false, ['gray']);
+
+	const isVRChat = (name === "VRChat");
+	const isIntermission = (name === "Ad Wall" || name === "Starting Soon");
+	const isMenu = (name === "SRXD Menu");
+	const isGameplay = (name === "SRXD Gameplay");
+
+	await obs.call('SetInputMute', {
+		inputName: 'Microphone',
+		inputMuted: isIntermission
+	});
+
+	await axios.post(`http://${settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`);
+
+	if(initialCategory == "Spin Rhythm XD") {
+		const throwStuff = redeemList.getByName("Throw stuff at me");
+		apiClient.channelPoints.updateCustomReward(broadcasterUser.id, throwStuff.id, {
+			isPaused: isMenu
+		});
+	}
+
+	await obs.call('SetInputVolume', {
+		inputName: "Spotify Audio",
+		inputVolumeDb: isVRChat ? -4 : 0
+	});
+}
+
+async function onOBSStreamStateChanged(state) {
+	if(state.outputActive && state.outputState == "OBS_WEBSOCKET_OUTPUT_STARTED") {
+		await onStreamStarted();
+	} else if(!state.outputActive && state.outputState == "OBS_WEBSOCKET_OUTPUT_STOPPING") {
+		await onStreamStopped();
+	}
+}
+
+async function onStreamStarted() {
+	global.log("OBS", "Stream started", false, ['green']);
+	await axios.post('http://127.0.0.1:8880/api/player', { volume: -36.5 });
+}
+async function onStreamStopped() {
+	global.log("OBS", "Stream stopped", false, ['yellow']);
+}
+
+obs.on('ConnectionOpened', onOBSConnectionOpened);
+obs.on('ConnectionClosed', onOBSConnectionClosed);
+obs.on('CurrentProgramSceneChanged', onOBSSceneChanged);
+obs.on('StreamStateChanged', onOBSStreamStateChanged);
+
+initOBS();
