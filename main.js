@@ -618,6 +618,8 @@ async function messageHandler(channel, userString, text, msg) {
 		return;
 	}
 
+	global.log("", `${userString}: ${text}`, false, ['gray']);
+
 	if(seenUsers.indexOf(msg.userInfo.userName) === -1) {
 		seenUsers.push(msg.userInfo.userName);
 		onUserFirstSeenForSession(channel, msg.userInfo);
@@ -677,8 +679,6 @@ function onUserFirstSeenForSession(channel, user) {
 }
 
 function onStandardMessage(channel, user, message) {
-	global.log("", `${user.displayName}: ${message}`, false, ['gray']);
-
 	let filtered = message.split(" ").filter((part) => !part.startsWith('http:') && !part.startsWith('https:')).join(" ");
 
 	if(!message.startsWith('@') && initialCategory != "VRChat") {
