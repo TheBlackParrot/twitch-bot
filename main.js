@@ -96,7 +96,13 @@ await authProvider.addUserForToken(streamerTokenData, ['channel']);
 
 // ====== SRXD ======
 
-const spinRequestsSocket = new WebSocketListener('http://127.0.0.1:6970/', handleSpinRequestsMessage);
+var spinRequestsSocket;
+
+function initSpinRequestsSocket() {
+	if(initialCategory == "Spin Rhythm XD") {
+		spinRequestsSocket = new WebSocketListener('http://127.0.0.1:6970/', handleSpinRequestsMessage);
+	}
+}
 
 const spinRequestsFunctions = {
 	RequestsAllowed: function(value) {
@@ -675,8 +681,7 @@ function onStandardMessage(channel, user, message) {
 
 	let filtered = message.split(" ").filter((part) => !part.startsWith('http:') && !part.startsWith('https:')).join(" ");
 
-	//if(!message.startsWith('@') && initialCategory != "VRChat") {
-	if(!message.startsWith('@')) {
+	if(!message.startsWith('@') && initialCategory != "VRChat") {
 		tts(settings.tts.voices.names, ensureEnglishName(user));
 		tts(settings.tts.voices.messages, global.emotes.getFilteredString(filtered));
 	}
@@ -698,6 +703,8 @@ chatClient.onJoin(async (channel, user) => {
 		let channelInfo = await apiClient.channels.getChannelInfoById(broadcasterUser.id);
 		initialCategory = channelInfo.gameName;
 		log("SYSTEM", `Initial category is ${initialCategory}`);
+
+		initSpinRequestsSocket();
 	}
 });
 
