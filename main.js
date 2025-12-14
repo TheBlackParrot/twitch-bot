@@ -12,7 +12,7 @@ import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { UserList } from "./classes/User.js";
 import { CommandList } from "./classes/Command.js";
 import { WebSocketListener } from "./classes/WebSocketListener.js";
-import { EmoteList, SevenTV, BetterTTV } from "./classes/Emote.js";
+import { EmoteList, SevenTV, BetterTTV, FrankerFaceZ } from "./classes/Emote.js";
 
 const settings = JSON.parse(await fs.readFile('./settings.json'));
 const clientId = settings.auth.twitch.clientID;
@@ -753,6 +753,7 @@ global.emotes = new EmoteList();
 
 const sevenTV = new SevenTV();
 const bttv = new BetterTTV();
+const ffz = new FrankerFaceZ();
 
 // ====== EVENTSUB STUFF ======
 

@@ -210,6 +210,69 @@ export class BetterTTV {
 	}
 }
 
+export class FrankerFaceZ {
+	constructor() {
+		this.preInitialize();
+	}
+
+	async preInitialize() {
+		while(global.broadcasterUser == null) {
+			global.log("FFZ", "global.broadcasterUser was null, waiting");
+			await delay(1000);
+		}
+
+		await this.initialize();
+	}
+
+	async #getGlobalEmotes() {
+		const response = await axios.get("https://api.frankerfacez.com/v1/set/global").catch((err) => {
+			console.error(err);
+			global.log("FFZ", "Unable to fetch global FFZ emotes - FFZ is probably down");
+		});
+
+		if(response) {
+			if(response.statusText == "OK") {
+				const data = response.data;
+
+				for(const setIdx of data.default_sets) {
+					const emotes = data.sets[setIdx].emoticons;
+
+					for(const emote of emotes) {
+						global.emotes.add(new Emote("FFZ", emote.id, emote.name));
+					}
+				}
+			}
+		}
+	}
+
+	async #getChannelEmotes() {
+		let response = await axios.get(`https://api.frankerfacez.com/v1/room/id/${global.broadcasterUser.id}?sigh=${Date.now()}`).catch((err) => {
+			console.error(err);
+			global.log("FFZ", `Unable to fetch FFZ emotes - FFZ is probably down`);
+		});
+
+		if(response) {
+			if(response.statusText == "OK") {
+				const data = response.data;
+
+				for(let setIdx in data.sets) {
+					const emotes = data.sets[setIdx].emoticons;
+					for(const emote of emotes) {
+						global.emotes.add(new Emote("FFZ", emote.id, emote.name));
+					}
+				}
+			}
+		}
+	}
+
+	async initialize() {
+		await this.#getGlobalEmotes();
+		await this.#getChannelEmotes();
+
+		global.log("FFZ", `Added ${global.emotes.lengthFromService("FFZ")} emotes`);
+	}
+}
+
 export class SevenTV {
 	constructor() {
 		this.preInitialize();
