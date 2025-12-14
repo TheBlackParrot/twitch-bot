@@ -45,6 +45,18 @@ export class WebSocketListener {
 		}
 	}
 
+	send = function(data) {
+		this.socket.send(data);
+	}
+
+	get readyState() {
+		if(typeof(this.socket) === "undefined") {
+			return -1;
+		}
+		
+		return this.socket.readyState;
+	}
+
 	initializeWebsocket() {
 		this.socket = new WebSocket(this.url);
 

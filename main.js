@@ -12,6 +12,7 @@ import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { UserList } from "./classes/User.js";
 import { CommandList } from "./classes/Command.js";
 import { WebSocketListener } from "./classes/WebSocketListener.js";
+import { EmoteList, SevenTV } from "./classes/Emote.js";
 
 const settings = JSON.parse(await fs.readFile('./settings.json'));
 const clientId = settings.auth.twitch.clientID;
@@ -669,9 +670,10 @@ function onUserFirstSeenForSession(channel, user) {
 function onStandardMessage(channel, user, message) {
 	let filtered = message.split(" ").filter((part) => !part.startsWith('http:') && !part.startsWith('https:')).join(" ");
 
-	if(!message.startsWith('@') && initialCategory != "VRChat") {
+	//if(!message.startsWith('@') && initialCategory != "VRChat") {
+	if(!message.startsWith('@')) {
 		tts(settings.tts.voices.names, ensureEnglishName(user));
-		tts(settings.tts.voices.messages, filtered);
+		tts(settings.tts.voices.messages, global.emotes.getFilteredString(filtered));
 	}
 }
 
@@ -685,6 +687,7 @@ chatClient.onJoin(async (channel, user) => {
 	broadcasterUser = await apiClient.users.getUserByName(channel);
 	if(broadcasterUser != null) {
 		log("SYSTEM", `Got broadcaster information for ${channel}`);
+		global.broadcasterUser = broadcasterUser;
 		startEventSub();
 
 		let channelInfo = await apiClient.channels.getChannelInfoById(broadcasterUser.id);
@@ -743,6 +746,12 @@ chatClient.onSubGift((channel, recipientName, subInfo) => {
 });
 
 chatClient.connect();
+
+// ====== EMOTES ======
+
+global.emotes = new EmoteList();
+
+const sevenTV = new SevenTV();
 
 // ====== EVENTSUB STUFF ======
 
