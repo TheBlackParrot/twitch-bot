@@ -199,7 +199,7 @@ export class SevenTV {
 		this.subscribe("emote_set.*", global.broadcasterUser.id, this.emoteSetIDs[0]);
 	}
 
-	subscribe = function(type, roomID, objectID) {
+	subscribe = async function(type, roomID, objectID) {
 		let conditions = {};
 
 		if(objectID) {
@@ -222,31 +222,42 @@ export class SevenTV {
 			}
 		};
 
-		if(this.listener.readyState === 1) {
-			this.listener.send(JSON.stringify(msg));
+		while(this.listener.readyState != 1) {
+			console.log("waiting to be ready...");
+			await delay(1000);
 		}
+		console.log("ready");
+
+		this.listener.send(JSON.stringify(msg));
 	}
 
 	onMessage = async function(data) {
+		console.log("onMessage");
 		data = JSON.parse(data.toString('utf8'));
 
 		switch(data.op) {
 			case 0: // basic data
 				if(data.d.type != "emote_set.update") {
+					console.log("not emote_set.update");
 					return;
 				}
 
+				data = data.d.body;
 				if(this.emoteSetIDs.indexOf(data.id) === -1) {
+					console.log(this.emoteSetIDs);
+					console.log(data.id);
 					return;
 				}
 
 				if("pushed" in data) {
+					console.log("push");
 					for(const objectData of data.pushed) {
 						const emoteData = objectData.value.data;
 						global.emotes.add(new Emote("7TV", emoteData.id, (objectData.value.name || emoteData.name)));
 					}
 				}
 				if("pulled" in data) {
+					console.log("pull");
 					for(const objectData of data.pulled) {
 						const emoteData = objectData.old_value;
 						global.emotes.delete(emoteData.id);
