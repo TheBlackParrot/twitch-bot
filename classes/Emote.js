@@ -3,42 +3,6 @@ import { WebSocketListener } from "./WebSocketListener.js";
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
-/*
-"emote_set.update": function(data) {
-	if(allowedSevenTVEmoteSets.indexOf(data.id) === -1 && localStorage.getItem("setting_enable7TVPersonalEmoteSets") === "false") {
-		return;
-	}
-
-	if("pushed" in data) {
-		for(const objectData of data.pushed) {
-			const emoteData = objectData.value.data;
-			const urls = emoteData.host.files;
-
-			chatEmotes.addEmote(new Emote({
-				service: "7tv",
-				setID: data.id,
-				animated: emoteData.animated,
-				urls: {
-					high: `https:${emoteData.host.url}/4x.###`,
-					low: `https:${emoteData.host.url}/1x.###`
-				},
-				emoteID: emoteData.id,
-				emoteName: (objectData.value.name || emoteData.name),
-				isZeroWidth: ((emoteData.flags & 256) === 256),
-				global: false
-			}));
-		}
-	}
-	if("pulled" in data) {
-		for(const objectData of data.pulled) {
-			console.log(objectData);
-			const emoteData = objectData.old_value;
-			chatEmotes.deleteEmote(emoteData.id, data.id);
-		}
-	}
-}
-*/
-
 export class EmoteList {
 	constructor() {
 		this.emotes = [];
@@ -223,41 +187,35 @@ export class SevenTV {
 		};
 
 		while(this.listener.readyState != 1) {
-			console.log("waiting to be ready...");
+			global.log("7TV", "Waiting for socket to be ready before sending subscription...");
 			await delay(1000);
 		}
-		console.log("ready");
 
 		this.listener.send(JSON.stringify(msg));
 	}
 
 	onMessage = async function(data) {
-		console.log("onMessage");
 		data = JSON.parse(data.toString('utf8'));
 
 		switch(data.op) {
 			case 0: // basic data
 				if(data.d.type != "emote_set.update") {
-					console.log("not emote_set.update");
 					return;
 				}
 
 				data = data.d.body;
+
 				if(this.emoteSetIDs.indexOf(data.id) === -1) {
-					console.log(this.emoteSetIDs);
-					console.log(data.id);
 					return;
 				}
 
 				if("pushed" in data) {
-					console.log("push");
 					for(const objectData of data.pushed) {
 						const emoteData = objectData.value.data;
 						global.emotes.add(new Emote("7TV", emoteData.id, (objectData.value.name || emoteData.name)));
 					}
 				}
 				if("pulled" in data) {
-					console.log("pull");
 					for(const objectData of data.pulled) {
 						const emoteData = objectData.old_value;
 						global.emotes.delete(emoteData.id);
