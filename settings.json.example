@@ -1,0 +1,29 @@
+{
+	"auth": {
+		"twitch": {
+			"clientID": "abdadasdada",
+			"clientSecret": "ouoiououiuouoi"
+		},
+
+		"weatherAPI": {
+			"key": "weweweeewwewwe"
+		}
+	},
+
+	"srxd": {
+		"spinRequestsURL": "http://127.0.0.1:6969/"
+	},
+
+	"tts": {
+		"URL": "http://127.0.0.1:6968/",
+		"voices": {
+			"names": "David",
+			"messages": "Zira",
+			"system": "Mark"
+		}
+	},
+
+	"weather": {
+		"location": 12345
+	}
+}

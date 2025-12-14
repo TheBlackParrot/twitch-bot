@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@twurple/api": "^8.0.2",
+    "@twurple/auth": "^8.0.2",
+    "@twurple/easy-bot": "^8.0.2",
+    "@twurple/eventsub-ws": "^8.0.2",
+    "axios": "^1.13.2",
+    "cli-sound": "^1.1.3",
+    "ws": "^8.18.3"
+  },
+  "type": "module"
+}
