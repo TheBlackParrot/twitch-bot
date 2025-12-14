@@ -159,10 +159,14 @@ export class BetterTTV {
 					return;
 				}
 
+				global.log("BTTV", `Updating emote ${emote.id} to "${emote.code}"`);
 				global.emotes.update(emote.id, emote.code);
 				break;
 
 			case "emote_delete":
+				const oldEmote = global.emotes.getByID(data.data.emoteId);
+
+				global.log("BTTV", `Deleting emote ${data.data.emoteId} ("${oldEmote.name}")`);
 				global.emotes.delete(data.data.emoteId);
 				break;
 
@@ -177,6 +181,7 @@ export class BetterTTV {
 					return;
 				}
 
+				global.log("BTTV", `Adding emote ${emote.id} ("${emote.code}")`);
 				global.emotes.add(new Emote("BTTV", emote.id, emote.code));
 				break;
 		}
@@ -406,12 +411,16 @@ export class SevenTV {
 				if("pushed" in data) {
 					for(const objectData of data.pushed) {
 						const emoteData = objectData.value.data;
+
+						global.log("7TV", `Adding emote ${emoteData.id} ("${(objectData.value.name || emoteData.name)}")`);
 						global.emotes.add(new Emote("7TV", emoteData.id, (objectData.value.name || emoteData.name)));
 					}
 				}
 				if("pulled" in data) {
 					for(const objectData of data.pulled) {
 						const emoteData = objectData.old_value;
+
+						global.log("7TV", `Deleting emote ${emoteData.id} ("${emoteData.name}")`);
 						global.emotes.delete(emoteData.id);
 					}
 				}
