@@ -128,10 +128,31 @@ export class SevenTV {
 		await this.initialize();
 	}
 
-	async initialize() {
-		let url = `https://7tv.io/v3/users/twitch/${global.broadcasterUser.id}?sigh=${Date.now()}`;
+	async #getGlobalEmotes() {
+		const response = await axios.get("https://7tv.io/v3/emote-sets/global").catch((err) => {
+			console.error(err);
+			global.log("7TV", "Unable to fetch global 7TV emotes - 7TV is probably down");
+		});
 
-		let response = await axios.get(url).catch((err) => {
+		if(response) {
+			if(response.statusText == "OK") {
+				const data = response.data;
+
+				if(!("emotes" in data)) {
+					global.log("7TV", "Unable to fetch global 7TV emotes - this specific error is 7TV's fault as they didn't actually give us any emotes to parse");
+					return;
+				}
+
+				for(const emote of data.emotes) {
+					const emoteData = emote.data;
+					global.emotes.add(new Emote("7TV", emoteData.id, (emote.name || emoteData.name)));
+				}
+			}
+		}
+	}
+
+	async #getChannelEmotes() {
+		let response = await axios.get(`https://7tv.io/v3/users/twitch/${global.broadcasterUser.id}?sigh=${Date.now()}`).catch((err) => {
 			console.error(err);
 			global.log("7TV", `Unable to fetch 7TV emotes - 7TV is probably down`);
 		});
@@ -154,8 +175,6 @@ export class SevenTV {
 					const emoteData = emote.data;
 					global.emotes.add(new Emote("7TV", emoteData.id, (emote.name || emoteData.name)));
 				}
-
-				console.log(global.emotes.length);
 			} else {
 				global.log("7TV", `Unable to fetch channel's 7TV emotes, response from 7TV was not OK`);
 				return;
@@ -164,6 +183,17 @@ export class SevenTV {
 			global.log("7TV", `Unable to fetch channel's 7TV emotes, initial fetch completely failed`);
 			return;
 		}
+	}
+
+	async initialize() {
+		let before = global.emotes.length;
+
+		await this.#getGlobalEmotes();
+		await this.#getChannelEmotes();
+
+		let after = global.emotes.length;
+
+		global.log("7TV", `Added ${after - before} emotes`);
 
 		this.listener = new WebSocketListener('wss://events.7tv.io/v3', this.onMessage.bind(this), { restartDelay: 60 });
 		this.subscribe("emote_set.*", global.broadcasterUser.id, this.emoteSetIDs[0]);
@@ -199,7 +229,7 @@ export class SevenTV {
 
 	onMessage = async function(data) {
 		data = JSON.parse(data.toString('utf8'));
-		
+
 		switch(data.op) {
 			case 0: // basic data
 				if(data.d.type != "emote_set.update") {
