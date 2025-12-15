@@ -967,8 +967,12 @@ function onAdsEnded(event) {
 	tts(system.tts.voices.system, "Ad break finished", 1);
 }
 
+var hasSetFirstRedeem = false;
 function onTwitchStreamOnline(event) {
 	say(broadcasterUser.name, 'SmileArrive Parrot is now live with $game! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive');
+	
+	redeemList.getByName("first").enable(!hasSetFirstRedeem);
+	hasSetFirstRedeem = true;
 }
 function onTwitchStreamOffline(event) {
 	say(broadcasterUser.name, 'The stream is now offline! If this was an interruption, wait a few minutes and reload your app or refresh your page. Otherwise, see you later! SmileWave');
