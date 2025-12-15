@@ -794,7 +794,7 @@ chatClient.onRaid(async (channel, user, raidInfo, msg) => {
 	
 	await apiClient.chat.shoutoutUser(broadcasterUser.id, raiderInfo.id);
 
-	// todo: add viewercount to thrown items
+	await updateLeaderboardValues(event.userId, "Items Thrown", raidInfo.viewerCount);
 	
 	say(channel, '⚠️⚠️⚠️ THIS STREAM CONTAINS LOTS OF FLASHING AND POTENTIALLY STROBING LIGHTS. If you are sensitive to flashing lights I would advise switching the stream to audio-only mode or closing the stream. Viewer discretion is advised. ⚠️⚠️⚠️');
 });
@@ -885,10 +885,37 @@ const redeemFunctions = {
 		for(let idx = 0; idx < redeems.length; idx++) {
 			await redeems[idx].enable(idx == wantedIdx)
 		}
+	},
+
+	"Throw stuff at me": async function(event) {
+		await updateLeaderboardValues(event.userId, "Items Thrown", 1);
+	},
+	"Throw a lot of stuff at me": async function(event) {
+		await updateLeaderboardValues(event.userId, "Items Thrown", 20);
+	},
+	"Throw a bunch of hearts": async function(event) {
+		await updateLeaderboardValues(event.userId, "Items Thrown", 12);
+	},
+	"E": async function(event) {
+		await updateLeaderboardValues(event.userId, "Items Thrown", 15);
+	},
+	"amogus": async function(event) {
+		await updateLeaderboardValues(event.userId, "Items Thrown", 15);
 	}
 };
 redeemFunctions["second"] = redeemFunctions["first"];
 redeemFunctions["third"] = redeemFunctions["first"];
+
+async function updateLeaderboardValues(userId, key, value, defaultValue = 0) {
+	key = key.replaceAll(" ", "_");
+
+	await axios.get(`${settings.bot.leaderboardPath}/private/api/updateValue.php?id=${userId}&which=${key}&value=${value}&default=${defaultValue}`).catch((err) => {
+		global.log("LEADERBOARD", `Could not add ${value} to ${key} for ${userId}`, false, ['redBright']);
+		console.error(err);
+	});
+
+	global.log("LEADERBOARD", `Added ${value} to ${key} for ${userId}`);
+}
 
 // ====== EVENTSUB STUFF ======
 
