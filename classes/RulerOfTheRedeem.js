@@ -28,6 +28,13 @@ export class RulerOfTheRedeem {
 		return Math.floor((Date.now() / 1000) - this.lastSwappedHands);
 	}
 
+	get crownHolder() {
+		return {
+			id: this.rulerId,
+			name: this.rulerName
+		};
+	}
+
 	async allowForceRefresh(status) {
 		const forceRedeem = global.redeemList.getByName("Force Refresh Ruler of the Redeem");
 		await forceRedeem.enable(status);
@@ -76,7 +83,7 @@ export class RulerOfTheRedeem {
 		this.sign = Math.floor(Math.random() * 100) % 2 == 1 ? "+" : "-";
 		this.answer = this.numbers[0] + (this.sign == "+" ? this.numbers[1] : this.numbers[1] * -1);
 
-		global.log("ROTR", `Updated answer for ${this.numbers.join(this.sign)} to ${this.answer}`, false, ['gray']);
+		global.log("ROTR", `Updated answer for ${this.numbers.join(` ${this.sign} `)} to ${this.answer}`, false, ['gray']);
 
 		await this.updatePrompt();
 	}

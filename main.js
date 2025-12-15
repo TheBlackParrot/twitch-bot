@@ -260,6 +260,37 @@ commandList.addTrigger("github", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+// --- !give ---
+commandList.addTrigger("give", async(channel, args, msg, user) => {
+	const crownHolder = rulerOfTheRedeem.crownHolder;
+
+	if(crownHolder.id != user.userId) {
+		await reply(channel, msg, "The crown is not yours to give!");
+		return;
+	}
+
+	if(!args.length) {
+		return;
+	}
+
+	const userCheck = await apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
+
+	if(!userCheck) {
+		await reply(channel, msg, "⚠️ Could not find any users matching that username");
+		return;
+	}
+
+	if(user.userId == userCheck.id) {
+		await reply(channel, msg, "You already have the crown!");
+		return;
+	}
+
+	await rulerOfTheRedeem.swapHands({ userId: userCheck.id, userName: userCheck.name }); // guh
+	await say(channel, `${user.displayName} has given the crown to ${userCheck.displayName}! That's so sweet, awww!`);
+}, {
+	cooldown: 10
+});
+
 // --- !insulin ---
 commandList.addTrigger("insulin", async(channel, args, msg, user) => {
 	await say(channel, 'Insulin helps regulate blood-sugar levels throughout the day and night, a key to managing diabetes. People with type 1 diabetes (T1D) rely on insulin therapy to help manage their blood-glucose levels. While insulin therapy keeps people with T1D alive, it is not a cure, nor does it prevent the possibility of T1D’s serious side effects. Learn more: https://www.breakthrought1d.org/t1d-basics/insulin/');
@@ -419,6 +450,14 @@ commandList.addTrigger("rotr", async(channel, args, msg, user) => {
 	await reply(channel, msg, `${wantedId == user.userId ? "You have" : `${wantedName} has`} been Ruler of the Redeem for ${hours}h ${minutes}m ${seconds}s`);
 }, {
 	userCooldown: 5
+});
+
+// --- !ruler ---
+commandList.addTrigger("ruler", async(channel, args, msg, user) => {
+	const crownHolder = rulerOfTheRedeem.crownHolder;
+	await reply(channel, msg, `${crownHolder.name == null ? "No one" : crownHolder.name} currently holds the crown`);
+}, {
+	cooldown: 5
 });
 
 // --- !specs ---
