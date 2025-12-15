@@ -42,6 +42,16 @@ class ChannelRedeem {
 		this.update(redeemObject);
 	}
 
+	async enable(status) {
+		if(status == this.enabled) {
+			return;
+		}
+
+		await global.apiClient.channelPoints.updateCustomReward(global.broadcasterUser.id, this.id, {
+			isEnabled: status
+		});
+	}
+
 	update(redeemObject, silent = true) {
 		this.name = redeemObject.title;
 		this.enabled = redeemObject.isEnabled;

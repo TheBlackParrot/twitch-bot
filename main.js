@@ -43,6 +43,7 @@ var broadcasterUser = null;
 const apiClient = new ApiClient({
 	authProvider
 });
+global.apiClient = apiClient;
 
 const sessionStart = Date.now();
 fs.mkdir("./logs").catch((err) => {
@@ -862,8 +863,32 @@ const redeemFunctions = {
 			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ This is an invalid voice name, please see https://theblackparrot.me/tts for available choices and voice examples.`);
 			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED"); // it's cancelled!! not canceled!!! grrr
 		}
+	},
+
+	"first": async function(event) {
+		const redeems = [
+			redeemList.getByName("first"),
+			redeemList.getByName("second"),
+			redeemList.getByName("third"),
+		];
+
+		let message;
+		let wantedIdx;
+		switch(event.rewardTitle) {
+			case "first": message = "u winner YIPPEE"; wantedIdx = 1; break;
+			case "second": message = "u also winner SealArrive"; wantedIdx = 2; break;
+			case "third": message = "congrat you got here too okayipullup"; wantedIdx = 3; break;
+		} // should disable all redeems on "third", as idx 3 doesn't exist
+
+		await say(broadcasterUser.name, `@${event.userDisplayName} ${message}`);
+
+		for(let idx = 0; idx < redeems.length; idx++) {
+			await redeems[idx].enable(idx == wantedIdx)
+		}
 	}
 };
+redeemFunctions["second"] = redeemFunctions["first"];
+redeemFunctions["third"] = redeemFunctions["first"];
 
 // ====== EVENTSUB STUFF ======
 
@@ -883,7 +908,7 @@ function onBitsCheered(bits, message) {
 }
 
 async function onChannelRewardRedemption(event) {
-	//https://twurple.js.org/reference/eventsub-base/classes/EventSubChannelRedemptionAddEvent.html
+	// https://twurple.js.org/reference/eventsub-base/classes/EventSubChannelRedemptionAddEvent.html
 
 	const redeem = redeemList.getByID(event.rewardId);
 
