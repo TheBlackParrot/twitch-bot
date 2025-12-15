@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import { Console } from 'node:console';
 import { styleText } from 'node:util';
+import { exec } from 'node:child_process';
 import axios from 'axios';
 import { OBSWebSocket } from 'obs-websocket-js';
 const obs = new OBSWebSocket();
@@ -52,6 +53,8 @@ const logOutput = await logFileHandle.createWriteStream();
 const logWriter = new Console({ stdout: logOutput });
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
+
+var allowBejeweled = false;
 
 // ====== SYSTEM STUFF ======
 
@@ -671,10 +674,6 @@ async function messageHandler(channel, userString, text, msg) {
 	} else {
 		// not a command or regex, standard message
 
-		if(Math.floor(Math.random() * 1000) == 69) {
-			say(channel, uniEmotes[Math.floor(Math.random() * uniEmotes.length)]);
-		}
-
 		onStandardMessage(channel, msg.userInfo, text);
 	}
 }
@@ -687,9 +686,35 @@ function onUserFirstSeenForSession(channel, user) {
 function onStandardMessage(channel, user, message) {
 	let filtered = message.split(" ").filter((part) => !part.startsWith('http:') && !part.startsWith('https:')).join(" ");
 
-	if(!message.startsWith('@') && initialCategory != "VRChat") {
+	let wasGemSwap = false;
+	if(allowBejeweled) {
+		const parts = filtered.toLowerCase().split(" ");
+		if(filtered.length == 5 && parts.length == 2) {
+			let isSwapValid = true;
+
+			for(const position of parts) {
+				const row = position.charCodeAt(0);
+				const column = position.charCodeAt(1);
+
+				if(row < 97 && row > 104 && column < 49 && column > 56) {
+					isSwapValid = false;
+				}
+			}
+
+			if(isSwapValid) {
+				wasGemSwap = true;
+				exec(`${settings.bot.bejeweledSwapperLocation} ${parts.join(" ")}`, { windowsHide: true });
+			}
+		}
+	}
+
+	if(!message.startsWith('@') && initialCategory != "VRChat" && !wasGemSwap) {
 		tts(settings.tts.voices.names, ensureEnglishName(user));
 		tts(settings.tts.voices.messages, global.emotes.getFilteredString(filtered));
+	}
+
+	if(Math.floor(Math.random() * 1000) == 69) {
+		say(channel, uniEmotes[Math.floor(Math.random() * uniEmotes.length)]);
 	}
 }
 
@@ -812,7 +837,7 @@ function onAdsStarted(event) {
 		say(broadcasterUser.name, 'Ads are running during setup to disable pre-rolls for the next little bit. You\'re not missing out on anything! Get your snacks, get your drinks, take your meds! Okayge');
 	}
 	haveAdsRunBefore = true;
-	
+
 	tts(system.tts.voices.system, "Ad break started", 1);
 }
 
@@ -951,6 +976,8 @@ async function onOBSSceneChanged(sceneObject) {
 	const isMenu = (name === "SRXD Menu");
 	const isGameplay = (name === "SRXD Gameplay");
 
+	allowBejeweled = (name === "Ad Wall");
+
 	await obs.call('SetInputMute', {
 		inputName: 'Microphone',
 		inputMuted: isIntermission
@@ -988,7 +1015,7 @@ async function onStreamStarted() {
 	await axios.post('http://127.0.0.1:8880/api/player', { volume: -36.5 }).catch((err) => {});
 }
 async function onStreamStopped() {
-	clear(rotatingMessageInterval);
+	clearInterval(rotatingMessageInterval);
 	global.log("OBS", "Stream stopped", false, ['yellow']);
 }
 
