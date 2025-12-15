@@ -10,7 +10,7 @@ const sound = new Player();
 
 import { RefreshingAuthProvider } from '@twurple/auth';
 import { ApiClient } from '@twurple/api';
-import { ChatClient } from '@twurple/chat';
+import { ChatClient, parseEmotePositions } from '@twurple/chat';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 
 import { UserList } from "./classes/User.js";
@@ -797,7 +797,7 @@ async function messageHandler(channel, userString, text, msg) {
 	} else {
 		// not a command or regex, standard message
 
-		onStandardMessage(channel, msg.userInfo, text);
+		onStandardMessage(channel, msg.userInfo, text, msg.emoteOffsets);
 	}
 }
 const commandListener = chatClient.onMessage(messageHandler);
@@ -806,9 +806,21 @@ function onUserFirstSeenForSession(channel, user) {
 	tts(settings.tts.voices.system, `${ensureEnglishName(user)} has entered the chat.`);
 }
 
-function onStandardMessage(channel, user, message) {
+function onStandardMessage(channel, user, message, emoteOffsets) {
 	// user: https://twurple.js.org/reference/chat/classes/ChatUser.html
-	let filtered = message.split(" ").filter((part) => !part.startsWith('http:') && !part.startsWith('https:')).join(" ");
+
+	const emotes = parseEmotePositions(message, emoteOffsets);
+
+	let filtered = message.split(" ").filter((part) => {
+		for(const emote of emotes) {
+			if(part === emote.name) {
+				return false;
+			}
+		}
+
+		return !part.startsWith('http:') && !part.startsWith('https:');
+	}).join(" ");
+	filtered = global.emotes.getFilteredString(filtered);
 
 	let wasGemSwap = false;
 	if(allowBejeweled) {
@@ -837,7 +849,7 @@ function onStandardMessage(channel, user, message) {
 
 		const userData = users.getUser(user.userId);
 		const voice = userData.getPersistentData("ttsVoice");
-		tts(voice == null ? settings.tts.voices.messages : voice, global.emotes.getFilteredString(filtered));
+		tts(voice == null ? settings.tts.voices.messages : voice, filtered);
 	}
 
 	if(Math.floor(Math.random() * 1000) == 69) {
