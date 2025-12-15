@@ -12,6 +12,10 @@ export class RulerOfTheRedeem {
 		this.updateAnswer();
 	}
 
+	updateTime() {
+		this.lastSwappedHands = Date.now() / 1000;
+	}
+
 	async swapHands(redeemEvent) {
 		const someoneWasHolding = this.rulerId != null;
 
@@ -19,7 +23,7 @@ export class RulerOfTheRedeem {
 			await this.awardTime();
 		}
 
-		this.lastSwappedHands = Date.now() / 1000;
+		this.updateTime();
 		this.rulerId = redeemEvent.userId;
 		this.rulerName = redeemEvent.userName;
 	}

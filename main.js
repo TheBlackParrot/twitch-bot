@@ -1164,6 +1164,9 @@ function onTwitchStreamOnline(event) {
 }
 function onTwitchStreamOffline(event) {
 	say(broadcasterUser.name, 'The stream is now offline! If this was an interruption, wait a few minutes and reload your app or refresh your page. Otherwise, see you later! SmileWave');
+
+	await rulerOfTheRedeem.awardTime();
+	rulerOfTheRedeem.updateTime();
 }
 
 const eventSubListener = new EventSubWsListener({
