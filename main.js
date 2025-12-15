@@ -32,6 +32,7 @@ const authProvider = new RefreshingAuthProvider(
 );
 
 const weatherConditionCodes = JSON.parse(await fs.readFile('./static/weatherConditionCodes.json'));
+const initialRedeemList = JSON.parse(await fs.readFile('./static/redeems.json'));
 
 const users = new UserList();
 const commandList = new CommandList();
@@ -740,6 +741,34 @@ chatClient.onJoin(async (channel, user) => {
 			redeemList.add(redeem);
 		}
 		log("SYSTEM", `Found ${redeemList.length} channel point redeems`);
+
+		for(const redeemName in initialRedeemList) {
+			const safeRedeemName = redeemName.substr(0, 45);
+
+			if(redeemList.getByName(safeRedeemName) != null) {
+				continue;
+			}
+
+			global.log("SYSTEM", `Defined channel point redeem "${safeRedeemName}" does not exist, creating it`, false, ['gray']);
+
+			const initialData = initialRedeemList[safeRedeemName];
+			const redeem = await apiClient.channelPoints.createCustomReward(broadcasterUser.id, {
+				autoFulfill: "autoFulfill" in initialData ? initialData.autoFulfill : true,
+				backgroundColor: "color" in initialData ? `#${initialData.color}` : "#000000",
+				cost: "cost" in initialData ? initialData.cost : 6969,
+				globalCooldown: "globalCooldown" in initialData ? initialData.globalCooldown : 0,
+				isEnabled: false,
+				maxRedemptionsPerStream: "maxRedemptionsPerStream" in initialData ? initialData.maxRedemptionsPerStream : 0,
+				maxRedemptionsPerUserPerStream: "maxRedemptionsPerUserPerStream" in initialData ? initialData.maxRedemptionsPerUserPerStream : 0,
+				prompt: "description" in initialData ? initialData.description.substr(0, 200) : "",
+				title: safeRedeemName,
+				userInputRequired: "userInputRequired" in initialData ? initialData.userInputRequired : false
+			});
+
+			redeemList.add(redeem);
+
+			await delay(250);
+		}
 
 		initSpinRequestsSocket();
 	}

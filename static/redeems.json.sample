@@ -1,0 +1,15 @@
+{
+	"test with values": {
+		"autoFulfill": false,
+		"color": "FF00FF",
+		"cost": 500,
+		"globalCooldown": 60,
+		"maxRedemptionsPerStream": 2,
+		"maxRedemptionsPerUserPerStream": 1,
+		"description": "description",
+		"userInputRequired": true
+	},
+
+	"test without values": {
+	}
+}

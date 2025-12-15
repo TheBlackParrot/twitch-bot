@@ -1,0 +1,192 @@
+{
+	"*metal pipe*": {
+		"description": "yeah",
+		"cost": 500,
+		"color": "FF7700",
+		"autoFulfill": true,
+		"globalCooldown": 1200
+	},
+
+	"amogus": {
+		"description": "sus",
+		"cost": 500,
+		"color": "FF7700",
+		"autoFulfill": true,
+		"globalCooldown": 1200,
+		"maxRedemptionsPerUserPerStream": 2
+	},
+
+	"balls": {
+		"description": "balls",
+		"cost": 500,
+		"color": "FF7700",
+		"autoFulfill": true,
+		"globalCooldown": 1800,
+		"maxRedemptionsPerUserPerStream": 1
+	},
+
+	"blep": {
+		"description": ":P",
+		"cost": 20,
+		"color": "FF7700",
+		"autoFulfill": true,
+		"globalCooldown": 60
+	},
+
+	"Credit Exchange": {
+		"description": "500 channel points grants you 100 Gamba Credits. Be careful, be wise!",
+		"cost": 500,
+		"color": "4c7a08",
+		"autoFulfill": true,
+		"maxRedemptionsPerUserPerStream": 3
+	},
+
+	"Drop a hat": {
+		"description": "Drops a random hat on my head",
+		"cost": 500,
+		"color": "FF7700",
+		"autoFulfill": true,
+		"globalCooldown": 1200
+	},
+
+	"Drop a thing on my head": {
+		"cost": 200,
+		"color": "FF7700",
+		"autoFulfill": true,
+		"globalCooldown": 600
+	},
+
+	"E": {
+		"cost": 500,
+		"color": "FF7700",
+		"autoFulfill": true,
+		"globalCooldown": 1200
+	},
+
+	"first": {
+		"description": "you are winner",
+		"cost": 1,
+		"color": "00FF00",
+		"autoFulfill": true,
+		"maxRedemptionsPerStream": 1
+	},
+
+	"Flip a Coin": {
+		"description": "Flip a coin! If it lands on what you choose, you win double what you wagered! If it doesn't, however, you lose your wager. Format your input as \"150 heads\" to wager 150 credits on heads.",
+		"cost": 20,
+		"color": "4c7a08",
+		"autoFulfill": false,
+		"globalCooldown": 30
+	},
+	
+	"Force Refresh Ruler of the Redeem": {
+		"description": "If Ruler of the Redeem isn't available at the moment, redeem this to force it to come back early.",
+		"cost": 200,
+		"color": "ffff00",
+		"autoFulfill": true,
+		"maxRedemptionsPerUserPerStream": 4
+	},
+	
+	"gib coin hit pls?": {
+		"description": "Feeling unsure about the side of the coin you want to wager on? Redeem this!",
+		"cost": 300,
+		"color": "73a030",
+		"autoFulfill": true,
+		"globalCooldown": 7200
+	},
+	
+	"Give me a treat": {
+		"description": "mm yummy",
+		"cost": 300,
+		"color": "FF7700",
+		"autoFulfill": true,
+		"globalCooldown": 300
+	},
+	
+	"GIVE ME THE CROWN RIGHT NOW!!!!!!! >:(((": {
+		"description": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA you will have the crown for 45 minutes guaranteed the moment you redeem this AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+		"cost": 4000,
+		"color": "ffff00",
+		"autoFulfill": true
+	},
+	
+	"Ruler of the Redeem": {
+		"cost": 50,
+		"color": "ffff00",
+		"autoFulfill": false,
+		"userInputRequired": true
+	},
+	
+	"second": {
+		"description": "you are almost winner",
+		"cost": 1,
+		"color": "00FF00",
+		"autoFulfill": true,
+		"maxRedemptionsPerStream": 1
+	},
+	
+	"Set TTS Voice": {
+		"description": "Set your TTS voice! For choices and examples, see https://theblackparrot.me/tts",
+		"cost": 100,
+		"color": "2a2da1",
+		"autoFulfill": false,
+		"userInputRequired": true
+	},
+
+	"Swap Avatars": {
+		"description": "Null (Deuzear), Tox (Stellaura), Septi (Lumar), or Parrot (RazGryphon)",
+		"cost": 350,
+		"color": "7b24cd",
+		"autoFulfill": false,
+		"userInputRequired": true,
+		"globalCooldown": 900
+	},
+	
+	"Take a picture!": {
+		"description": "Screenshot the stream and send it to the Discord",
+		"cost": 200,
+		"color": "00FF00",
+		"autoFulfill": true,
+		"globalCooldown": 120
+	},
+	
+	"third": {
+		"description": "there was an attempt",
+		"cost": 1,
+		"color": "00FF00",
+		"autoFulfill": true,
+		"maxRedemptionsPerStream": 1
+	},
+	
+	"Throw a bunch of hearts": {
+		"description": "<3",
+		"cost": 300,
+		"color": "FF7700",
+		"autoFulfill": true,
+		"globalCooldown": 300
+	},
+	
+	"Throw a lot of stuff at me": {
+		"description": "oof ow ouch my bones",
+		"cost": 200,
+		"color": "FF7700",
+		"autoFulfill": true,
+		"globalCooldown": 300
+	},
+	
+	"Throw stuff at me": {
+		"description": "oof",
+		"cost": 20,
+		"color": "FF7700",
+		"autoFulfill": true,
+		"globalCooldown": 1
+	},
+	
+	"yay!": {
+		"description": "woo hoo!",
+		"cost": 300,
+		"color": "FF7700",
+		"autoFulfill": true,
+		"globalCooldown": 1800
+	}
+}
