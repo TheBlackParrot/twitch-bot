@@ -815,6 +815,13 @@ function onAdsEnded(event) {
 	tts(system.tts.voices.system, "Ad break finished", 1);
 }
 
+function onTwitchStreamOnline(event) {
+	say(broadcasterUser.name, 'SmileArrive Parrot is now live with $game! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive');
+}
+function onTwitchStreamOffline(event) {
+	say(broadcasterUser.name, 'The stream is now offline! If this was an interruption, wait a few minutes and reload your app or refresh your page. Otherwise, see you later! SmileWave');
+}
+
 const eventSubListener = new EventSubWsListener({
 	apiClient: apiClient
 });
@@ -833,7 +840,14 @@ function startEventSub() {
 		try { onAdsStarted(event); } catch(err) { console.error(err); }
 
 		setTimeout(() => { onAdsEnded(event) }, event.durationSeconds * 1000);
-	})
+	});
+
+	eventSubListener.onStreamOnline(broadcasterUser.id, (event) => {
+		try { onTwitchStreamOnline(event) } catch(err) { console.error(err); }
+	});
+	eventSubListener.onStreamOffline(broadcasterUser.id, (event) => {
+		try { onTwitchStreamOffline(event) } catch(err) { console.error(err); }
+	});
 
 	eventSubListener.start();
 	log("SYSTEM", `Started EventSub listeners`);
@@ -966,8 +980,6 @@ async function onStreamStarted() {
 	rotatingMessageInterval = setInterval(doRotatingMessage, settings.bot.rotatingMessageInterval * 1000);
 
 	await axios.post('http://127.0.0.1:8880/api/player', { volume: -36.5 }).catch((err) => {});
-
-	say(broadcasterUser.name, 'SmileArrive Parrot is now live with $game! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive');
 }
 async function onStreamStopped() {
 	clear(rotatingMessageInterval);
