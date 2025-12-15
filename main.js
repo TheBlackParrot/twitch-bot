@@ -880,6 +880,10 @@ function startEventSub() {
 		try { onTwitchStreamOffline(event) } catch(err) { console.error(err); }
 	});
 
+	eventSubListener.onChannelRewardUpdate(broadcasterUser.id, (redeem) => {
+		redeemList.getByID(redeem.id).update(redeem, false);
+	});
+
 	eventSubListener.start();
 	log("SYSTEM", `Started EventSub listeners`);
 }

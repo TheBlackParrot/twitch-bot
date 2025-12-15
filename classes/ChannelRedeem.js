@@ -37,11 +37,19 @@ export class ChannelRedeemList {
 class ChannelRedeem {
 	constructor(redeemObject) {
 		this.redeemObject = redeemObject;
-
-		this.name = redeemObject.title;
 		this.id = redeemObject.id;
+
+		this.update(redeemObject);
+	}
+
+	update(redeemObject, silent = true) {
+		this.name = redeemObject.title;
 		this.enabled = redeemObject.isEnabled;
-		this.cost = redeemObject.cost;
-		this.autoFulfill = redeemObject.autoFulfill;
+		this.cost = redeemObject.rewardCost;
+		this.autoFulfill = redeemObject.autoApproved;
+
+		if(!silent) {
+			global.log("REDEEM", `Updated channel point redeem ${redeemObject.title}`);
+		}
 	}
 }
