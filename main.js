@@ -516,6 +516,30 @@ commandList.addTrigger("telegram", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+// --- !thrown ---
+commandList.addTrigger("thrown", async(channel, args, msg, user) => {
+	let wantedId = user.userId;
+	let wantedName = user.displayName;
+
+	if(args.length) {
+		const userCheck = await apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
+
+		if(!userCheck) {
+			await reply(channel, msg, "⚠️ Could not find any users matching that username");
+			return;
+		}
+
+		wantedId = userCheck.id;
+		wantedName = userCheck.displayName;
+	}
+
+	const amount = await getLeaderboardValue(wantedId, "Items Thrown");
+
+	await reply(channel, msg, `${wantedId == user.userId ? "You have" : `${wantedName} has`} thrown ${amount.toLocaleString()} ${amount != 1 ? "items" : "item"} at me`);
+}, {
+	userCooldown: 5
+});
+
 // --- !tipping ---
 commandList.addTrigger("tipping", async(channel, args, msg, user) => {
 	await say(channel, 'Streamlabs: https://streamlabs.com/theblackparrot/tip || StreamElements: https://streamelements.com/theblackparrot/tip || Ko-fi: https://ko-fi.com/septilateral');
