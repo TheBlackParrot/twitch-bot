@@ -35,6 +35,7 @@ const authProvider = new RefreshingAuthProvider(
 const allowedTTSVoices = JSON.parse(await fs.readFile('./static/allowedTTSVoices.json'));
 const weatherConditionCodes = JSON.parse(await fs.readFile('./static/weatherConditionCodes.json'));
 const initialRedeemList = JSON.parse(await fs.readFile('./static/redeems.json'));
+const rotatingMessageLines = JSON.parse(await fs.readFile('./static/rotatingMessages.json'));
 
 const users = new UserList();
 const commandList = new CommandList();
@@ -1337,14 +1338,6 @@ initOBS();
 
 var rotatingMessageInterval;
 var currentRotatingMessageIdx = -1;
-const rotatingMessageLines = [
-	`Come say hello if you'd like! Join the Discord! https://discord.gg/gCDJYbzxar Or join the Telegram group! https://t.me/+4dg5pw6oiy84N2Jh`,
-	`Want to directly support the stream? Send me a tip! Check the About Panels down below for links to my Ko-fi, Streamlabs, and StreamElements pages. I also have a Patreon!`,
-	`Want to change the appearance of your chat messages on stream? Use this page to manage your own settings! https://theblackparrot.me/overlays/chat/previewer`,
-	`This channel has custom 3rd party emotes! Grab the FrankerFaceZ browser extension from https://frankerfacez.com to see them. (Also enable the "7TV Emotes" and "BetterTTV Emotes" add-ons in FFZ's settings to see even more of them!)`,
-	`Amazon Prime members: if you connect your Amazon account with your Twitch account, you get a free (non-rollover) subscription you can use across Twitch each month! Be sure to use it on your favorite streamer! https://gaming.amazon.com/links/twitch/manage`,
-	`Want 20 free Gamba Credits to use for coin flips? You can use !amhere in chat every 30 minutes!`
-];
 
 function doRotatingMessage() {
 	currentRotatingMessageIdx++;
