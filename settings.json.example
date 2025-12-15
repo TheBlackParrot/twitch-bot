@@ -10,6 +10,31 @@
 		}
 	},
 
+	"bot": {
+		"rotatingMessageInterval": 720,
+		"bejeweledSwapperLocation": "C:\\Utils\\AutoIt\\bj3_swap.exe",
+		"leaderboard": {
+			"update": {
+				"root": "http://127.0.0.1/",
+				"path": "/value-tracking/private/api/updateValue.php"
+			},
+			"obtain": {
+				"root": "https://1.1.1.1/",
+				"path": "/value-tracking/public/api/getValueForUser.php"
+			}
+		}
+	},
+
+	"foobar": {
+		"address": "127.0.0.1:8880"
+	},
+
+	"obs": {
+		"address": "127.0.0.1:4455",
+		"password": "rururururrrur",
+		"reconnectDelay": 10
+	},
+
 	"srxd": {
 		"spinRequestsURL": "http://127.0.0.1:6969/"
 	},
@@ -21,6 +46,10 @@
 			"messages": "Zira",
 			"system": "Mark"
 		}
+	},
+
+	"twitch": {
+		"adTimerRefreshInterval": 15
 	},
 
 	"weather": {
