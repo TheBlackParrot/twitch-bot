@@ -173,6 +173,15 @@ async function querySRXD(endpoint, args, opts) {
 
 // ====== TRIGGER COMMANDS ======
 
+// --- !ad ---
+commandList.addTrigger("ad", async(channel, args, msg, user) => {
+	await obs.call('SetCurrentProgramScene', {
+		sceneName: "Ad Wall"
+	});
+}, {
+	whitelist: ["broadcaster"]
+});
+
 // --- !amhere ---
 commandList.addTrigger("amhere", async(channel, args, msg, user) => {
 	await updateLeaderboardValues(user.userId, "Gamba Credits", 20);
@@ -1124,6 +1133,7 @@ function onAdsStarted(event) {
 	}
 	haveAdsRunBefore = true;
 
+	say(event.broadcasterName, "Rave4 AD BREAK! Rave4 Stand up, stretch, grab some refreshments, use the restroom, take your meds, do what you need to do! The stream will be back in a few minutes, you'll miss nothing! I promise! kermitNod");
 	tts(system.tts.voices.system, "Ad break started", 1);
 }
 
