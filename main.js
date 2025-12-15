@@ -174,6 +174,30 @@ async function querySRXD(endpoint, args, opts) {
 
 // ====== TRIGGER COMMANDS ======
 
+async function getLeaderboardValueFromUserTarget(channel, args, msg, user, key) {
+	let wantedId = user.userId;
+	let wantedName = user.displayName;
+
+	if(args.length) {
+		const userCheck = await apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
+
+		if(!userCheck) {
+			await reply(channel, msg, "⚠️ Could not find any users matching that username");
+			return null;
+		}
+
+		wantedId = userCheck.id;
+		wantedName = userCheck.displayName;
+	}
+
+	const value = await getLeaderboardValue(wantedId, key);
+	return {
+		value: value,
+		userId: wantedId,
+		userDisplayName: wantedName
+	};
+}
+
 // --- !ad ---
 commandList.addTrigger("ad", async(channel, args, msg, user) => {
 	await obs.call('SetCurrentProgramScene', {
@@ -219,24 +243,10 @@ commandList.addTrigger("category", async(channel, args, msg, user) => {
 
 // --- !credits ---
 commandList.addTrigger("credits", async(channel, args, msg, user) => {
-	let wantedId = user.userId;
-	let wantedName = user.displayName;
-
-	if(args.length) {
-		const userCheck = await apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
-
-		if(!userCheck) {
-			await reply(channel, msg, "⚠️ Could not find any users matching that username");
-			return;
-		}
-
-		wantedId = userCheck.id;
-		wantedName = userCheck.displayName;
+	const value = await getLeaderboardValueFromUserTarget(channel, args, msg, user, "Gamba Credits");
+	if(value != null) {
+		await reply(channel, msg, `${value.userId == user.userId ? "You have" : `${value.userDisplayName} has`} ${value.value.toLocaleString()} Gamba ${value.value != 1 ? "Credits" : "Credit"}`);
 	}
-
-	const amount = await getLeaderboardValue(wantedId, "Gamba Credits");
-
-	await reply(channel, msg, `${wantedId == user.userId ? "You have" : `${wantedName} has`} ${amount.toLocaleString()} Gamba ${amount != 1 ? "Credits" : "Credit"}`);
 }, {
 	userCooldown: 5
 });
@@ -436,28 +446,15 @@ commandList.addTrigger("request", async(channel, args, msg, user) => {
 
 // --- !rotr ---
 commandList.addTrigger("rotr", async(channel, args, msg, user) => {
-	let wantedId = user.userId;
-	let wantedName = user.displayName;
+	const value = await getLeaderboardValueFromUserTarget(channel, args, msg, user, "Ruler of the Redeem");
 
-	if(args.length) {
-		const userCheck = await apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
+	if(value != null) {
+		const hours = Math.floor(value.value / 60 / 60);
+		const minutes = Math.floor(value.value / 60) % 60;
+		const seconds = value.value % 60;
 
-		if(!userCheck) {
-			await reply(channel, msg, "⚠️ Could not find any users matching that username");
-			return;
-		}
-
-		wantedId = userCheck.id;
-		wantedName = userCheck.displayName;
+		await reply(channel, msg, `${value.userId == user.userId ? "You have" : `${value.userDisplayName} has`} been Ruler of the Redeem for ${hours}h ${minutes}m ${seconds}s`);
 	}
-
-	const amount = await getLeaderboardValue(wantedId, "Ruler of the Redeem");
-
-	const hours = Math.floor(amount / 60 / 60);
-	const minutes = Math.floor(amount / 60) % 60;
-	const seconds = amount % 60;
-
-	await reply(channel, msg, `${wantedId == user.userId ? "You have" : `${wantedName} has`} been Ruler of the Redeem for ${hours}h ${minutes}m ${seconds}s`);
 }, {
 	userCooldown: 5
 });
@@ -528,24 +525,10 @@ commandList.addTrigger("telegram", async(channel, args, msg, user) => {
 
 // --- !thrown ---
 commandList.addTrigger("thrown", async(channel, args, msg, user) => {
-	let wantedId = user.userId;
-	let wantedName = user.displayName;
-
-	if(args.length) {
-		const userCheck = await apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
-
-		if(!userCheck) {
-			await reply(channel, msg, "⚠️ Could not find any users matching that username");
-			return;
-		}
-
-		wantedId = userCheck.id;
-		wantedName = userCheck.displayName;
+	const value = await getLeaderboardValueFromUserTarget(channel, args, msg, user, "Items Thrown");
+	if(value != null) {
+		await reply(channel, msg, `${value.userId == user.userId ? "You have" : `${value.userDisplayName} has`} thrown ${value.value.toLocaleString()} ${value.value != 1 ? "items" : "item"} at me`);
 	}
-
-	const amount = await getLeaderboardValue(wantedId, "Items Thrown");
-
-	await reply(channel, msg, `${wantedId == user.userId ? "You have" : `${wantedName} has`} thrown ${amount.toLocaleString()} ${amount != 1 ? "items" : "item"} at me`);
 }, {
 	userCooldown: 5
 });
@@ -1162,7 +1145,7 @@ function onTwitchStreamOnline(event) {
 	redeemList.getByName("first").enable(!hasSetFirstRedeem);
 	hasSetFirstRedeem = true;
 }
-function onTwitchStreamOffline(event) {
+async function onTwitchStreamOffline(event) {
 	say(broadcasterUser.name, 'The stream is now offline! If this was an interruption, wait a few minutes and reload your app or refresh your page. Otherwise, see you later! SmileWave');
 
 	await rulerOfTheRedeem.awardTime();
