@@ -806,7 +806,13 @@ function onChannelFollowed(follow) {
 	say(follow.broadcasterName, `${thanksParts[0][Math.floor(Math.random() * thanksParts[0].length)]} for the follow! Feel free to say ${thanksParts[1][Math.floor(Math.random() * thanksParts[1].length)]} in chat! RareChar`);
 }
 
+var haveAdsRunBefore = false;
 function onAdsStarted(event) {
+	if(!haveAdsRunBefore) {
+		say(broadcasterUser.name, 'Ads are running during setup to disable pre-rolls for the next little bit. You\'re not missing out on anything! Get your snacks, get your drinks, take your meds! Okayge');
+	}
+	haveAdsRunBefore = true;
+	
 	tts(system.tts.voices.system, "Ad break started", 1);
 }
 
