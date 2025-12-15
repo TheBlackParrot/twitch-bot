@@ -31,6 +31,7 @@ const authProvider = new RefreshingAuthProvider(
 	}
 );
 
+const allowedTTSVoices = JSON.parse(await fs.readFile('./static/allowedTTSVoices.json'));
 const weatherConditionCodes = JSON.parse(await fs.readFile('./static/weatherConditionCodes.json'));
 const initialRedeemList = JSON.parse(await fs.readFile('./static/redeems.json'));
 
@@ -47,6 +48,9 @@ const sessionStart = Date.now();
 fs.mkdir("./logs").catch((err) => {
 	// ignored 
 });
+fs.mkdir("./data/persistence", { recursive: true }).catch((err) => {
+	// ignored
+})
 
 await fs.writeFile(`./logs/${sessionStart}.log`, '');
 const logFileHandle = await fs.open(`./logs/${sessionStart}.log`, 'r+');
@@ -685,6 +689,7 @@ function onUserFirstSeenForSession(channel, user) {
 }
 
 function onStandardMessage(channel, user, message) {
+	// user: https://twurple.js.org/reference/chat/classes/ChatUser.html
 	let filtered = message.split(" ").filter((part) => !part.startsWith('http:') && !part.startsWith('https:')).join(" ");
 
 	let wasGemSwap = false;
@@ -711,7 +716,10 @@ function onStandardMessage(channel, user, message) {
 
 	if(!message.startsWith('@') && initialCategory != "VRChat" && !wasGemSwap) {
 		tts(settings.tts.voices.names, ensureEnglishName(user));
-		tts(settings.tts.voices.messages, global.emotes.getFilteredString(filtered));
+
+		const userData = users.getUser(user.userId);
+		const voice = userData.getPersistentData("ttsVoice");
+		tts(voice == null ? settings.tts.voices.messages : voice, global.emotes.getFilteredString(filtered));
 	}
 
 	if(Math.floor(Math.random() * 1000) == 69) {
@@ -833,6 +841,30 @@ const sevenTV = new SevenTV();
 const bttv = new BetterTTV();
 const ffz = new FrankerFaceZ();
 
+// ====== REDEEM FUNCTIONS ======
+
+const redeemFunctions = {
+	// https://twurple.js.org/reference/eventsub-base/classes/EventSubChannelRedemptionAddEvent.html
+
+	"Set TTS Voice": async function(event) {
+		const message = event.input;
+
+		let name = message.split(" ")[0];
+		name = name.charAt(0).toUpperCase() + name.slice(1);
+
+		if(allowedTTSVoices.indexOf(name) !== -1) {
+			const user = users.getUser(event.userId);
+			user.setPersistentData("ttsVoice", name);
+
+			await say(broadcasterUser.name, `@${event.userDisplayName} 🆗 Your TTS voice is now ${name}`);
+			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "FULFILLED");
+		} else {
+			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ This is an invalid voice name, please see https://theblackparrot.me/tts for available choices and voice examples.`);
+			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED"); // it's cancelled!! not canceled!!! grrr
+		}
+	}
+};
+
 // ====== EVENTSUB STUFF ======
 
 const thanksParts = [
@@ -850,8 +882,16 @@ function onBitsCheered(bits, message) {
 	}
 }
 
-function onChannelRewardRedemption(rewardId, message) {
-	log("EVENTSUB", `Reward redeemed: ${rewardId}`, false, ['whiteBright']);
+async function onChannelRewardRedemption(event) {
+	//https://twurple.js.org/reference/eventsub-base/classes/EventSubChannelRedemptionAddEvent.html
+
+	const redeem = redeemList.getByID(event.rewardId);
+
+	log("EVENTSUB", `Reward redeemed: ${redeem == null ? "<unknown>" : redeem.name} (${event.rewardId})`, false, ['whiteBright']);
+
+	if(redeem.name in redeemFunctions) {
+		await redeemFunctions[redeem.name](event);
+	}
 }
 
 function onChannelFollowed(follow) {
@@ -889,7 +929,7 @@ const eventSubListener = new EventSubWsListener({
 function startEventSub() {
 	eventSubListener.onChannelChatMessage(broadcasterUser.id, broadcasterUser.id, (message) => {
 		if(message.isCheer) { try { onBitsCheered(message.bits, message); } catch(err) { console.error(err); } }
-		if(message.isReward) { try { onChannelRewardRedemption(message.rewardId, message); } catch(err) { console.error(err); } }
+		//if(message.isReward) { try { onChannelRewardRedemption(message); } catch(err) { console.error(err); } }
 	});
 
 	eventSubListener.onChannelFollow(broadcasterUser.id, broadcasterUser.id, (follow) => {
@@ -912,6 +952,10 @@ function startEventSub() {
 	eventSubListener.onChannelRewardUpdate(broadcasterUser.id, (redeem) => {
 		redeemList.getByID(redeem.id).update(redeem, false);
 	});
+
+	eventSubListener.onChannelRedemptionAdd(broadcasterUser.id, (event) => {
+		try { onChannelRewardRedemption(event); } catch(err) { console.error(err); }
+	})
 
 	eventSubListener.start();
 	log("SYSTEM", `Started EventSub listeners`);

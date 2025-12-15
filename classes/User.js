@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+
 export class UserList {
 	constructor() {
 		this.users = {};
@@ -5,7 +7,7 @@ export class UserList {
 
 	getUser(userId) {
 		if(!(userId in this.users)) {
-			this.users[userId] = new User();
+			this.users[userId] = new User(userId);
 		}
 
 		return this.users[userId];
@@ -13,8 +15,33 @@ export class UserList {
 }
 
 export class User {
-	constructor() {
+	constructor(userId) {
+		this.userId = userId;
+
+		this.persistentData = {};
 		this.lastUsedCommand = {};
+
+		const persistenceFilename = `./data/persistence/${userId}.json`;
+		if(fs.existsSync(persistenceFilename)) {
+			this.persistentData = JSON.parse(fs.readFileSync(persistenceFilename));
+		}
+	}
+
+	getPersistentData(key) {
+		if(key in this.persistentData) {
+			return this.persistentData[key];
+		}
+
+		return null;
+	}
+
+	setPersistentData(key, value) {
+		const persistenceFilename = `./data/persistence/${this.userId}.json`;
+
+		this.persistentData[key] = value;
+		fs.writeFileSync(persistenceFilename, JSON.stringify(this.persistentData));
+
+		global.log("USER", `Saved persistent data for ${this.userId}`, false, ['gray']);
 	}
 
 	usedCommand(command) {
