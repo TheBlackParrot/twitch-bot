@@ -51,6 +51,8 @@ const logFileHandle = await fs.open(`./logs/${sessionStart}.log`, 'r+');
 const logOutput = await logFileHandle.createWriteStream();
 const logWriter = new Console({ stdout: logOutput });
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
 // ====== SYSTEM STUFF ======
 
 function log(type, data, showTrace = false, style = []) {
@@ -837,6 +839,50 @@ function startEventSub() {
 	log("SYSTEM", `Started EventSub listeners`);
 }
 
+// ====== AD STUFF (guh, bluh even) ======
+
+var adTimerTimeout;
+
+async function adTimer() {
+	clearTimeout(adTimerTimeout);
+
+	while(broadcasterUser == null) {
+		await delay(1000);
+	}
+
+	adTimerTimeout = setTimeout(adTimer, settings.twitch.adTimerRefreshInterval * 1000);
+
+	const adSchedule = await apiClient.channels.getAdSchedule(broadcasterUser.id);
+	if(adSchedule == null) {
+		// no ads or stream is not live
+		return;
+	}
+
+	if(adSchedule.nextAdDate == null) {
+		// no ads or stream is not live
+		return;
+	}
+
+	onAdTimerRefreshed(adSchedule.nextAdDate.getTime());
+}
+
+var previousMinutesLeft = -1;
+function onAdTimerRefreshed(nextAdTimestamp) {
+	const now = Date.now();
+	const timeLeft = (nextAdTimestamp - now) / 1000;
+	const minutesLeft = Math.floor(timeLeft / 60);
+
+	if(timeLeft <= 300 && previousMinutesLeft != minutesLeft) {
+		say(broadcasterUser.name, `SNIFFA NEXT BREAK IN ${minutesLeft} ${minutesLeft != 1 : "MINUTES" : "MINUTE"} SNIFFA`);
+		tts(settings.tts.voices.system, `Scheduled ad break starts in ${minutesLeft} ${minutesLeft != 1 : "minutes" : "minute"}`, 1);
+		sound.play("sounds/retro-01.ogg", { volume: 0.6 });
+	}
+
+	previousMinutesLeft = minutesLeft;
+}
+
+adTimer();
+
 // ====== OBS ======
 
 var obsConnectionTimeout;
@@ -872,7 +918,7 @@ function onOBSConnectionClosed() {
 
 async function onOBSSceneChanged(sceneObject) {
 	const name = sceneObject.sceneName;
-	
+
 	global.log("OBS", `Scene changed to ${name}`, false, ['gray']);
 
 	const isVRChat = (name === "VRChat");
