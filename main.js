@@ -18,6 +18,7 @@ import { CommandList } from "./classes/Command.js";
 import { WebSocketListener } from "./classes/WebSocketListener.js";
 import { EmoteList, SevenTV, BetterTTV, FrankerFaceZ } from "./classes/Emote.js";
 import { ChannelRedeemList } from "./classes/ChannelRedeem.js";
+import { RulerOfTheRedeem } from "./classes/RulerOfTheRedeem.js";
 
 const settings = JSON.parse(await fs.readFile('./settings.json'));
 const clientId = settings.auth.twitch.clientID;
@@ -38,7 +39,9 @@ const initialRedeemList = JSON.parse(await fs.readFile('./static/redeems.json'))
 const users = new UserList();
 const commandList = new CommandList();
 const redeemList = new ChannelRedeemList();
+global.redeemList = redeemList;
 var broadcasterUser = null;
+global.broadcasterUser = null;
 
 const apiClient = new ApiClient({
 	authProvider
@@ -607,9 +610,11 @@ var seenUsers = [];
 async function say(channel, text) {
 	await chatClient.say(channel, text);
 }
+global.say = say;
 async function reply(channel, originalMsg, text) {
 	await chatClient.say(channel, text, { replyTo: originalMsg });
 }
+global.reply = reply;
 
 function hypeEmoteString(amount = 5) {
 	let selectedEmote = hypeEmotes[Math.floor(Math.random() * hypeEmotes.length)];
@@ -779,6 +784,8 @@ chatClient.onJoin(async (channel, user) => {
 			await delay(250);
 		}
 
+		await rulerOfTheRedeem.enable(true);
+
 		initSpinRequestsSocket();
 	}
 });
@@ -844,6 +851,20 @@ const ffz = new FrankerFaceZ();
 
 // ====== REDEEM FUNCTIONS ======
 
+const rulerOfTheRedeem = new RulerOfTheRedeem();
+
+async function updateLeaderboardValues(userId, key, value, defaultValue = 0) {
+	key = key.replaceAll(" ", "_");
+
+	await axios.get(`${settings.bot.leaderboardPath}/private/api/updateValue.php?id=${userId}&which=${key}&value=${value}&default=${defaultValue}`).catch((err) => {
+		global.log("LEADERBOARD", `Could not add ${value} to ${key} for ${userId}`, false, ['redBright']);
+		console.error(err);
+	});
+
+	global.log("LEADERBOARD", `Added ${value} to ${key} for ${userId}`);
+}
+global.updateLeaderboardValues = updateLeaderboardValues;
+
 const redeemFunctions = {
 	// https://twurple.js.org/reference/eventsub-base/classes/EventSubChannelRedemptionAddEvent.html
 
@@ -901,21 +922,21 @@ const redeemFunctions = {
 	},
 	"amogus": async function(event) {
 		await updateLeaderboardValues(event.userId, "Items Thrown", 15);
+	},
+
+	"Ruler of the Redeem": async function(event) {
+		const correct = await rulerOfTheRedeem.attempt(event);
+		await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], correct ? "FULFILLED" : "CANCELED");
+	},
+	"Force Refresh Ruler of the Redeem": async function(event) {
+		await rulerOfTheRedeem.forceRefresh();
+	},
+	"GIVE ME THE CROWN RIGHT NOW!!!!!!! >:(((": async function(event) {
+		await rulerOfTheRedeem.steal(event);
 	}
 };
 redeemFunctions["second"] = redeemFunctions["first"];
 redeemFunctions["third"] = redeemFunctions["first"];
-
-async function updateLeaderboardValues(userId, key, value, defaultValue = 0) {
-	key = key.replaceAll(" ", "_");
-
-	await axios.get(`${settings.bot.leaderboardPath}/private/api/updateValue.php?id=${userId}&which=${key}&value=${value}&default=${defaultValue}`).catch((err) => {
-		global.log("LEADERBOARD", `Could not add ${value} to ${key} for ${userId}`, false, ['redBright']);
-		console.error(err);
-	});
-
-	global.log("LEADERBOARD", `Added ${value} to ${key} for ${userId}`);
-}
 
 // ====== EVENTSUB STUFF ======
 
@@ -970,7 +991,7 @@ function onAdsEnded(event) {
 var hasSetFirstRedeem = false;
 function onTwitchStreamOnline(event) {
 	say(broadcasterUser.name, 'SmileArrive Parrot is now live with $game! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive');
-	
+
 	redeemList.getByName("first").enable(!hasSetFirstRedeem);
 	hasSetFirstRedeem = true;
 }
@@ -985,7 +1006,6 @@ const eventSubListener = new EventSubWsListener({
 function startEventSub() {
 	eventSubListener.onChannelChatMessage(broadcasterUser.id, broadcasterUser.id, (message) => {
 		if(message.isCheer) { try { onBitsCheered(message.bits, message); } catch(err) { console.error(err); } }
-		//if(message.isReward) { try { onChannelRewardRedemption(message); } catch(err) { console.error(err); } }
 	});
 
 	eventSubListener.onChannelFollow(broadcasterUser.id, broadcasterUser.id, (follow) => {
