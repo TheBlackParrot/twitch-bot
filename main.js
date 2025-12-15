@@ -86,7 +86,7 @@ function tts(voice, string, rate = 0) {
 		rate: rate
 	};
 
-	axios.post(url, data);
+	axios.post(url, data).catch((err) => {});
 }
 
 // ====== AUTH ======
@@ -863,6 +863,11 @@ async function adTimer() {
 		return;
 	}
 
+	if(adSchedule.nextAdDate.getTime() < Date.now()) {
+		// or twitch is just fucking broken half the time who cares
+		return;
+	}
+
 	onAdTimerRefreshed(adSchedule.nextAdDate.getTime());
 }
 
@@ -873,8 +878,8 @@ function onAdTimerRefreshed(nextAdTimestamp) {
 	const minutesLeft = Math.floor(timeLeft / 60);
 
 	if(timeLeft <= 300 && previousMinutesLeft != minutesLeft) {
-		say(broadcasterUser.name, `SNIFFA NEXT BREAK IN ${minutesLeft} ${minutesLeft != 1 : "MINUTES" : "MINUTE"} SNIFFA`);
-		tts(settings.tts.voices.system, `Scheduled ad break starts in ${minutesLeft} ${minutesLeft != 1 : "minutes" : "minute"}`, 1);
+		say(broadcasterUser.name, `SNIFFA NEXT BREAK IN ${minutesLeft} ${minutesLeft != 1 ? "MINUTES" : "MINUTE"} SNIFFA`);
+		tts(settings.tts.voices.system, `Scheduled ad break starts in ${minutesLeft} ${minutesLeft != 1 ? "minutes" : "minute"}`, 1);
 		sound.play("sounds/retro-01.ogg", { volume: 0.6 });
 	}
 
