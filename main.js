@@ -175,21 +175,8 @@ async function querySRXD(endpoint, args, opts) {
 
 // --- !amhere ---
 commandList.addTrigger("amhere", async(channel, args, msg, user) => {
-	let url = new URL('/value-tracking/private/api/updateValue.php', 'http://172.16.0.1/');
-	let params = new URLSearchParams({
-		id: user.userId,
-		which: 'Gamba_Credits',
-		value: 20,
-		default: 0
-	});
-	url.search = params.toString();
-
-	let response = await axios.get(url).catch((err) => {});
-	if("data" in response) {
-		await reply(channel, msg, response.data === "OK" ? `20 Gamba Credits to you! Okayge` : `⚠️ Something went wrong: ${response.data} @${channel}`);
-	} else {
-		await reply(channel, msg, `⚠️ Something went REALLY wrong @${channel}`);
-	}
+	await updateLeaderboardValues(user.userId, "Gamba Credits", 20);
+	await reply(channel, msg, '20 Gamba Credits to you! Okayge');
 }, {
 	userCooldown: 1800
 });
@@ -218,6 +205,30 @@ commandList.addTrigger("category", async(channel, args, msg, user) => {
 	aliases: ["game"],
 	whitelist: ["broadcaster", "mod"],
 	cooldown: 15
+});
+
+// --- !credits ---
+commandList.addTrigger("credits", async(channel, args, msg, user) => {
+	let wantedId = user.userId;
+	let wantedName = user.displayName;
+
+	if(args.length) {
+		const userCheck = await apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
+
+		if(!userCheck) {
+			await reply(channel, msg, "⚠️ Could not find any users matching that username");
+			return;
+		}
+
+		wantedId = userCheck.id;
+		wantedName = userCheck.displayName;
+	}
+
+	const amount = await getLeaderboardValue(wantedId, "Gamba Credits");
+
+	await reply(channel, msg, `${wantedId == user.userId ? "You have" : `${wantedName} has`} ${amount.toLocaleString()} Gamba ${amount != 1 ? "Credits" : "Credit"}`);
+}, {
+	userCooldown: 5
 });
 
 // --- !csp ---
@@ -380,6 +391,34 @@ commandList.addTrigger("request", async(channel, args, msg, user) => {
 }, {
 	aliases: ["srxd", "req", "bsr", "sr", "add"],
 	userCooldown: 10
+});
+
+// --- !rotr ---
+commandList.addTrigger("rotr", async(channel, args, msg, user) => {
+	let wantedId = user.userId;
+	let wantedName = user.displayName;
+
+	if(args.length) {
+		const userCheck = await apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
+
+		if(!userCheck) {
+			await reply(channel, msg, "⚠️ Could not find any users matching that username");
+			return;
+		}
+
+		wantedId = userCheck.id;
+		wantedName = userCheck.displayName;
+	}
+
+	const amount = await getLeaderboardValue(wantedId, "Ruler of the Redeem");
+
+	const hours = Math.floor(amount / 60 / 60);
+	const minutes = Math.floor(amount / 60) % 60;
+	const seconds = amount % 60;
+
+	await reply(channel, msg, `${wantedId == user.userId ? "You have" : `${wantedName} has`} been Ruler of the Redeem for ${hours}h ${minutes}m ${seconds}s`);
+}, {
+	userCooldown: 5
 });
 
 // --- !specs ---
@@ -733,6 +772,11 @@ function onStandardMessage(channel, user, message) {
 	}
 }
 
+const vnyanOnlyRedeems = [
+	'blep', 'Throw stuff at me', 'Drop a thing on my head', 'Throw a lot of stuff at me', 'yay!', 'Throw a bunch of hearts',
+	'Give me a treat', 'E', '*metal pipe*', 'amogus', 'Drop a hat', 'balls'
+];
+
 chatClient.onJoin(async (channel, user) => {
 	log("CHAT", `Joined channel #${channel} as ${user}`, false, ['whiteBright']);
 	global.botUserName = user;
@@ -782,6 +826,10 @@ chatClient.onJoin(async (channel, user) => {
 			redeemList.add(redeem);
 
 			await delay(250);
+		}
+
+		for(const redeemName of vnyanOnlyRedeems) {
+			await redeemList.getByName(redeemName).enable(initialCategory != "VRChat");
 		}
 
 		await rulerOfTheRedeem.enable(true);
@@ -856,7 +904,16 @@ const rulerOfTheRedeem = new RulerOfTheRedeem();
 async function updateLeaderboardValues(userId, key, value, defaultValue = 0) {
 	key = key.replaceAll(" ", "_");
 
-	await axios.get(`${settings.bot.leaderboardPath}/private/api/updateValue.php?id=${userId}&which=${key}&value=${value}&default=${defaultValue}`).catch((err) => {
+	let url = new URL(settings.bot.leaderboard.update.path, settings.bot.leaderboard.update.root);
+	let params = new URLSearchParams({
+		id: userId,
+		which: key.replaceAll(" ", "_"),
+		value: value,
+		default: defaultValue
+	});
+	url.search = params.toString();
+
+	await axios.get(url).catch((err) => {
 		global.log("LEADERBOARD", `Could not add ${value} to ${key} for ${userId}`, false, ['redBright']);
 		console.error(err);
 	});
@@ -864,6 +921,26 @@ async function updateLeaderboardValues(userId, key, value, defaultValue = 0) {
 	global.log("LEADERBOARD", `Added ${value} to ${key} for ${userId}`);
 }
 global.updateLeaderboardValues = updateLeaderboardValues;
+
+async function getLeaderboardValue(userId, key) {
+	let url = new URL(settings.bot.leaderboard.obtain.path, settings.bot.leaderboard.obtain.root);
+	let params = new URLSearchParams({
+		id: userId,
+		which: key.replaceAll(" ", "_"),
+		type: "plain"
+	});
+	url.search = params.toString();
+
+	const response = await axios.get(url).catch((err) => {});
+
+	if(response) {
+		if(response.statusText == "OK") {
+			return response.data;
+		}
+	}
+
+	return null;
+}
 
 const redeemFunctions = {
 	// https://twurple.js.org/reference/eventsub-base/classes/EventSubChannelRedemptionAddEvent.html
@@ -933,6 +1010,10 @@ const redeemFunctions = {
 	},
 	"GIVE ME THE CROWN RIGHT NOW!!!!!!! >:(((": async function(event) {
 		await rulerOfTheRedeem.steal(event);
+	},
+
+	"Credit Exchange": async function(event) {
+		await updateLeaderboardValues(event.userId, "Gamba Credits", 100);
 	}
 };
 redeemFunctions["second"] = redeemFunctions["first"];
