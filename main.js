@@ -156,7 +156,7 @@ async function querySRXD(endpoint, args, opts) {
 	let params = new URLSearchParams(opts);
 	url.search = params.toString();
 
-	return await axios.get(url, { validateStatus: () => { return true } });
+	return await axios.get(url, { validateStatus: () => { return true } }).catch((err) => {});
 }
 
 // ====== TRIGGER COMMANDS ======
@@ -172,7 +172,7 @@ commandList.addTrigger("amhere", async(channel, args, msg, user) => {
 	});
 	url.search = params.toString();
 
-	let response = await axios.get(url);
+	let response = await axios.get(url).catch((err) => {});
 	if("data" in response) {
 		await reply(channel, msg, response.data === "OK" ? `20 Gamba Credits to you! Okayge` : `⚠️ Something went wrong: ${response.data} @${channel}`);
 	} else {
@@ -467,7 +467,7 @@ commandList.addTrigger("weather", async(channel, args, msg, user) => {
 	});
 	url.search = params.toString();
 
-	let response = await axios.get(url);
+	let response = await axios.get(url).catch((err) => {});
 	if(!("data" in response)) {
 		return;
 	}
@@ -936,7 +936,7 @@ async function onOBSSceneChanged(sceneObject) {
 		inputMuted: isIntermission
 	});
 
-	await axios.post(`http://${settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`);
+	await axios.post(`http://${settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
 
 	if(initialCategory == "Spin Rhythm XD") {
 		const throwStuff = redeemList.getByName("Throw stuff at me");
@@ -961,9 +961,16 @@ async function onOBSStreamStateChanged(state) {
 
 async function onStreamStarted() {
 	global.log("OBS", "Stream started", false, ['green']);
-	await axios.post('http://127.0.0.1:8880/api/player', { volume: -36.5 });
+
+	clearInterval(rotatingMessageInterval);
+	rotatingMessageInterval = setInterval(doRotatingMessage, settings.bot.rotatingMessageInterval * 1000);
+
+	await axios.post('http://127.0.0.1:8880/api/player', { volume: -36.5 }).catch((err) => {});
+
+	say(broadcasterUser.name, 'SmileArrive Parrot is now live with $game! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive');
 }
 async function onStreamStopped() {
+	clear(rotatingMessageInterval);
 	global.log("OBS", "Stream stopped", false, ['yellow']);
 }
 
@@ -973,3 +980,25 @@ obs.on('CurrentProgramSceneChanged', onOBSSceneChanged);
 obs.on('StreamStateChanged', onOBSStreamStateChanged);
 
 initOBS();
+
+// ====== TIMERS ======
+
+var rotatingMessageInterval;
+var currentRotatingMessageIdx = -1;
+const rotatingMessageLines = [
+	`Come say hello if you'd like! Join the Discord! https://discord.gg/gCDJYbzxar Or join the Telegram group! https://t.me/+4dg5pw6oiy84N2Jh`,
+	`Want to directly support the stream? Send me a tip! Check the About Panels down below for links to my Ko-fi, Streamlabs, and StreamElements pages. I also have a Patreon!`,
+	`Want to change the appearance of your chat messages on stream? Use this page to manage your own settings! https://theblackparrot.me/overlays/chat/previewer`,
+	`This channel has custom 3rd party emotes! Grab the FrankerFaceZ browser extension from https://frankerfacez.com to see them. (Also enable the "7TV Emotes" and "BetterTTV Emotes" add-ons in FFZ's settings to see even more of them!)`,
+	`Amazon Prime members: if you connect your Amazon account with your Twitch account, you get a free (non-rollover) subscription you can use across Twitch each month! Be sure to use it on your favorite streamer! https://gaming.amazon.com/links/twitch/manage`,
+	`Want 20 free Gamba Credits to use for coin flips? You can use !amhere in chat every 30 minutes!`
+];
+
+function doRotatingMessage() {
+	currentRotatingMessageIdx++;
+	if(currentRotatingMessageIdx >= rotatingMessageLines.length) {
+		currentRotatingMessageIdx = 0;
+	}
+
+	say(broadcasterUser.name, `🤖 ${rotatingMessageLines[currentRotatingMessageIdx]}`);
+}
