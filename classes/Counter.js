@@ -15,19 +15,19 @@ export class Counter {
 	}
 
 	increment(key, value) {
-		if(!("key" in this.persistentData)) {
+		if(!(key in this.persistentData)) {
 			this.persistentData[key] = 0;
 		}
 
 		this.persistentData[key] += value;
-		global.log("COUNTER", `Added ${value} to ${key}`, ['gray']);
+		global.log("COUNTER", `Added ${value} to ${key}`, false, ['gray']);
 
 		this.save();
 	}
 
 	set(key, value) {
 		this.persistentData[key] = value;
-		global.log("COUNTER", `Set ${key} to ${value}`, ['gray']);
+		global.log("COUNTER", `Set ${key} to ${value}`, false, ['gray']);
 
 		this.save();
 	}

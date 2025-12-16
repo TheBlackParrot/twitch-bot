@@ -342,6 +342,15 @@ commandList.addTrigger("low", async(channel, args, msg, user) => {
 	cooldown: 30
 });
 
+// --- !man ---
+commandList.addTrigger("man", async(channel, args, msg, user) => {
+	counter.increment("man", 1);
+	await say(channel, `MANHORSE x${counter.get("man").toLocaleString()}`);
+}, {
+	whitelist: ["broadcaster", "mod", "vip"],
+	cooldown: 10
+});
+
 // --- !modadd ---
 commandList.addTrigger("modadd", async(channel, args, msg, user) => {
 	if(!args.length) {
@@ -470,6 +479,16 @@ commandList.addTrigger("ruler", async(channel, args, msg, user) => {
 	cooldown: 5
 });
 
+// --- !smack ---
+commandList.addTrigger("smack", async(channel, args, msg, user) => {
+	counter.increment("smack", 1);
+	await say(channel, `Parrot has hit himself ${counter.get("smack").toLocaleString()} times jermaSlap`);
+}, {
+	whitelist: ["broadcaster", "mod", "vip"],
+	aliases: ["slap", "hit", "selfown"],
+	cooldown: 10
+});
+
 // --- !specs ---
 commandList.addTrigger("specs", async(channel, args, msg, user) => {
 	let parts = {
@@ -549,7 +568,20 @@ commandList.addTrigger("vnyan", async(channel, args, msg, user) => {
 	await reply(channel, msg, 'VNyan is what I use to render my avatar over the game I\'m playing, it\'s available for free! https://suvidriel.itch.io/vnyan');
 }, {
 	cooldown: 10
-})
+});
+
+// --- !vnyandeath ---
+// (temporary until VNyan adds support for sending HTTP requests)
+const deathRemarks = ["This is so sad.", "Devastating.", "My condolences.", "What a loss.", "How could this happen?",
+					 "Can we get 100 likes?", "Alexa, play Despacito.", "lik dis if u cri evrytim", "Tears are being shed."];
+
+commandList.addTrigger("vnyandeath", async(channel, args, msg, user) => {
+	counter.increment("death", 1);
+	await say(channel, `Parrot has died ${counter.get("death").toLocaleString()} times. ${deathRemarks[Math.floor(Math.random() * deathRemarks.length)]}`);
+}, {
+	whitelist: ["broadcaster", "mod"],
+	cooldown: 10
+});
 
 // --- !vrc ---
 commandList.addTrigger("vrc", async(channel, args, msg, user) => {
