@@ -1237,6 +1237,15 @@ function onTwitchStreamOnline(event) {
 	say(broadcasterUser.name, 'SmileArrive Parrot is now live with $game! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive');
 
 	redeemList.getByName("first").enable(!hasSetFirstRedeem);
+
+	const channelInfo = await apiClient.channels.getChannelInfoById(event.broadcasterId);
+
+	if(!hasSetFirstRedeem) {
+		await postToWebhook("streamLive", {
+			content: `# ${event.broadcasterDisplayName} is now live with ${channelInfo.gameName}!\n> ${channelInfo.title}\n\nhttps://twitch.tv/theblackparrot`;
+		});
+	}
+
 	hasSetFirstRedeem = true;
 }
 async function onTwitchStreamOffline(event) {
@@ -1258,7 +1267,7 @@ async function onOutgoingRaid(event) {
 		});
 	}
 
-	await say(broadcasterUser.name. `We have sent the stream over to https://twitch.tv/${event.raidedBroadcasterName} ! See you next time! SmileWave`);
+	await say(broadcasterUser.name, `We have sent the stream over to https://twitch.tv/${event.raidedBroadcasterName} ! See you next time! SmileWave`);
 }
 
 const eventSubListener = new EventSubWsListener({
@@ -1461,4 +1470,11 @@ function doRotatingMessage() {
 	}
 
 	say(broadcasterUser.name, `🤖 ${rotatingMessageLines[currentRotatingMessageIdx]}`);
+}
+
+// ====== WEBHOOKS ======
+
+async function postToWebhook(which, data) {
+	await axios.post(settings.webhooks[which], data).catch((err) => { console.error(err); });
+	global.log("WEBHOOK", `Posted to the ${which} webhook`);
 }
