@@ -177,6 +177,28 @@ async function querySRXD(endpoint, args, opts) {
 
 // ====== TRIGGER COMMANDS ======
 
+async function getTargetedUser(channel, target, msg) {
+	if(!target || target.length === 0) {
+		await reply(channel, msg, "⚠️ Command requires a targeted user");
+		return null;
+	}
+
+	const userCheck = await apiClient.users.getUserByName(target.replace("@", "").toLowerCase());
+
+	if(!userCheck) {
+		await reply(channel, msg, "⚠️ Could not find any users matching that username");
+		return null;
+	}
+
+	wantedId = userCheck.id;
+	wantedName = userCheck.displayName;
+
+	return {
+		userId: userCheck.id,
+		userDisplayName: userCheck.displayName
+	};
+}
+
 async function getLeaderboardValueFromUserTarget(channel, args, msg, user, key) {
 	let wantedId = user.userId;
 	let wantedName = user.displayName;
@@ -489,6 +511,20 @@ commandList.addTrigger("smack", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+// --- !so ---
+commandList.addTrigger("so", async(channel, args, msg, user) => {
+	const targetUser = await getTargetedUser(channel, args[0], msg);
+	if(targetUser == null) {
+		return;
+	}
+
+	await apiClient.chat.shoutoutUser(broadcasterUser.id, targetUser.id);
+}, {
+	whitelist: ["broadcaster", "mod"],
+	aliases: ["shoutout", "sso", "cso"],
+	cooldown: 60
+});
+
 // --- !specs ---
 commandList.addTrigger("specs", async(channel, args, msg, user) => {
 	let parts = {
@@ -569,7 +605,7 @@ commandList.addTrigger("uptime", async(channel, args, msg, user) => {
 
 	if(response.outputActive) {
 		const allSeconds = Math.ceil(response.outputDuration / 1000);
-		
+
 		const hours = Math.floor(allSeconds / 60 / 60);
 		const minutes = Math.floor(allSeconds / 60) % 60;
 		const seconds = allSeconds % 60;
