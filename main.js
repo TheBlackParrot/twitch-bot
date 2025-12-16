@@ -400,6 +400,43 @@ commandList.addTrigger("music", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+// --- !note ---
+commandList.addTrigger("note", async(channel, args, msg, user) => {
+	if(!args.length) {
+		return;
+	}
+
+	const moreUserInfo = await apiClient.users.getUserById(user.userId);
+	if(moreUserInfo == null) {
+		await reply(channel, msg, `⚠️ Could not fetch your user information (erm @${broadcasterUser.name})`);
+		return;
+	}
+
+	await postToWebhook("noteChannel", {
+		embeds: [
+			{
+				color: 16777215,
+				author: {
+					name: ensureEnglishName(user),
+					icon_url: moreUserInfo.profilePictureUrl,
+				},
+				fields: [
+					{
+						"name": "",
+						"inline": true,
+						"value": args.join(" ")
+					}
+				]
+			}
+		]
+	});
+
+	await reply(channel, msg, "NOTED");
+}, {
+	whitelist: ["broadcaster", "mod", "vip"],
+	cooldown: 3
+});
+
 // --- !overlays ---
 commandList.addTrigger("overlays", async(channel, args, msg, user) => {
 	await reply(channel, msg, 'All of the overlays you see on stream are my own creation, you can also use them if you\'d like! https://theblackparrot.me/overlays');
@@ -1233,7 +1270,7 @@ function onAdsEnded(event) {
 }
 
 var hasSetFirstRedeem = false;
-function onTwitchStreamOnline(event) {
+async function onTwitchStreamOnline(event) {
 	say(broadcasterUser.name, 'SmileArrive Parrot is now live with $game! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive');
 
 	redeemList.getByName("first").enable(!hasSetFirstRedeem);
@@ -1242,7 +1279,7 @@ function onTwitchStreamOnline(event) {
 
 	if(!hasSetFirstRedeem) {
 		await postToWebhook("streamLive", {
-			content: `# ${event.broadcasterDisplayName} is now live with ${channelInfo.gameName}!\n> ${channelInfo.title}\n\nhttps://twitch.tv/theblackparrot`;
+			content: `# ${event.broadcasterDisplayName} is now live with ${channelInfo.gameName}!\n> ${channelInfo.title}\n\nhttps://twitch.tv/theblackparrot`
 		});
 	}
 
