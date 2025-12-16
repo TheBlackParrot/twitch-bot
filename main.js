@@ -102,7 +102,7 @@ async function tts(voice, string, rate = 0) {
 	let url = new URL('/', settings.tts.URL);
 	let data = {
 		voice: voice,
-		text: string.replace('"', ''),
+		text: string.replaceAll('"', ''),
 		rate: rate
 	};
 
