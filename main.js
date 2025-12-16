@@ -1446,7 +1446,7 @@ var previousMinutesLeft = -1;
 function onAdTimerRefreshed(nextAdTimestamp) {
 	const now = Date.now();
 	const timeLeft = (nextAdTimestamp - now) / 1000;
-	const minutesLeft = Math.floor(timeLeft / 60);
+	const minutesLeft = Math.ceil(timeLeft / 60);
 
 	if(timeLeft <= 300 && previousMinutesLeft != minutesLeft) {
 		say(broadcasterUser.name, `SNIFFA NEXT BREAK IN ${minutesLeft} ${minutesLeft != 1 ? "MINUTES" : "MINUTE"} SNIFFA`);
