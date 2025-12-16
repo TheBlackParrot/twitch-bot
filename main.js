@@ -19,6 +19,7 @@ import { WebSocketListener } from "./classes/WebSocketListener.js";
 import { EmoteList, SevenTV, BetterTTV, FrankerFaceZ } from "./classes/Emote.js";
 import { ChannelRedeemList } from "./classes/ChannelRedeem.js";
 import { RulerOfTheRedeem } from "./classes/RulerOfTheRedeem.js";
+import { Counter } from "./classes/Counter.js";
 
 const settings = JSON.parse(await fs.readFile('./settings.json'));
 const clientId = settings.auth.twitch.clientID;
@@ -37,12 +38,20 @@ const weatherConditionCodes = JSON.parse(await fs.readFile('./static/weatherCond
 const initialRedeemList = JSON.parse(await fs.readFile('./static/redeems.json'));
 const rotatingMessageLines = JSON.parse(await fs.readFile('./static/rotatingMessages.json'));
 
+fs.mkdir("./logs").catch((err) => {
+	// ignored 
+});
+fs.mkdir("./data/persistence", { recursive: true }).catch((err) => {
+	// ignored
+});
+
 const users = new UserList();
 const commandList = new CommandList();
 const redeemList = new ChannelRedeemList();
 global.redeemList = redeemList;
 var broadcasterUser = null;
 global.broadcasterUser = null;
+const counter = new Counter();
 
 const apiClient = new ApiClient({
 	authProvider
@@ -50,12 +59,6 @@ const apiClient = new ApiClient({
 global.apiClient = apiClient;
 
 const sessionStart = Date.now();
-fs.mkdir("./logs").catch((err) => {
-	// ignored 
-});
-fs.mkdir("./data/persistence", { recursive: true }).catch((err) => {
-	// ignored
-})
 
 await fs.writeFile(`./logs/${sessionStart}.log`, '');
 const logFileHandle = await fs.open(`./logs/${sessionStart}.log`, 'r+');
