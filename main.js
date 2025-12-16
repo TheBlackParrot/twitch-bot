@@ -563,6 +563,25 @@ commandList.addTrigger("tipping", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+// --- !uptime ---
+commandList.addTrigger("uptime", async(channel, args, msg, user) => {
+	const response = await obs.call('GetStreamStatus');
+
+	if(response.outputActive) {
+		const allSeconds = Math.ceil(response.outputDuration / 1000);
+		
+		const hours = Math.floor(allSeconds / 60 / 60);
+		const minutes = Math.floor(allSeconds / 60) % 60;
+		const seconds = allSeconds % 60;
+
+		await reply(channel, msg, `The stream has been going for ${hours}h ${minutes}m ${seconds}s`);
+	} else {
+		await reply(channel, msg, "⚠️ The stream is currently offline.");
+	}
+}, {
+	cooldown: 10
+});
+
 // --- !vnyan ---
 commandList.addTrigger("vnyan", async(channel, args, msg, user) => {
 	await reply(channel, msg, 'VNyan is what I use to render my avatar over the game I\'m playing, it\'s available for free! https://suvidriel.itch.io/vnyan');
