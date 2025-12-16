@@ -987,7 +987,7 @@ async function onStandardMessage(channel, user, message, emoteOffsets) {
 
 	if(!(message.startsWith('@') || message.startsWith('!')) && initialCategory != "VRChat" && !wasGemSwap) {
 		const userData = users.getUser(user.userId);
-		
+
 		const ttsName = user.getPersistentData("ttsName");
 		await tts(settings.tts.voices.names, ttsName ? ttsName : ensureEnglishName(user));
 
@@ -1556,6 +1556,15 @@ async function onStreamStarted() {
 
 	clearInterval(rotatingMessageInterval);
 	rotatingMessageInterval = setInterval(doRotatingMessage, settings.bot.rotatingMessageInterval * 1000);
+
+	const scene = await obs.call('GetCurrentProgramScene');
+	
+	if(scene.sceneName == "Starting Soon") {
+		await obs.call('SetInputMute', {
+			inputName: 'Microphone',
+			inputMuted: true
+		});
+	}
 
 	await axios.post('http://127.0.0.1:8880/api/player', { volume: -32.5 }).catch((err) => {});
 }
