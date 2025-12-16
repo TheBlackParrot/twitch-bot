@@ -644,6 +644,15 @@ commandList.addTrigger("tipping", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+// --- !toggleswapping ---
+commandList.addTrigger("toggleswapping", async(channel, args, msg, user) => {
+	allowBejeweled = !allowBejeweled;
+	await reply(channel, msg, `Gem swapping is now ${allowBejeweled ? "enabled SkeletonPls" : "disabled SkeletonPause"}`;
+}, {
+	whitelist: ["broadcaster", "mod"],
+	cooldown: 0
+});
+
 // --- !uptime ---
 commandList.addTrigger("uptime", async(channel, args, msg, user) => {
 	const response = await obs.call('GetStreamStatus');
