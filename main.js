@@ -1003,7 +1003,7 @@ chatClient.onRaid(async (channel, user, raidInfo, msg) => {
 	tts(settings.tts.voices.system, `${user} raided the stream with ${raidInfo.viewerCount} ${raidInfo.viewerCount != 1 ? "viewers": "viewer"}! They were streaming ${channelInfo.gameName}.`);
 
 	let hypeString = hypeEmoteString(2);
-	say(channel, `${hypeString} Thank you @${raiderInfo.displayName} for the raid of ${raidInfo.viewerCount}, they were streaming ${channelInfo.gameName}! Check them out at https://twitch.tv/${user}! ${hypeString}`);
+	say(channel, `${hypeString} Thank you @${raiderInfo.displayName} for the raid of ${raidInfo.viewerCount}! Also, hello raiders! SmileWave`);
 	
 	await apiClient.chat.shoutoutUser(broadcasterUser.id, raiderInfo.id);
 
@@ -1241,6 +1241,10 @@ async function onTwitchStreamOffline(event) {
 	await rulerOfTheRedeem.awardTime();
 	rulerOfTheRedeem.updateTime();
 }
+async function onChannelShoutedOut(event) {
+	const channelInfo = await apiClient.channels.getChannelInfoById(event.shoutedOutBroadcasterId);
+	await say(broadcasterUser.name, `👉👉 Check out https://twitch.tv/${event.shoutedOutBroadcasterName} ! 👈👈 They were last seen streaming ${channelInfo.gameName}!`)
+}
 
 const eventSubListener = new EventSubWsListener({
 	apiClient: apiClient
@@ -1274,6 +1278,10 @@ function startEventSub() {
 
 	eventSubListener.onChannelRedemptionAdd(broadcasterUser.id, (event) => {
 		try { onChannelRewardRedemption(event); } catch(err) { console.error(err); }
+	});
+
+	eventSubListener.onChannelShoutoutCreate(broadcasterUser.id, broadcasterUser.id, (event) => {
+		try { onChannelShoutedOut(event); } catch(err) { console.error(err); }
 	})
 
 	eventSubListener.start();
