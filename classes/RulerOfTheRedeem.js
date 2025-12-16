@@ -12,11 +12,11 @@ export class RulerOfTheRedeem {
 		this.updateAnswer();
 	}
 
-	updateTime() {
+	updateTime = function() {
 		this.lastSwappedHands = Date.now() / 1000;
 	}
 
-	async swapHands(redeemEvent) {
+	swapHands = async function(redeemEvent) {
 		const someoneWasHolding = this.rulerId != null;
 
 		if(someoneWasHolding) {
@@ -39,17 +39,17 @@ export class RulerOfTheRedeem {
 		};
 	}
 
-	async allowForceRefresh(status) {
+	allowForceRefresh = async function(status) {
 		const forceRedeem = global.redeemList.getByName("Force Refresh Ruler of the Redeem");
 		await forceRedeem.enable(status);
 	}
 
-	async allowSteal(status) {
+	allowSteal = async function(status) {
 		const redeem = global.redeemList.getByName("GIVE ME THE CROWN RIGHT NOW!!!!!!! >:(((");
 		await redeem.enable(status);
 	}
 
-	async enable(status) {
+	enable = async function(status) {
 		const redeem = global.redeemList.getByName("Ruler of the Redeem");
 
 		await redeem.enable(status);
@@ -60,7 +60,7 @@ export class RulerOfTheRedeem {
 		}
 	}
 
-	async updatePrompt() {
+	updatePrompt = async function() {
 		while(!global.broadcasterUser) {
 			await delay(1000);
 		}
@@ -78,7 +78,7 @@ export class RulerOfTheRedeem {
 		global.log("ROTR", "Updated prompt", false, ['gray']);
 	}
 
-	async updateAnswer() {
+	updateAnswer = async function() {
 		this.numbers = [
 			Math.floor(Math.random() * 100),
 			Math.floor(Math.random() * 100)
@@ -92,7 +92,7 @@ export class RulerOfTheRedeem {
 		await this.updatePrompt();
 	}
 
-	async awardTime() {
+	awardTime = async function() {
 		if(this.rulerId == null) {
 			global.log("ROTR", "Could not award time, rulerId was null", false, ['redBright']);
 			return;
@@ -101,7 +101,7 @@ export class RulerOfTheRedeem {
 		await global.updateLeaderboardValues(this.rulerId, "Ruler of the Redeem", this.lengthHeld);
 	}
 
-	async attempt(redeemEvent) {
+	attempt = async function(redeemEvent) {
 		const correct = (redeemEvent.input == this.answer);
 
 		if(correct) {
@@ -119,7 +119,7 @@ export class RulerOfTheRedeem {
 		return correct;
 	}
 
-	initiateCountdown() {
+	initiateCountdown = function() {
 		const length = 240000 + (Math.random() * 120000);
 
 		global.log("ROTR", `Countdown finishes in ${Math.ceil(length / 1000)} seconds`);
@@ -133,11 +133,11 @@ export class RulerOfTheRedeem {
 		await this.enable(true);
 	}
 
-	async forceRefresh() {
+	forceRefresh = async function() {
 		await this.countdownFinished();
 	}
 
-	async steal(redeemEvent) {
+	steal = async function(redeemEvent) {
 		clearTimeout(this.countdownTimeout);
 
 		await this.allowSteal(false);
