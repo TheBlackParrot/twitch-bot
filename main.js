@@ -98,7 +98,7 @@ function log(type, data, showTrace = false, style = []) {
 }
 global.log = log;
 
-function tts(voice, string, rate = 0) {
+async function tts(voice, string, rate = 0) {
 	let url = new URL('/', settings.tts.URL);
 	let data = {
 		voice: voice,
@@ -106,7 +106,7 @@ function tts(voice, string, rate = 0) {
 		rate: rate
 	};
 
-	axios.post(url, data).catch((err) => {});
+	await axios.post(url, data).catch((err) => {});
 }
 
 // ====== AUTH ======
@@ -959,6 +959,10 @@ function onStandardMessage(channel, user, message, emoteOffsets) {
 	}).join(" ");
 	filtered = global.emotes.getFilteredString(filtered);
 
+	if(!filtered.replaceAll(" ", "").length) {
+		return;
+	}
+
 	let wasGemSwap = false;
 	if(allowBejeweled) {
 		const parts = filtered.toLowerCase().split(" ");
@@ -982,11 +986,11 @@ function onStandardMessage(channel, user, message, emoteOffsets) {
 	}
 
 	if(!message.startsWith('@') && initialCategory != "VRChat" && !wasGemSwap) {
-		tts(settings.tts.voices.names, ensureEnglishName(user));
+		await tts(settings.tts.voices.names, ensureEnglishName(user));
 
 		const userData = users.getUser(user.userId);
 		const voice = userData.getPersistentData("ttsVoice");
-		tts(voice == null ? settings.tts.voices.messages : voice, filtered);
+		await tts(voice == null ? settings.tts.voices.messages : voice, filtered);
 	}
 
 	if(Math.floor(Math.random() * 1000) == 69) {
