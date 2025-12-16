@@ -831,7 +831,7 @@ async function messageHandler(channel, userString, text, msg) {
 
 	if(seenUsers.indexOf(msg.userInfo.userName) === -1) {
 		seenUsers.push(msg.userInfo.userName);
-		onUserFirstSeenForSession(channel, msg.userInfo);
+		onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
 	}
 
 	let commandName = "";
@@ -879,8 +879,8 @@ async function messageHandler(channel, userString, text, msg) {
 }
 const commandListener = chatClient.onMessage(messageHandler);
 
-function onUserFirstSeenForSession(channel, user) {
-	tts(settings.tts.voices.system, `${ensureEnglishName(user)} has entered the chat.`);
+function onUserFirstSeenForSession(channel, user, isFirst) {
+	tts(settings.tts.voices.system, `${ensureEnglishName(user)} has entered the chat${isFirst ? " for the first time." : "."}`);
 }
 
 function onStandardMessage(channel, user, message, emoteOffsets) {
