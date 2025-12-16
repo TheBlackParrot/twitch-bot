@@ -9,6 +9,17 @@ class SoundCache {
 	}
 
 	async get(name) {
+		let path = `${global.settings.sounds.directory}/${name}`;
+
+		try {
+			const files = await fs.readdir(path);
+			return await this.getIndividualFile(`${name}/${files[Math.floor(Math.random() * files.length)].split(".").slice(0, -1).join(".")}`);
+		} catch {
+			return await this.getIndividualFile(name);
+		}
+	}
+
+	async getIndividualFile(name) {
 		if(name in this.cache) {
 			return this.cache[name];
 		}
@@ -42,7 +53,8 @@ class SoundCache {
 
 		this.cache[name] = {
 			data: data,
-			type: type
+			type: type,
+			realName: name
 		};
 		return this.cache[name];
 	}
@@ -91,7 +103,7 @@ export class SoundServer {
 
 		this.broadcast("sound", {
 			type: sound.type,
-			name: which,
+			name: sound.realName,
 			volume: volume,
 			pitchRange: pitch,
 			audio: sound.data.toString('base64')
