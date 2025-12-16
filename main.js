@@ -1286,12 +1286,12 @@ function onAdsStarted(event) {
 	haveAdsRunBefore = true;
 
 	say(event.broadcasterName, "Rave4 AD BREAK! Rave4 Stand up, stretch, grab some refreshments, use the restroom, take your meds, do what you need to do! The stream will be back in a few minutes, you'll miss nothing! I promise! kermitNod");
-	tts(system.tts.voices.system, "Ad break started", 1);
+	tts(settings.tts.voices.system, "Ad break started", 1);
 }
 
 function onAdsEnded(event) {
 	say(event.broadcasterName, "Ad break has ended, welcome back! WooperRise");
-	tts(system.tts.voices.system, "Ad break finished", 1);
+	tts(settings.tts.voices.system, "Ad break finished", 1);
 }
 
 var hasSetFirstRedeem = false;
@@ -1537,7 +1537,7 @@ async function onStreamStarted() {
 	clearInterval(rotatingMessageInterval);
 	rotatingMessageInterval = setInterval(doRotatingMessage, settings.bot.rotatingMessageInterval * 1000);
 
-	await axios.post('http://127.0.0.1:8880/api/player', { volume: -36.5 }).catch((err) => {});
+	await axios.post('http://127.0.0.1:8880/api/player', { volume: -32.5 }).catch((err) => {});
 }
 async function onStreamStopped() {
 	clearInterval(rotatingMessageInterval);
