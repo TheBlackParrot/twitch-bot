@@ -1,0 +1,115 @@
+{
+	"lizard": {
+		"volume": 0.8,
+		"pitch": [0.98, 1.02],
+		"cooldown": 0
+	},
+
+	"fish": {
+		"volume": 0.5,
+		"pitch": [0.95, 1.05],
+		"cooldown": 0
+	},
+
+	"groovershutdown": {
+		"volume": 0.5
+	},
+
+	"^HUH": {
+		"volume": 0.6,
+		"pitch": [0.85, 1.15],
+		"regex": true,
+		"filename": "HUH",
+		"cooldown": 0
+	},
+
+	"mood": {
+		"volume": 0.7,
+		"cooldown": 20
+	},
+
+	"jeff": {
+		"volume": 0.9,
+		"pitch": [0.85, 1.15]
+	},
+
+	"fissa": {
+		"volume": 0.4,
+		"pitch": [0.75, 1.25],
+		"cooldown": 0
+	},
+
+	"yay": {
+		"volume": 0.6,
+		"pitch": [0.95, 1.05]
+	},
+
+	"vineboom": {
+		"volume": 0.6,
+		"pitch": [0.9, 1.1],
+		"cooldown": 0
+	},
+
+	"table": {
+		"volume": 0.7,
+		"cooldown": 20
+	},
+
+	"speen": {
+		"volume": 0.8,
+		"pitch": [0.75, 1.25],
+		"cooldown": 0
+	},
+
+	"gwah": {
+		"volume": 0.8,
+		"pitch": [0.75, 1.25],
+		"cooldown": 0
+	},
+
+	"woof": {
+		"volume": 0.8,
+		"pitch": [0.9, 1.1]
+	},
+
+	"cheese": {
+		"volume": 0.6,
+		"cooldown": 20
+	},
+
+	"ohbother": {
+		"volume": 0.6
+	},
+
+	"giveup": {
+		"volume": 0.8,
+		"cooldown": 20
+	},
+
+	"wow": {
+		"volume": 1,
+		"pitch": [0.8, 1.2]
+	},
+
+	"kippis": {
+		"volume": 0.25,
+		"pitch": [0.8, 1.2]
+	},
+
+	"augh": {
+		"volume": 1,
+		"pitch": [0.85, 1.15]
+	},
+
+	"a": {
+		"volume": 0.6,
+		"pitch": [0.7, 1.3],
+		"cooldown": 0
+	},
+
+	"merp": {
+		"volume": 0.5,
+		"pitch": [0.7, 1.3],
+		"cooldown": 0
+	}
+}

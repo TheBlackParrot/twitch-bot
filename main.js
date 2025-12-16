@@ -20,8 +20,10 @@ import { EmoteList, SevenTV, BetterTTV, FrankerFaceZ } from "./classes/Emote.js"
 import { ChannelRedeemList } from "./classes/ChannelRedeem.js";
 import { RulerOfTheRedeem } from "./classes/RulerOfTheRedeem.js";
 import { Counter } from "./classes/Counter.js";
+import { SoundServer } from "./classes/SoundServer.js";
 
 const settings = JSON.parse(await fs.readFile('./settings.json'));
+global.settings = settings;
 const clientId = settings.auth.twitch.clientID;
 const clientSecret = settings.auth.twitch.clientSecret;
 const botTokenData = JSON.parse(await fs.readFile('./tokens.738319562.json'));
@@ -37,6 +39,7 @@ const allowedTTSVoices = JSON.parse(await fs.readFile('./static/allowedTTSVoices
 const weatherConditionCodes = JSON.parse(await fs.readFile('./static/weatherConditionCodes.json'));
 const initialRedeemList = JSON.parse(await fs.readFile('./static/redeems.json'));
 const rotatingMessageLines = JSON.parse(await fs.readFile('./static/rotatingMessages.json'));
+const soundCommands = JSON.parse(await fs.readFile('./static/soundCommands.json'));
 
 fs.mkdir("./logs").catch((err) => {
 	// ignored 
@@ -52,6 +55,7 @@ global.redeemList = redeemList;
 var broadcasterUser = null;
 global.broadcasterUser = null;
 const counter = new Counter();
+const remoteSound = new SoundServer();
 
 const apiClient = new ApiClient({
 	authProvider
@@ -724,6 +728,25 @@ commandList.addTrigger("weather", async(channel, args, msg, user) => {
 }, {
 	cooldown: 300
 });
+
+// ====== SOUND COMMANDS ======
+for(const soundCommandName in soundCommands) {
+	let params = soundCommands[soundCommandName];
+
+	if(params.regex) {
+		commandList.addRegex(soundCommandName, async(channel, args, msg, user) => {
+			await remoteSound.play(params.filename, ("volume" in params ? params.volume : 1), ("pitch" in params ? params.pitch : [1, 1]));
+		}, {
+			userCooldown: "cooldown" in params ? params.cooldown : 5
+		});
+	} else {
+		commandList.addTrigger(soundCommandName, async(channel, args, msg, user) => {
+			await remoteSound.play(("filename" in params ? params.filename : soundCommandName), ("volume" in params ? params.volume : 1), ("pitch" in params ? params.pitch : [1, 1]));
+		}, {
+			userCooldown: "cooldown" in params ? params.cooldown : 5
+		});
+	}
+}
 
 // ====== REGEX TRIGGERS ======
 
