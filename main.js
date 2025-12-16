@@ -991,6 +991,8 @@ chatClient.onJoin(async (channel, user) => {
 
 		let channelInfo = await apiClient.channels.getChannelInfoById(broadcasterUser.id);
 		initialCategory = channelInfo.gameName;
+		previousCategory = channelInfo.gameName;
+		previousTitle = channelInfo.title;
 		log("SYSTEM", `Initial category is ${initialCategory}`);
 
 		let allRedeems = await apiClient.channelPoints.getCustomRewards(broadcasterUser.id);
@@ -1281,6 +1283,10 @@ async function onTwitchStreamOnline(event) {
 		await postToWebhook("streamLive", {
 			content: `# ${event.broadcasterDisplayName} is now live with ${channelInfo.gameName}!\n> ${channelInfo.title}\n\nhttps://twitch.tv/theblackparrot`
 		});
+
+		if(initialCategory == "Spin Rhythm XD") {
+			swapCategoryInterval = setInterval(swapCategoryInSRXD, 45 * 60 * 1000);
+		};
 	}
 
 	hasSetFirstRedeem = true;
@@ -1305,6 +1311,29 @@ async function onOutgoingRaid(event) {
 	}
 
 	await say(broadcasterUser.name, `We have sent the stream over to https://twitch.tv/${event.raidedBroadcasterName} ! See you next time! SmileWave`);
+}
+
+var previousCategory = null;
+var previousTitle = null;
+async function onChannelMetadataUpdate(event) {
+	let messages = [];
+
+	if(event.streamTitle != previousTitle) {
+		global.log("EVENTSUB", `Stream title changed to ${event.streamTitle}`, false, ['gray']);
+		messages.push(`Stream title changed to "${event.streamTitle}"`);
+	}
+
+	if(event.categoryName != previousCategory) {
+		global.log("EVENTSUB", `Category changed to ${event.categoryName}`, false, ['gray']);
+		messages.push(`Category changed to "${event.categoryName}"`);
+	}
+
+	previousTitle = event.streamTitle;
+	previousCategory = event.categoryName;
+
+	for(const message of messages) {
+		say(broadcasterUser.name, `ObamaPhone ${message}`);
+	}
 }
 
 const eventSubListener = new EventSubWsListener({
@@ -1347,6 +1376,10 @@ function startEventSub() {
 
 	eventSubListener.onChannelRaidFrom(broadcasterUser.id, (event) => {
 		try { onOutgoingRaid(event); } catch(err) { console.error(err); }
+	});
+
+	eventSubListener.onChannelUpdate(broadcasterUser.id, (event) => {
+		try { onChannelMetadataUpdate(event); } catch(err) { console.error(err); }
 	});
 
 	eventSubListener.start();
@@ -1507,6 +1540,25 @@ function doRotatingMessage() {
 	}
 
 	say(broadcasterUser.name, `🤖 ${rotatingMessageLines[currentRotatingMessageIdx]}`);
+}
+
+var swapCategoryInterval;
+async function swapCategoryInSRXD() {
+	if(initialCategory != "Spin Rhythm XD") {
+		return;
+	}
+
+	let channelInfo = await apiClient.channels.getChannelInfoById(broadcasterUser.id);
+	let wantedGameName = channelInfo.gameName == "Spin Rhythm XD" ? "Games + Demos" : "Spin Rhythm XD";
+
+	let gameInfo = await apiClient.games.getGameByName(wantedGameName);
+	if(gameInfo == null) {
+		return;
+	}
+
+	await apiClient.channels.updateChannelInfo(broadcasterUser.id, {
+		gameId: gameInfo.id
+	});
 }
 
 // ====== WEBHOOKS ======

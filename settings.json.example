@@ -57,6 +57,7 @@
 	},
 
 	"webhooks": {
-		"streamLive": "https://discord.com/api/webhooks/0000000000000000000/ipipppipiipipip"
+		"streamLive": "https://discord.com/api/webhooks/0000000000000000000/ipipppipiipipip",
+		"noteChannel": "https://discord.com/api/webhooks/0000000000000000000/ipipppipiipipip"
 	}
 }
