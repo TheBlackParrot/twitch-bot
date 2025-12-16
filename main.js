@@ -1249,6 +1249,17 @@ async function onChannelShoutedOut(event) {
 	const channelInfo = await apiClient.channels.getChannelInfoById(event.shoutedOutBroadcasterId);
 	await say(broadcasterUser.name, `👉👉 Check out https://twitch.tv/${event.shoutedOutBroadcasterName} ! 👈👈 They were last seen streaming ${channelInfo.gameName}!`)
 }
+async function onOutgoingRaid(event) {
+	let gameInfo = await apiClient.games.getGameByName(initialCategory);
+
+	if(gameInfo != null) {
+		await apiClient.channels.updateChannelInfo(broadcasterUser.id, {
+			gameId: gameInfo.id
+		});
+	}
+
+	await say(broadcasterUser.name. `We have sent the stream over to https://twitch.tv/${event.raidedBroadcasterName} ! See you next time! SmileWave`);
+}
 
 const eventSubListener = new EventSubWsListener({
 	apiClient: apiClient
@@ -1286,7 +1297,11 @@ function startEventSub() {
 
 	eventSubListener.onChannelShoutoutCreate(broadcasterUser.id, broadcasterUser.id, (event) => {
 		try { onChannelShoutedOut(event); } catch(err) { console.error(err); }
-	})
+	});
+
+	eventSubListener.onChannelRaidFrom(broadcasterUser.id, (event) => {
+		try { onOutgoingRaid(event); } catch(err) { console.error(err); }
+	});
 
 	eventSubListener.start();
 	log("SYSTEM", `Started EventSub listeners`);
