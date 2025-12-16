@@ -695,7 +695,7 @@ commandList.addTrigger("weather", async(channel, args, msg, user) => {
 	let unit = "f";
 	let windUnit = "mph";
 	if(args.length) {
-		if(arg[0].toLowerCase().startsWith("c") || arg[0].toLowerCase().startsWith("m")) {
+		if(args[0].toLowerCase().startsWith("c") || args[0].toLowerCase().startsWith("m")) {
 			unit = "c";
 			windUnit = "kph";
 		}
