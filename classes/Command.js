@@ -168,6 +168,8 @@ export class RegexCommand extends BaseCommand {
 				this.validRegex.push(new RegExp(aliasedRegex, "i"));
 			}
 		}
+
+		this.fallThroughAsMessage = "fallThroughAsMessage" in opts ? opts.fallThroughAsMessage : true;
 	}
 
 	matches(string) {

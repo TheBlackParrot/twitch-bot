@@ -737,7 +737,8 @@ for(const soundCommandName in soundCommands) {
 		commandList.addRegex(soundCommandName, async(channel, args, msg, user) => {
 			await remoteSound.play(params.filename, ("volume" in params ? params.volume : 1), ("pitch" in params ? params.pitch : [1, 1]));
 		}, {
-			userCooldown: "cooldown" in params ? params.cooldown : 5
+			userCooldown: "cooldown" in params ? params.cooldown : 5,
+			fallThroughAsMessage: false
 		});
 	} else {
 		commandList.addTrigger(soundCommandName, async(channel, args, msg, user) => {
@@ -913,7 +914,9 @@ async function messageHandler(channel, userString, text, msg) {
 	}
 
 	if(command != null) {
-		let triggerName = typeof(command.name) === "undefined" ? `(regex: ${command.regexStrings[0]})` : command.name;
+		const isRegex = typeof(command.name) === "undefined";
+		
+		const triggerName = isRegex ? `(regex: ${command.regexStrings[0]})` : command.name;
 
 		if(user.canUseCommand(command)) {
 			if(command.canUse) {
@@ -931,9 +934,14 @@ async function messageHandler(channel, userString, text, msg) {
 		} else {
 			log("COMMANDS", `Command ${triggerName} is on cooldown for ${msg.userInfo.userName}`);
 		}
+
+		if(isRegex) {
+			if(command.fallThroughAsMessage) {
+				onStandardMessage(channel, msg.userInfo, text, msg.emoteOffsets);
+			}
+		}
 	} else {
 		// not a command or regex, standard message
-
 		onStandardMessage(channel, msg.userInfo, text, msg.emoteOffsets);
 	}
 }
