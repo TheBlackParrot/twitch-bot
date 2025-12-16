@@ -1296,11 +1296,11 @@ function onAdsEnded(event) {
 
 var hasSetFirstRedeem = false;
 async function onTwitchStreamOnline(event) {
-	say(broadcasterUser.name, 'SmileArrive Parrot is now live with $game! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive');
-
 	redeemList.getByName("first").enable(!hasSetFirstRedeem);
 
 	const channelInfo = await apiClient.channels.getChannelInfoById(event.broadcasterId);
+
+	say(broadcasterUser.name, `SmileArrive Parrot is now live with ${channelInfo.gameName}! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive`);
 
 	if(!hasSetFirstRedeem) {
 		await postToWebhook("streamLive", {
