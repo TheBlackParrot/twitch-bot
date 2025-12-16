@@ -123,7 +123,7 @@ export class RulerOfTheRedeem {
 		const length = 240000 + (Math.random() * 120000);
 
 		global.log("ROTR", `Countdown finishes in ${Math.ceil(length / 1000)} seconds`);
-		this.countdownTimeout = setTimeout(this.countdownFinished, length);
+		this.countdownTimeout = setTimeout(this.countdownFinished.bind(this), length);
 	}
 
 	countdownFinished = async function() {
@@ -148,6 +148,6 @@ export class RulerOfTheRedeem {
 		await global.say(global.broadcasterUser.name, `@${redeemEvent.userDisplayName} became so power hungry they used their wealth to steal the crown for 45 minutes! Goodness me...`);
 
 		global.log("ROTR", `Countdown finishes in 45 minutes`);
-		this.countdownTimeout = setTimeout(this.countdownFinished, 60 * 45 * 1000);
+		this.countdownTimeout = setTimeout(this.countdownFinished.bind(this), 60 * 45 * 1000);
 	}
 }
