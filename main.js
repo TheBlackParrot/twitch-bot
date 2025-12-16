@@ -102,7 +102,7 @@ async function tts(voice, string, rate = 0) {
 	let url = new URL('/', settings.tts.URL);
 	let data = {
 		voice: voice,
-		text: string.replaceAll('"', ''),
+		text: string.replaceAll('"', '').replace(/[^\x00-\x7F]/g, ''),
 		rate: rate
 	};
 
@@ -126,7 +126,7 @@ var spinRequestsSocket;
 
 function initSpinRequestsSocket() {
 	if(initialCategory == "Spin Rhythm XD") {
-		spinRequestsSocket = new WebSocketListener('http://127.0.0.1:6970/', handleSpinRequestsMessage);
+		spinRequestsSocket = new WebSocketListener('ws://127.0.0.1:6970/', handleSpinRequestsMessage);
 	}
 }
 
@@ -943,7 +943,7 @@ function onUserFirstSeenForSession(channel, user, isFirst) {
 	tts(settings.tts.voices.system, `${ensureEnglishName(user)} has entered the chat${isFirst ? " for the first time." : "."}`);
 }
 
-function onStandardMessage(channel, user, message, emoteOffsets) {
+async function onStandardMessage(channel, user, message, emoteOffsets) {
 	// user: https://twurple.js.org/reference/chat/classes/ChatUser.html
 
 	const emotes = parseEmotePositions(message, emoteOffsets);
