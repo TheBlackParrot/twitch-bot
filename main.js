@@ -1448,7 +1448,7 @@ function onAdTimerRefreshed(nextAdTimestamp) {
 	const timeLeft = (nextAdTimestamp - now) / 1000;
 	const minutesLeft = Math.ceil(timeLeft / 60);
 
-	if(timeLeft <= 300 && previousMinutesLeft != minutesLeft) {
+	if(timeLeft <= 300 && previousMinutesLeft != minutesLeft && haveAdsRunBefore) {
 		say(broadcasterUser.name, `SNIFFA NEXT BREAK IN ${minutesLeft} ${minutesLeft != 1 ? "MINUTES" : "MINUTE"} SNIFFA`);
 		tts(settings.tts.voices.system, `Scheduled ad break starts in ${minutesLeft} ${minutesLeft != 1 ? "minutes" : "minute"}`, 1);
 		sound.play("sounds/retro-01.ogg", { volume: 0.6 });
