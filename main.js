@@ -190,12 +190,12 @@ async function getTargetedUser(channel, target, msg) {
 		return null;
 	}
 
-	wantedId = userCheck.id;
-	wantedName = userCheck.displayName;
+	const wantedId = userCheck.id;
+	const wantedName = userCheck.displayName;
 
 	return {
-		userId: userCheck.id,
-		userDisplayName: userCheck.displayName
+		userId: wantedId,
+		userDisplayName: wantedName
 	};
 }
 
@@ -518,7 +518,11 @@ commandList.addTrigger("so", async(channel, args, msg, user) => {
 		return;
 	}
 
-	await apiClient.chat.shoutoutUser(broadcasterUser.id, targetUser.id);
+	try {
+		await apiClient.chat.shoutoutUser(broadcasterUser.id, targetUser.userId);
+	} catch(err) {
+		await reply(channel, msg, `⚠️ Could not shout out ${targetUser.userDisplayName}`);
+	}
 }, {
 	whitelist: ["broadcaster", "mod"],
 	aliases: ["shoutout", "sso", "cso"],
