@@ -1316,8 +1316,6 @@ function onAdsEnded(event) {
 
 var hasSetFirstRedeem = false;
 async function onTwitchStreamOnline(event) {
-	redeemList.getByName("first").enable(!hasSetFirstRedeem);
-
 	const channelInfo = await apiClient.channels.getChannelInfoById(event.broadcasterId);
 
 	say(broadcasterUser.name, `SmileArrive Parrot is now live with ${channelInfo.gameName}! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive`);
@@ -1558,12 +1556,16 @@ async function onStreamStarted() {
 	rotatingMessageInterval = setInterval(doRotatingMessage, settings.bot.rotatingMessageInterval * 1000);
 
 	const scene = await obs.call('GetCurrentProgramScene');
-	
+
 	if(scene.sceneName == "Starting Soon") {
 		await obs.call('SetInputMute', {
 			inputName: 'Microphone',
 			inputMuted: true
 		});
+
+		await redeemList.getByName("first").enable(!hasSetFirstRedeem);
+		await redeemList.getByName("second").enable(false);
+		await redeemList.getByName("third").enable(false);
 	}
 
 	await axios.post('http://127.0.0.1:8880/api/player', { volume: -32.5 }).catch((err) => {});
