@@ -1282,10 +1282,11 @@ var haveAdsRunBefore = false;
 function onAdsStarted(event) {
 	if(!haveAdsRunBefore) {
 		say(broadcasterUser.name, 'Ads are running during setup to disable pre-rolls for the next little bit. You\'re not missing out on anything! Get your snacks, get your drinks, take your meds! Okayge');
+	} else {
+		say(event.broadcasterName, "Rave4 AD BREAK! Rave4 Stand up, stretch, grab some refreshments, use the restroom, take your meds, do what you need to do! The stream will be back in a few minutes, you'll miss nothing! I promise! kermitNod");
 	}
-	haveAdsRunBefore = true;
 
-	say(event.broadcasterName, "Rave4 AD BREAK! Rave4 Stand up, stretch, grab some refreshments, use the restroom, take your meds, do what you need to do! The stream will be back in a few minutes, you'll miss nothing! I promise! kermitNod");
+	haveAdsRunBefore = true;
 	tts(settings.tts.voices.system, "Ad break started", 1);
 }
 
