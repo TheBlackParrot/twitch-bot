@@ -985,10 +985,12 @@ async function onStandardMessage(channel, user, message, emoteOffsets) {
 		}
 	}
 
-	if(!message.startsWith('@') && initialCategory != "VRChat" && !wasGemSwap) {
-		await tts(settings.tts.voices.names, ensureEnglishName(user));
-
+	if(!(message.startsWith('@') || message.startsWith('!')) && initialCategory != "VRChat" && !wasGemSwap) {
 		const userData = users.getUser(user.userId);
+		
+		const ttsName = user.getPersistentData("ttsName");
+		await tts(settings.tts.voices.names, ttsName ? ttsName : ensureEnglishName(user));
+
 		const voice = userData.getPersistentData("ttsVoice");
 		await tts(voice == null ? settings.tts.voices.messages : voice, filtered);
 	}
@@ -1189,6 +1191,16 @@ const redeemFunctions = {
 			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ This is an invalid voice name, please see https://theblackparrot.me/tts for available choices and voice examples.`);
 			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED"); // it's cancelled!! not canceled!!! grrr
 		}
+	},
+
+	"Set TTS Name": async function(event) {
+		const message = event.input;
+		const name = message.replace(/[^a-zA-Z0-9]/gi, '').substring(0, 80);
+
+		const user = users.getUser(event.userId);
+		user.setPersistentData("ttsName", name);
+
+		await say(broadcasterUser.name, `@${event.userDisplayName} 🆗 I will call you this now, thanks for letting me know!`);
 	},
 
 	"first": async function(event) {

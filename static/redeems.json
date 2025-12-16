@@ -188,5 +188,13 @@
 		"color": "FF7700",
 		"autoFulfill": true,
 		"globalCooldown": 1800
-	}
+	},
+
+	"Set TTS Name": {
+		"description": "Let the TTS system know what to call you, if it's mispronouncing your name.",
+		"cost": 100,
+		"color": "2a2da1",
+		"autoFulfill": true,
+		"userInputRequired": true
+	},
 }
