@@ -22,10 +22,9 @@ const noiseLowPassFilter = new BiquadFilterNode(context, {
 });
 
 const noiseGain = context.createGain();
-noiseGain.gain.value = 0.01;
+noiseGain.gain.value = 0.055;
 
 noise.connect(noiseGain).connect(noiseLowPassFilter).connect(context.destination);
-noise.start();
 
 var ws;
 var reconnectTimeout;
@@ -40,12 +39,16 @@ function handleOpen() {
 	clearTimeout(reconnectTimeout);
 	
 	console.log("Connected");
+
+	noise.start();
 }
 function handleClose() {
 	clearTimeout(reconnectTimeout);
-	reconnectTimeout = setTimeout(initConnection, 15000);
+	reconnectTimeout = setTimeout(initConnection, 7000);
 
 	console.log("Connection dropped");
+
+	noise.stop();
 }
 
 function randomFloat(min, max) {
