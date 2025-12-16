@@ -1238,6 +1238,9 @@ const redeemFunctions = {
 
 	"Credit Exchange": async function(event) {
 		await updateLeaderboardValues(event.userId, "Gamba Credits", 100);
+		
+		const newAmount = await getLeaderboardValue(event.userId, "Gamba Credits");
+		await say(broadcasterUser.name, `@${event.userDisplayName} You now have ${newAmount.toLocaleString()} Gamba Credits`);
 	}
 };
 redeemFunctions["second"] = redeemFunctions["first"];
