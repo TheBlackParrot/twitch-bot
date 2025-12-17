@@ -1346,11 +1346,14 @@ async function onTwitchStreamOnline(event) {
 			swapCategoryInterval = setInterval(swapCategoryInSRXD, 45 * 60 * 1000);
 		};
 	}
-
 	hasSetFirstRedeem = true;
+
+	adTimer();
 }
 async function onTwitchStreamOffline(event) {
 	say(broadcasterUser.name, 'The stream is now offline! If this was an interruption, wait a few minutes and reload your app or refresh your page. Otherwise, see you later! SmileWave');
+
+	clearTimeout(adTimerTimeout);
 
 	await rulerOfTheRedeem.awardTime();
 	rulerOfTheRedeem.updateTime();
@@ -1490,8 +1493,6 @@ function onAdTimerRefreshed(nextAdTimestamp) {
 
 	previousMinutesLeft = minutesLeft;
 }
-
-adTimer();
 
 // ====== OBS ======
 
