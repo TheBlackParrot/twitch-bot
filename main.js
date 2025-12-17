@@ -961,7 +961,10 @@ async function messageHandler(channel, userString, text, msg) {
 const commandListener = chatClient.onMessage(messageHandler);
 
 function onUserFirstSeenForSession(channel, user, isFirst) {
-	tts(settings.tts.voices.system, `${ensureEnglishName(user)} has entered the chat${isFirst ? " for the first time." : "."}`);
+	const userData = users.getUser(user.userId);
+
+	const ttsName = userData.getPersistentData("ttsName");
+	tts(settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(user)} has entered the chat${isFirst ? " for the first time." : "."}`);
 }
 
 async function onStandardMessage(channel, user, message, emoteOffsets) {
