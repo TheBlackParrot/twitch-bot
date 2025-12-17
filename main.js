@@ -1088,6 +1088,7 @@ const vnyanOnlyRedeems = [
 	'blep', 'Throw stuff at me', 'Drop a thing on my head', 'Throw a lot of stuff at me', 'yay!', 'Throw a bunch of hearts',
 	'Give me a treat', 'E', '*metal pipe*', 'amogus', 'Drop a hat', 'balls'
 ];
+const helloEmotes = ["ARISE", "FridayAwake", "PatArrive", "ARRIVE", "revUpThoseFryers"]
 
 chatClient.onJoin(async (channel, user) => {
 	log("CHAT", `Joined channel #${channel} as ${user}`, false, ['whiteBright']);
@@ -1150,6 +1151,8 @@ chatClient.onJoin(async (channel, user) => {
 		await rulerOfTheRedeem.enable(true);
 
 		initSpinRequestsSocket();
+
+		await say(broadcasterUser.name, helloEmotes[Math.floor(Math.random() * helloEmotes.length)]);
 	}
 });
 
@@ -1817,3 +1820,12 @@ async function postToWebhook(which, data) {
 	await axios.post(settings.webhooks[which], data).catch((err) => { console.error(err); });
 	global.log("WEBHOOK", `Posted to the ${which} webhook`);
 }
+
+// ====== bye ======
+
+const byeEmotes = ["Sleepo", "sleepofdog", "VirtualLeave"];
+
+process.on('SIGINT', async function() {
+	await say(broadcasterUser.name, byeEmotes[Math.floor(Math.random() * byeEmotes.length)]);
+	process.exit();
+});
