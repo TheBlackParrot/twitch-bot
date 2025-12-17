@@ -1368,7 +1368,7 @@ const redeemFunctions = {
 			await updateLeaderboardValues(event.userId, "Gamba Credits", wager);
 			await remoteSound.play("win", 0.7);
 		} else {
-			await say(broadcasterUser.name, `@${event.userDisplayName} ...it lands on ${result === "h" ? "Heads" : "Tails"}! Oh no! You lost ${wager.toLocaleString()} Gamba Credits. Better luck next time! LETSGOGAMBLING`)
+			await say(broadcasterUser.name, `@${event.userDisplayName} ...it lands on ${result === "h" ? "Heads" : "Tails"}! Oh no! You lost ${wager.toLocaleString()} Gamba Credits. Better luck next time! LETSGOGAMBLING`);
 			await updateLeaderboardValues(event.userId, "Gamba Credits", wager * -1);
 			await remoteSound.play("awdangit", 0.7, [0.9, 1.1]);
 		}
@@ -1665,6 +1665,9 @@ async function onOBSSceneChanged(sceneObject) {
 		inputName: "Spotify Audio",
 		inputVolumeDb: isVRChat ? -4 : 0
 	});
+
+	await redeemList.getByName("Flip a Coin").enable(isIntermission);
+	await redeemList.getByName("gib coin hint pls?").enable(isIntermission);
 }
 
 async function onOBSStreamStateChanged(state) {
@@ -1692,6 +1695,9 @@ async function onStreamStarted() {
 		await redeemList.getByName("first").enable(!hasSetFirstRedeem);
 		await redeemList.getByName("second").enable(false);
 		await redeemList.getByName("third").enable(false);
+
+		await redeemList.getByName("Flip a Coin").enable(true);
+		await redeemList.getByName("gib coin hint pls?").enable(true);
 	}
 
 	await axios.post('http://127.0.0.1:8880/api/player', { volume: -32.5 }).catch((err) => {});
