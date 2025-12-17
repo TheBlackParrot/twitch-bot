@@ -1511,7 +1511,7 @@ async function onTwitchStreamOnline(event) {
 
 	if(!hasSetFirstRedeem) {
 		await postToWebhook("streamLive", {
-			content: `# ${event.broadcasterDisplayName} is now live with ${channelInfo.gameName}!\n> ${channelInfo.title}\n\nhttps://twitch.tv/theblackparrot`
+			content: `https://twitch.tv/theblackparrot\n\n# ${event.broadcasterDisplayName} is now live with *${channelInfo.gameName}*!\n> ${channelInfo.title}`
 		});
 
 		if(initialCategory == "Spin Rhythm XD") {
