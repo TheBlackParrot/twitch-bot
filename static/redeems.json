@@ -76,7 +76,8 @@
 		"cost": 20,
 		"color": "4c7a08",
 		"autoFulfill": false,
-		"globalCooldown": 30
+		"globalCooldown": 30,
+		"userInputRequired": true
 	},
 	
 	"Force Refresh Ruler of the Redeem": {
@@ -87,7 +88,7 @@
 		"maxRedemptionsPerUserPerStream": 4
 	},
 	
-	"gib coin hit pls?": {
+	"gib coin hint pls?": {
 		"description": "Feeling unsure about the side of the coin you want to wager on? Redeem this!",
 		"cost": 300,
 		"color": "73a030",

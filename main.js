@@ -1086,6 +1086,7 @@ chatClient.onJoin(async (channel, user) => {
 			await redeemList.getByName(redeemName).enable(initialCategory != "VRChat");
 		}
 
+		await redeemList.getByName("Flip a Coin").setCooldown(30); // can't do this on the twitch dashboard, so we do it here
 		await rulerOfTheRedeem.enable(true);
 
 		initSpinRequestsSocket();
@@ -1202,6 +1203,7 @@ const avatarRedeemMap = {
 	s: "Septi",
 	t: "Tox"
 };
+var coinFlipOdds = 0.5;
 
 const redeemFunctions = {
 	// https://twurple.js.org/reference/eventsub-base/classes/EventSubChannelRedemptionAddEvent.html
@@ -1309,6 +1311,77 @@ const redeemFunctions = {
 		
 		const newAmount = await getLeaderboardValue(event.userId, "Gamba Credits");
 		await say(broadcasterUser.name, `@${event.userDisplayName} You now have ${newAmount.toLocaleString()} Gamba Credits`);
+	},
+	"Flip a Coin": async function(event) {
+		const args = event.input.split(" ");
+		if(!args.length) {
+			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ Please input a wager as the first word/argument, and then "h" or "t" as the second word/argument (or anything starting with those letters, e.g. "200 h").`);
+			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			return;
+		}
+
+		const wager = +(args[0].replaceAll(",", "").split(".")[0]);
+		if(isNaN(wager)) {
+			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ This wager is not a valid whole number.`);
+			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			return;
+		}
+		if(wager <= 0) {
+			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ You must wager a positive value above 0.`);
+			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			return;
+		}
+
+		const userHas = await getLeaderboardValue(event.userId, "Gamba Credits");
+		if(wager > userHas) {
+			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ You can only wager a maximum of ${userHas.toLocaleString()} credits.`);
+			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			return;
+		}
+
+		const minWager = Math.floor(userHas * 0.005);
+		if(wager < minWager) {
+			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ You must wager at least 0.5% of your total credits, (which would be ${minWager.toLocaleString()} credits) PayUp`);
+			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			return;
+		}
+
+		await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "FULFILLED");
+		await remoteSound.play("insertcoin");
+
+		let whichSide = "";
+
+		if(args.length >= 2) {
+			whichSide = args[1].toLowerCase()[0];
+		}
+		if(!(whichSide === "h" || whichSide === "t")) {
+			whichSide = (Math.floor(Math.random() * 2) % 2) ? "h" : "t";
+		}
+
+		await say(broadcasterUser.name, `@${event.userDisplayName} flips a coin... CoinTime hopefully it lands on ${whichSide === "h" ? "Heads" : "Tails"}! NAILS`);
+		await delay(5000 + (Math.random() * 7000));
+
+		const result = Math.random() >= coinFlipOdds ? "t" : "h";
+
+		if(result === whichSide) {
+			await say(broadcasterUser.name, `@${event.userDisplayName} ...it lands on ${result === "h" ? "Heads" : "Tails"}! You win ${(wager * 2).toLocaleString()} Gamba Credits. OOOO`);
+			await updateLeaderboardValues(event.userId, "Gamba Credits", wager);
+			await remoteSound.play("win", 0.7);
+		} else {
+			await say(broadcasterUser.name, `@${event.userDisplayName} ...it lands on ${result === "h" ? "Heads" : "Tails"}! Oh no! You lost ${wager.toLocaleString()} Gamba Credits. Better luck next time! LETSGOGAMBLING`)
+			await updateLeaderboardValues(event.userId, "Gamba Credits", wager * -1);
+			await remoteSound.play("awdangit", 0.7, [0.9, 1.1]);
+		}
+
+		coinFlipOdds += ((2 + Math.floor(Math.random() * 5)) / 100) * (result === "h" ? -1 : 1);
+		coinFlipOdds = Math.min(0.85, Math.max(0.15, coinFlipOdds));
+
+		const readableOdds = Math.floor(coinFlipOdds * 100);
+		global.log("GAMBA", `Result: ${result === "h" ? "Heads" : "Tails"} (odds: ${readableOdds}% heads, ${100 - readableOdds}% tails)`);
+	},
+	"gib coin hint pls?": async function(event) {
+		const readableOdds = Math.floor(coinFlipOdds * 100);
+		await say(broadcasterUser.name, `Current Coin Flip odds: ${readableOdds}% heads, ${100 - readableOdds}% tails EZ`);
 	}
 };
 redeemFunctions["second"] = redeemFunctions["first"];

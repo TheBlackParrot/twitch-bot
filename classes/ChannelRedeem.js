@@ -52,11 +52,22 @@ class ChannelRedeem {
 		});
 	}
 
+	async setCooldown(seconds) {
+		if(seconds == this.globalCooldown) {
+			return;
+		}
+
+		await global.apiClient.channelPoints.updateCustomReward(global.broadcasterUser.id, this.id, {
+			globalCooldown: seconds
+		});
+	}
+
 	update(redeemObject, silent = true) {
 		this.name = redeemObject.title;
 		this.enabled = redeemObject.isEnabled;
 		this.cost = redeemObject.rewardCost;
 		this.autoFulfill = redeemObject.autoApproved;
+		this.globalCooldown = redeemObject.globalCooldown;
 
 		if(!silent) {
 			global.log("REDEEM", `Updated channel point redeem ${redeemObject.title}`);
