@@ -21,6 +21,7 @@ import { ChannelRedeemList } from "./classes/ChannelRedeem.js";
 import { RulerOfTheRedeem } from "./classes/RulerOfTheRedeem.js";
 import { Counter } from "./classes/Counter.js";
 import { SoundServer } from "./classes/SoundServer.js";
+import { CreditRaffle } from "./classes/CreditRaffle.js";
 
 const settings = JSON.parse(await fs.readFile('./settings.json'));
 global.settings = settings;
@@ -55,7 +56,10 @@ global.redeemList = redeemList;
 var broadcasterUser = null;
 global.broadcasterUser = null;
 const counter = new Counter();
+global.counter = counter;
 const remoteSound = new SoundServer();
+global.remoteSound = remoteSound;
+const creditRaffle = new CreditRaffle();
 
 const apiClient = new ApiClient({
 	authProvider
@@ -244,6 +248,19 @@ commandList.addTrigger("amhere", async(channel, args, msg, user) => {
 	userCooldown: 1800
 });
 
+// --- !cancelraffle ---
+commandList.addTrigger("cancelraffle", async(channel, args, msg, user) => {
+	if(!creditRaffle.active) {
+		await reply(channel, msg, '⚠️ No Gamba Credit raffle is in progress. Use !startraffle to start one.');
+		return;
+	}
+	
+	await creditRaffle.cancel();
+}, {
+	whitelist: ["broadcaster", "mod"],
+	cooldown: 3
+});
+
 // --- !category ---
 commandList.addTrigger("category", async(channel, args, msg, user) => {
 	if(!args.length) {
@@ -299,7 +316,20 @@ commandList.addTrigger("dka", async(channel, args, msg, user) => {
 	await say(channel, 'Diabetic Ketoacidosis (DKA) is a serious condition in which an insulin-deprived body seeks energy from stored fat. Ketones are caused by the breakdown of fat when there isn’t enough insulin to allow the glucose (sugar) into your cells for energy. When ketones build up, the result is acidosis (too much acid in the blood). If not treated, this can lead to death. More: https://www.breakthrought1d.org/news-and-updates/ketones-diabetic-ketoacidosis/');
 }, {
 	cooldown: 30
-})
+});
+
+// --- !endraffle ---
+commandList.addTrigger("endraffle", async(channel, args, msg, user) => {
+	if(!creditRaffle.active) {
+		await reply(channel, msg, '⚠️ No Gamba Credit raffle is in progress. Use !startraffle to start one.');
+		return;
+	}
+	
+	await creditRaffle.end();
+}, {
+	whitelist: ["broadcaster", "mod"],
+	cooldown: 10
+});
 
 // --- !github ---
 commandList.addTrigger("github", async(channel, args, msg, user) => {
@@ -478,6 +508,23 @@ commandList.addTrigger("r", async(channel, args, msg, user) => {
 	cooldown: 15
 });
 
+// --- !rafjoin ---
+commandList.addTrigger("rafjoin", async(channel, args, msg, user) => {
+	if(!creditRaffle.active) {
+		await reply(channel, msg, "No Gamba Credit raffle is going on right now!");
+		return;
+	}
+
+	if(!creditRaffle.addUser(user)) {
+		await reply(channel, msg, "You've already joined the Gamba Credit raffle!");
+		return;
+	}
+
+	await remoteSound.play("rafjoin", 0.6, [0.75, 1.1]);
+}, {
+	userCooldown: 10
+});
+
 // --- !ratjoin ---
 commandList.addTrigger("ratjoin", async(channel, args, msg, user) => {
 	await say(channel, 'ratdancinglikeahumanwhaaathowisthatevenhappening');
@@ -595,6 +642,19 @@ commandList.addTrigger("specs", async(channel, args, msg, user) => {
 commandList.addTrigger("spotify", async(channel, args, msg, user) => {
 	await reply(channel, msg, 'https://open.spotify.com/playlist/0vWRNK92hhY94uluS2QfGx || copyright-safer version: https://open.spotify.com/playlist/5kORwNmoeKMOa4XJiAmf6X');
 }, {
+	cooldown: 10
+});
+
+// --- !startraffle ---
+commandList.addTrigger("startraffle", async(channel, args, msg, user) => {
+	if(creditRaffle.active) {
+		await reply(channel, msg, '⚠️ A Gamba Credit raffle is already in progress. Use !endraffle to end it, or !cancelraffle to cancel it.');
+		return;
+	}
+
+	await creditRaffle.start();
+}, {
+	whitelist: ["broadcaster", "mod"],
 	cooldown: 10
 });
 
@@ -1423,20 +1483,24 @@ function onChannelFollowed(follow) {
 }
 
 var haveAdsRunBefore = false;
-function onAdsStarted(event) {
+async function onAdsStarted(event) {
 	if(!haveAdsRunBefore) {
-		say(broadcasterUser.name, 'Ads are running during setup to disable pre-rolls for the next little bit. You\'re not missing out on anything! Get your snacks, get your drinks, take your meds! Okayge');
+		await say(broadcasterUser.name, 'Ads are running during setup to disable pre-rolls for the next little bit. You\'re not missing out on anything! Get your snacks, get your drinks, take your meds! Okayge');
 	} else {
-		say(event.broadcasterName, "Rave4 AD BREAK! Rave4 Stand up, stretch, grab some refreshments, use the restroom, take your meds, do what you need to do! The stream will be back in a few minutes, you'll miss nothing! I promise! kermitNod");
+		await say(broadcasterUser.name, "Rave4 AD BREAK! Rave4 Stand up, stretch, grab some refreshments, use the restroom, take your meds, do what you need to do! The stream will be back in a few minutes, you'll miss nothing! I promise! kermitNod");
 	}
 
 	haveAdsRunBefore = true;
 	tts(settings.tts.voices.system, "Ad break started", 1);
+
+	await creditRaffle.start();
 }
 
-function onAdsEnded(event) {
-	say(event.broadcasterName, "Ad break has ended, welcome back! WooperRise");
+async function onAdsEnded(event) {
+	await say(broadcasterUser.name, "Ad break has ended, welcome back! WooperRise");
 	tts(settings.tts.voices.system, "Ad break finished", 1);
+
+	await creditRaffle.end();
 }
 
 var hasSetFirstRedeem = false;
