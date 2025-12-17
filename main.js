@@ -647,7 +647,7 @@ commandList.addTrigger("tipping", async(channel, args, msg, user) => {
 // --- !toggleswapping ---
 commandList.addTrigger("toggleswapping", async(channel, args, msg, user) => {
 	allowBejeweled = !allowBejeweled;
-	await reply(channel, msg, `Gem swapping is now ${allowBejeweled ? "enabled SkeletonPls" : "disabled SkeletonPause"}`;
+	await reply(channel, msg, `Gem swapping is now ${allowBejeweled ? "enabled SkeletonPls" : "disabled SkeletonPause"}`);
 }, {
 	whitelist: ["broadcaster", "mod"],
 	cooldown: 0
@@ -1005,7 +1005,7 @@ async function onStandardMessage(channel, user, message, emoteOffsets) {
 	if(!(message.startsWith('@') || message.startsWith('!')) && initialCategory != "VRChat" && !wasGemSwap) {
 		const userData = users.getUser(user.userId);
 
-		const ttsName = user.getPersistentData("ttsName");
+		const ttsName = userData.getPersistentData("ttsName");
 		await tts(settings.tts.voices.names, ttsName ? ttsName : ensureEnglishName(user));
 
 		const voice = userData.getPersistentData("ttsVoice");
@@ -1212,7 +1212,7 @@ const redeemFunctions = {
 
 	"Set TTS Name": async function(event) {
 		const message = event.input;
-		const name = message.replace(/[^a-zA-Z0-9]/gi, '').substring(0, 80);
+		const name = message.replace(/[^a-zA-Z0-9\s]/gi, '').substring(0, 80);
 
 		const user = users.getUser(event.userId);
 		user.setPersistentData("ttsName", name);
