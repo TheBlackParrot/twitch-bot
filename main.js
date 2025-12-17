@@ -1189,6 +1189,13 @@ async function getLeaderboardValue(userId, key) {
 	return null;
 }
 
+const avatarRedeemMap = {
+	n: "Null",
+	p: "Parrot",
+	s: "Septi",
+	t: "Tox"
+};
+
 const redeemFunctions = {
 	// https://twurple.js.org/reference/eventsub-base/classes/EventSubChannelRedemptionAddEvent.html
 
@@ -1218,6 +1225,27 @@ const redeemFunctions = {
 		user.setPersistentData("ttsName", name);
 
 		await say(broadcasterUser.name, `@${event.userDisplayName} 🆗 I will call you this now, thanks for letting me know!`);
+	},
+
+	"Swap Avatars": async function(event) {
+		const which = event.input[0].toLowerCase();
+
+		if(!which in avatarRedeemMap) {
+			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ This is not a valid character name. You can find the character choices in the redeem's description.`);
+			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			return;
+		}
+
+		const url = new URL('/', settings.vnyan.httpURL);
+
+		await axios.post(url, {
+			action: "SwapAvatars",
+			payload: {
+				avatar: which
+			}
+		}).catch((err) => {});
+		await say(broadcasterUser.name, `@${event.userDisplayName} 🆗 Swapped to ${avatarRedeemMap[which]}`);
+		await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "FULFILLED");
 	},
 
 	"first": async function(event) {
