@@ -1104,11 +1104,11 @@ chatClient.onRaidCancel((channel, msg) => {
 	say(channel, "wait nevermind...");
 });
 chatClient.onSub((channel, user, subInfo, msg) => {
-	tts(settings.tts.voices.system, `${user} subscribed ${subInfo.isPrime ? "with Prime" : `at ${subInfo.planName}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
+	tts(settings.tts.voices.system, `${user} subscribed ${subInfo.isPrime ? "with Prime" : `at ${subInfo.plan}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
 	say(channel, hypeEmoteString());
 })
 chatClient.onResub((channel, user, subInfo, msg) => {
-	tts(settings.tts.voices.system, `${user} re-subscribed ${subInfo.isPrime ? "with Prime" : `at ${subInfo.planName}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
+	tts(settings.tts.voices.system, `${user} re-subscribed ${subInfo.isPrime ? "with Prime" : `at ${subInfo.plan}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
 	say(channel, hypeEmoteString());
 })
 
