@@ -904,6 +904,10 @@ async function messageHandler(channel, userString, text, msg) {
 		onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
 	}
 
+	if(msg.isRedemption) {
+		return;
+	}
+
 	let commandName = "";
 	if(!args[0].startsWith("!")) {
 		if(text.startsWith("https://spinsha.re/song/") || text.startsWith("spinshare://chart/")) {
