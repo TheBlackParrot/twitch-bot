@@ -70,7 +70,12 @@ export class RulerOfTheRedeem {
 			prompt += ` (Current ruler: ${this.rulerName})`;
 		}
 
-		const redeem = global.redeemList.getByName("Ruler of the Redeem");
+		var redeem = null;
+		while(redeem == null) {
+			redeem = global.redeemList.getByName("Ruler of the Redeem");
+			await delay(1000);
+		}
+		
 		await global.apiClient.channelPoints.updateCustomReward(global.broadcasterUser.id, redeem.id, {
 			prompt: prompt
 		});
