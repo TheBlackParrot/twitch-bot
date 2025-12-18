@@ -1,3 +1,5 @@
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const context = new AudioContext();
 
@@ -51,10 +53,7 @@ function handleClose() {
 	noise.stop();
 }
 
-function randomFloat(min, max) {
-	if(typeof min === "undefined") { min = 0; }
-	if(typeof max === "undefined") { max = 1; }
-
+function randomFloat(min = 0, max = 1) {
 	if(min > max) { return NaN; }
 	else if(min === max) { return min; }
 
@@ -64,13 +63,23 @@ function randomFloat(min, max) {
 var soundCache = {};
 async function handleMessage(event) {
 	const data = JSON.parse(event.data);
+	const audioData = data.data;
+
+	if(data.event == "data") {
+		soundCache[audioData.name] = await context.decodeAudioData(Uint8Array.fromBase64(audioData.audio).buffer);
+		return;
+	}
 
 	if(data.event == "sound") {
-		const audioData = data.data;
-
 		if(!(audioData.name in soundCache)) {
-			console.log(`${audioData.name} is not cached, creating buffer...`);
-			soundCache[audioData.name] = await context.decodeAudioData(Uint8Array.fromBase64(audioData.audio).buffer);
+			console.log(`${audioData.name} is not cached, requesting data...`);
+			ws.send(audioData.name);
+
+			while(!(audioData.name in soundCache)) {
+				await delay(100);
+			}
+
+			console.log(`${audioData.name} is now cached`);
 		} else {
 			console.log(`${audioData.name} is cached`);
 		}

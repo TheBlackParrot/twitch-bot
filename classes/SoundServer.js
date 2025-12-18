@@ -75,6 +75,9 @@ export class SoundServer {
 		this.server.on('connection', (client) => {
 			instance.clients.push(client);
 			instance.onOpen();
+
+			client.on('close', instance.onClose.bind(this));
+			client.on('message', instance.onMessage.bind(this));
 		});
 	}
 
@@ -86,12 +89,32 @@ export class SoundServer {
 		global.log("SOUNDS", "Client disconnected from sound server", false, ['redBright']);
 	}
 
+	onMessage = async function(data) {
+		const which = data.toString();
+
+		global.log("SOUNDS", `Client wants sound ${which}`, false, ['gray']);
+		await this.broadcastAudioData(which);
+	}
+
 	broadcast(event, data) {
 		for(const client of this.clients) {
 			if(client.readyState === WebSocket.OPEN) {
 				client.send(JSON.stringify({ event: event, data: data }));
 			}
 		}
+	}
+
+	broadcastAudioData = async function(which) {
+		const sound = await this.cache.get(which);
+		
+		if(sound == null) {
+			return;
+		}
+
+		this.broadcast("data", {
+			name: sound.realName,
+			audio: sound.data.toString('base64')
+		});
 	}
 
 	play = async function(which, volume = 1, pitch = [1, 1]) {
@@ -105,8 +128,7 @@ export class SoundServer {
 			type: sound.type,
 			name: sound.realName,
 			volume: volume,
-			pitchRange: pitch,
-			audio: sound.data.toString('base64')
+			pitchRange: pitch
 		});
 	}
 }
