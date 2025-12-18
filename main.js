@@ -1186,7 +1186,8 @@ const vnyanOnlyRedeems = [
 	'blep', 'Throw stuff at me', 'Drop a thing on my head', 'Throw a lot of stuff at me', 'yay!', 'Throw a bunch of hearts',
 	'Give me a treat', 'E', '*metal pipe*', 'amogus', 'Drop a hat', 'balls'
 ];
-const helloEmotes = ["ARISE", "FridayAwake", "PatArrive", "ARRIVE", "revUpThoseFryers"]
+const helloEmotes = ["ARISE", "FridayAwake", "PatArrive", "ARRIVE", "revUpThoseFryers"];
+const helloMessages = ["hello chat!", "hi chat!", "omg hai :3", "i am awake", "hi there!", "hello there!", "(i enter the room)", "(i walk in)"];
 
 chatClient.onJoin(async (channel, user) => {
 	log("CHAT", `Joined channel #${channel} as ${user}`, false, ['whiteBright']);
@@ -1250,7 +1251,7 @@ chatClient.onJoin(async (channel, user) => {
 
 		initSpinRequestsSocket();
 
-		await say(broadcasterUser.name, helloEmotes[Math.floor(Math.random() * helloEmotes.length)]);
+		await say(broadcasterUser.name, `${helloEmotes[Math.floor(Math.random() * helloEmotes.length)]} ${helloMessages[Math.floor(Math.random() * helloMessages.length)]}`);
 	}
 });
 
@@ -1924,8 +1925,9 @@ async function postToWebhook(which, data) {
 // ====== bye ======
 
 const byeEmotes = ["Sleepo", "sleepofdog", "VirtualLeave"];
+const byeMessages = ["alright bye", "i'm out bye", "bye bye", "ok bye", "cya later", "(i leave the room)", "goodbye chat"];
 
 process.on('SIGINT', async function() {
-	await say(broadcasterUser.name, byeEmotes[Math.floor(Math.random() * byeEmotes.length)]);
+	await say(broadcasterUser.name, `${byeMessages[Math.floor(Math.random() * byeMessages.length)]} ${byeEmotes[Math.floor(Math.random() * byeEmotes.length)]}`);
 	process.exit();
 });
