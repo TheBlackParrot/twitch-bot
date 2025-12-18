@@ -1,0 +1,34 @@
+{
+	"title": {
+		"tag": "title",
+		"type": "string"
+	},
+	"artist": {
+		"tag": "artist",
+		"type": "string"
+	},
+	"album": {
+		"tag": "album",
+		"type": "string"
+	},
+	"year": {
+		"tag": "year",
+		"type": "date"
+	},
+	"isrc": {
+		"tag": "isrc",
+		"type": "string"
+	},
+	"duration": {
+		"tag": "length_seconds_fp",
+		"type": "float"
+	},
+	"filename": {
+		"tag": "filename_ext",
+		"type": "string"
+	},
+	"comment": {
+		"tag": "comment",
+		"type": "string"
+	}
+}

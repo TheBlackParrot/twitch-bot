@@ -41,6 +41,11 @@ const weatherConditionCodes = JSON.parse(await fs.readFile('./static/weatherCond
 const initialRedeemList = JSON.parse(await fs.readFile('./static/redeems.json'));
 const rotatingMessageLines = JSON.parse(await fs.readFile('./static/rotatingMessages.json'));
 const soundCommands = JSON.parse(await fs.readFile('./static/soundCommands.json'));
+const foobarSchema = JSON.parse(await fs.readFile('./static/foobarSchema.json'));
+var foobarTagSchema = {};
+for(const key in foobarSchema) {
+	foobarTagSchema[foobarSchema[key].tag] = key;
+}
 
 fs.mkdir("./logs").catch((err) => {
 	// ignored 
@@ -111,6 +116,33 @@ async function tts(voice, string, rate = 0) {
 	};
 
 	await axios.post(url, data).catch((err) => {});
+}
+
+function formatFoobarTagResponse(data, tag) {
+	if(!(tag in foobarSchema)) {
+		return data;
+	}
+
+	switch(foobarSchema[tag].type) {
+		case "string":
+			return data;
+			break;
+
+		case "date":
+			return new Date(data).getUTCFullYear();
+			break;
+
+		case "number":
+			return parseInt(data);
+			break;
+
+		case "float":
+			return parseFloat(data);
+			break;
+
+		default:
+			return data;
+	}
 }
 
 // ====== AUTH ======
@@ -331,6 +363,63 @@ commandList.addTrigger("endraffle", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+// --- !foobar ---
+commandList.addTrigger("foobar", async(channel, args, msg, user) => {
+	const rootResponse = await axios.get(`http://${settings.foobar.address}/api/player`).catch((err) => {});
+
+	if(!("data" in rootResponse)) {
+		await reply(channel, msg, '⚠️ Could not query foobar2000.');
+		return;
+	}
+
+	if(!("player" in rootResponse.data)) {
+		await reply(channel, msg, '⚠️ No player data returned from foobar2000.');
+		return;
+	}
+
+	if(!("activeItem" in rootResponse.data.player)) {
+		await reply(channel, msg, '⚠️ No active item data returned from foobar2000.');
+		return;
+	}
+
+	const active = rootResponse.data.player.activeItem;
+
+	let columns = [];
+	for(const key in foobarSchema) {
+		columns.push(foobarSchema[key].tag);
+	}
+
+	const entryResponse = await axios.get(`http://${settings.foobar.address}/api/playlists/${active.playlistId}/items/${active.index}:1?columns=%${columns.join("%,%")}%`).catch((err) => {});
+
+	if(!("data" in entryResponse)) {
+		await reply(channel, msg, '⚠️ No playlist entry data returned from foobar2000.');
+		return;
+	}
+
+	var track = {};
+	const trackData = entryResponse.data.playlistItems.items[0].columns;
+
+	for(const idx in columns) {
+		const tag = columns[idx];
+		track[foobarTagSchema[tag]] = (trackData[idx] === "?" ? null : formatFoobarTagResponse(trackData[idx], foobarTagSchema[tag]));
+	}
+
+	let spotifyURL = null;
+	if("comment" in track) {
+		if(track.comment) {
+			if(track.comment.length == 22 && track.comment.split(" ").length == 1) {
+				// spotify code
+				spotifyURL = `https://open.spotify.com/track/${track.comment}`;
+			}
+		}
+	}
+
+	await reply(channel, msg, `"${track.title}" by ${track.artist} (from "${track.album}")${spotifyURL != null ? ` -- ${spotifyURL}` : ""}`);
+}, {
+	aliases: ["foobar2k"],
+	cooldown: 10
+});
+
 // --- !github ---
 commandList.addTrigger("github", async(channel, args, msg, user) => {
 	await reply(channel, msg, 'https://github.com/TheBlackParrot');
@@ -379,14 +468,23 @@ commandList.addTrigger("insulin", async(channel, args, msg, user) => {
 
 // --- !link ---
 commandList.addTrigger("link", async(channel, args, msg, user) => {
-	let response = await querySRXD('history', '', { limit: 1 });
-	if("data" in response) {
-		if(response.data.length) {
-			await reply(channel, msg, formatSRXDLinkResponse(response.data[0], "Current chart: "));
+	const scene = await obs.call('GetCurrentProgramScene');
+
+	if(scene.sceneName.split(" ")[0] == "SRXD") {
+		let response = await querySRXD('history', '', { limit: 1 });
+		if(!response) {
+			await reply(channel, msg, "⚠️ Could not query SpinRequests.");
+		} else if("data" in response) {
+			if(response.data.length) {
+				await reply(channel, msg, formatSRXDLinkResponse(response.data[0], "Current chart: "));
+			}
 		}
+	} else {
+		await commandList.get("foobar").trigger(channel, args, msg, user);
 	}
 }, {
-	aliases: ["song", "chart"]
+	aliases: ["song", "chart"],
+	cooldown: 10
 });
 
 // --- !low ---
