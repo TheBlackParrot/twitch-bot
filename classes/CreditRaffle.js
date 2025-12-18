@@ -28,15 +28,23 @@ export class CreditRaffle {
 			return;
 		}
 
-		this.active = false;
-
 		const amount = global.counter.get("RaffleCredits");
-		global.counter.set("RaffleCredits", 0);
 
 		let winner;
 		const ids = Object.keys(this.entries);
 
+		if(!ids.length) {
+			this.active = false;
+
+			await global.say(global.broadcasterUser.name, `Aw! No one joined the raffle. We'll just throw these credits into the next one... Sadge`);
+			return;
+		}
+
+		global.counter.set("RaffleCredits", 0);
+
 		if(ids.length == 1) {
+			this.active = false;
+
 			winner = this.entries[ids[0]];
 			await global.updateLeaderboardValues(winner.userId, "Gamba Credits", amount * 2);
 			await global.say(global.broadcasterUser.name, `There was only one entrant? That's no fun! Have double the credits @${winner.displayName}, go nuts, who cares. WHATASHAME`);
@@ -52,6 +60,7 @@ export class CreditRaffle {
 		await global.say(global.broadcasterUser.name, `And the winner of ${amount} Gamba Credits is... PauseChamp`);
 		await delay(3500 + (Math.random() * 2500));
 
+		this.active = false;
 		await global.updateLeaderboardValues(winner.userId, "Gamba Credits", amount);
 		await global.say(global.broadcasterUser.name, `... @${winner.displayName}! PogChamp Congrats! Clap Clap Clap`);
 		await global.remoteSound.play("applause", 0.6);
