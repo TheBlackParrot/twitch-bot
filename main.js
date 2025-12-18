@@ -1719,7 +1719,9 @@ async function onOBSSceneChanged(sceneObject) {
 		inputMuted: isIntermission
 	});
 
-	await axios.post(`http://${settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
+	if(initialCategory != "VRChat") {
+		await axios.post(`http://${settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
+	}
 
 	if(initialCategory == "Spin Rhythm XD") {
 		const throwStuff = redeemList.getByName("Throw stuff at me");
