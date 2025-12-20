@@ -22,6 +22,7 @@ import { RulerOfTheRedeem } from "./classes/RulerOfTheRedeem.js";
 import { Counter } from "./classes/Counter.js";
 import { SoundServer } from "./classes/SoundServer.js";
 import { CreditRaffle } from "./classes/CreditRaffle.js";
+import { Foobar2000 } from "./classes/Foobar2000.js";
 
 const settings = JSON.parse(await fs.readFile('./settings.json'));
 global.settings = settings;
@@ -41,11 +42,6 @@ const weatherConditionCodes = JSON.parse(await fs.readFile('./static/weatherCond
 const initialRedeemList = JSON.parse(await fs.readFile('./static/redeems.json'));
 const rotatingMessageLines = JSON.parse(await fs.readFile('./static/rotatingMessages.json'));
 const soundCommands = JSON.parse(await fs.readFile('./static/soundCommands.json'));
-const foobarSchema = JSON.parse(await fs.readFile('./static/foobarSchema.json'));
-var foobarTagSchema = {};
-for(const key in foobarSchema) {
-	foobarTagSchema[foobarSchema[key].tag] = key;
-}
 const whitelistedDomains = JSON.parse(await fs.readFile('./static/whitelistedDomains.json'));
 
 fs.mkdir("./logs").catch((err) => {
@@ -66,6 +62,7 @@ global.counter = counter;
 const remoteSound = new SoundServer();
 global.remoteSound = remoteSound;
 const creditRaffle = new CreditRaffle();
+const foobar2000 = new Foobar2000("safe");
 
 const apiClient = new ApiClient({
 	authProvider
@@ -364,58 +361,37 @@ commandList.addTrigger("endraffle", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+// --- !f2kr ---
+commandList.addTrigger("f2kr", async(channel, args, msg, user) => {
+	if(!args.length) {
+		// todo: give the song list
+		return;
+	}
+
+	if(args[0].length != 7 || !(/^[0-9A-F]{7}$/i.test(args[0]))) {
+		await reply(channel, msg, `⚠️ Request code must be 7 hexadecimal characters in length.`);
+		return;
+	}
+
+	const track = await foobar2000.enqueueTrack(args[0].toLowerCase());
+	if(track) {
+		await reply(channel, msg, `Queued "${track.title}" by ${track.artist} (from "${track.album}") at position #${track.queuePosition}`);
+	} else {
+		await reply(channel, msg, `⚠️ Could not enqueue track.`);
+	}
+}, {
+	aliases: ["f2kreq", "f2ksr", "rf2k", "srf2k", "reqf2k", "f2krequest", "requestf2k"],
+	userCooldown: 10
+});
+
 // --- !foobar ---
 commandList.addTrigger("foobar", async(channel, args, msg, user) => {
-	const rootResponse = await axios.get(`http://${settings.foobar.address}/api/player`).catch((err) => {});
-
-	if(!("data" in rootResponse)) {
-		await reply(channel, msg, '⚠️ Could not query foobar2000.');
-		return;
+	const track = await foobar2000.getCurrentTrack();
+	if(track) {
+		await reply(channel, msg, `Current song: "${track.title}" by ${track.artist} (from "${track.album}")${"spotifyURL" in track ? ` -- ${track.spotifyURL}` : ""}`);
+	} else {
+		await reply(channel, msg, `⚠️ Could not fetch data from foobar2000.`);
 	}
-
-	if(!("player" in rootResponse.data)) {
-		await reply(channel, msg, '⚠️ No player data returned from foobar2000.');
-		return;
-	}
-
-	if(!("activeItem" in rootResponse.data.player)) {
-		await reply(channel, msg, '⚠️ No active item data returned from foobar2000.');
-		return;
-	}
-
-	const active = rootResponse.data.player.activeItem;
-
-	let columns = [];
-	for(const key in foobarSchema) {
-		columns.push(foobarSchema[key].tag);
-	}
-
-	const entryResponse = await axios.get(`http://${settings.foobar.address}/api/playlists/${active.playlistId}/items/${active.index}:1?columns=%${columns.join("%,%")}%`).catch((err) => {});
-
-	if(!("data" in entryResponse)) {
-		await reply(channel, msg, '⚠️ No playlist entry data returned from foobar2000.');
-		return;
-	}
-
-	var track = {};
-	const trackData = entryResponse.data.playlistItems.items[0].columns;
-
-	for(const idx in columns) {
-		const tag = columns[idx];
-		track[foobarTagSchema[tag]] = (trackData[idx] === "?" ? null : formatFoobarTagResponse(trackData[idx], foobarTagSchema[tag]));
-	}
-
-	let spotifyURL = null;
-	if("comment" in track) {
-		if(track.comment) {
-			if(track.comment.length == 22 && track.comment.split(" ").length == 1) {
-				// spotify code
-				spotifyURL = `https://open.spotify.com/track/${track.comment}`;
-			}
-		}
-	}
-
-	await reply(channel, msg, `"${track.title}" by ${track.artist} (from "${track.album}")${spotifyURL != null ? ` -- ${spotifyURL}` : ""}`);
 }, {
 	aliases: ["foobar2k"],
 	cooldown: 10

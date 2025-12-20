@@ -1,34 +1,44 @@
 {
 	"title": {
-		"tag": "title",
+		"tag": "%title%",
 		"type": "string"
 	},
 	"artist": {
-		"tag": "artist",
+		"tag": "%artist%",
 		"type": "string"
 	},
 	"album": {
-		"tag": "album",
+		"tag": "%album%",
 		"type": "string"
 	},
 	"year": {
-		"tag": "year",
+		"tag": "%year%",
 		"type": "date"
 	},
 	"isrc": {
-		"tag": "isrc",
+		"tag": "%isrc%",
 		"type": "string"
 	},
 	"duration": {
-		"tag": "length_seconds_fp",
+		"tag": "%length_seconds_fp%",
 		"type": "float"
 	},
 	"filename": {
-		"tag": "filename_ext",
+		"tag": "%filename_ext%",
 		"type": "string"
 	},
 	"comment": {
-		"tag": "comment",
+		"tag": "%comment%",
 		"type": "string"
+	},
+	"md5": {
+		"tag": "$meta(AUDIOMD5)",
+		"type": "string",
+		"skipPercents": true
+	},
+	"requestCode": {
+		"tag": "$lower($substr($meta(AUDIOMD5)\\, 0\\, 7))",
+		"type": "string",
+		"skipPercents": true
 	}
 }
