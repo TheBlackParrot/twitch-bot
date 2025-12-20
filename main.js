@@ -364,7 +364,7 @@ commandList.addTrigger("endraffle", async(channel, args, msg, user) => {
 // --- !f2kr ---
 commandList.addTrigger("f2kr", async(channel, args, msg, user) => {
 	if(!args.length) {
-		// todo: give the song list
+		await reply(channel, msg, "For a list of music that can be requested during non-rhythm-game gameplay, see https://theblackparrot.me/foobar2k (press the code on the left to copy a chat command that can be pasted here!)");
 		return;
 	}
 
@@ -380,7 +380,7 @@ commandList.addTrigger("f2kr", async(channel, args, msg, user) => {
 		await reply(channel, msg, `⚠️ Could not enqueue track.`);
 	}
 }, {
-	aliases: ["f2kreq", "f2ksr", "rf2k", "srf2k", "reqf2k", "f2krequest", "requestf2k"],
+	aliases: ["f2kreq", "f2ksr", "rf2k", "srf2k", "reqf2k", "f2krequest", "requestf2k", "fb2kr"],
 	userCooldown: 10
 });
 
