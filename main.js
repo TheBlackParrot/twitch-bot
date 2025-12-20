@@ -24,12 +24,19 @@ import { SoundServer } from "./classes/SoundServer.js";
 import { CreditRaffle } from "./classes/CreditRaffle.js";
 import { Foobar2000 } from "./classes/Foobar2000.js";
 
+fs.mkdir("./logs").catch((err) => {
+	// ignored 
+});
+fs.mkdir("./data/persistence", { recursive: true }).catch((err) => {
+	// ignored
+});
+
 const settings = JSON.parse(await fs.readFile('./settings.json'));
 global.settings = settings;
 const clientId = settings.auth.twitch.clientID;
 const clientSecret = settings.auth.twitch.clientSecret;
-const botTokenData = JSON.parse(await fs.readFile('./tokens.738319562.json'));
-const streamerTokenData = JSON.parse(await fs.readFile('./tokens.43464015.json'));
+const botTokenData = JSON.parse(await fs.readFile('./data/tokens.738319562.json'));
+const streamerTokenData = JSON.parse(await fs.readFile('./data/tokens.43464015.json'));
 const authProvider = new RefreshingAuthProvider(
 	{
 		clientId,
@@ -43,13 +50,6 @@ const initialRedeemList = JSON.parse(await fs.readFile('./static/redeems.json'))
 const rotatingMessageLines = JSON.parse(await fs.readFile('./static/rotatingMessages.json'));
 const soundCommands = JSON.parse(await fs.readFile('./static/soundCommands.json'));
 const whitelistedDomains = JSON.parse(await fs.readFile('./static/whitelistedDomains.json'));
-
-fs.mkdir("./logs").catch((err) => {
-	// ignored 
-});
-fs.mkdir("./data/persistence", { recursive: true }).catch((err) => {
-	// ignored
-});
 
 const users = new UserList();
 const commandList = new CommandList();
