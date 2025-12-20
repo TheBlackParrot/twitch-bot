@@ -1823,15 +1823,6 @@ async function onOBSSceneChanged(sceneObject) {
 
 	allowBejeweled = (name === "Ad Wall");
 
-	await obs.call('SetInputMute', {
-		inputName: 'Microphone',
-		inputMuted: isIntermission
-	});
-
-	if(initialCategory != "VRChat") {
-		await axios.post(`http://${settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
-	}
-
 	if(initialCategory == "Spin Rhythm XD") {
 		const throwStuff = redeemList.getByName("Throw stuff at me");
 		apiClient.channelPoints.updateCustomReward(broadcasterUser.id, throwStuff.id, {
@@ -1839,13 +1830,34 @@ async function onOBSSceneChanged(sceneObject) {
 		});
 	}
 
+	await redeemList.getByName("Flip a Coin").enable(isIntermission);
+	await redeemList.getByName("gib coin hint pls?").enable(isIntermission);
+}
+async function onOBSSceneTransitionStarted(transitionObject) {
+	const sceneObject = await obs.call('GetCurrentProgramScene');
+
+	global.log("OBS", `Scene transition to scene ${name} started`, false, ['gray']);
+	
+	const name = sceneObject.sceneName;
+
+	const isVRChat = (name === "VRChat");
+	const isIntermission = (name === "Ad Wall" || name === "Starting Soon");
+	const isMenu = (name === "SRXD Menu");
+	const isGameplay = (name === "SRXD Gameplay");
+
+	await obs.call('SetInputMute', {
+		inputName: 'Microphone',
+		inputMuted: isIntermission
+	});
+
 	await obs.call('SetInputVolume', {
 		inputName: "Spotify Audio",
 		inputVolumeDb: isVRChat ? -4 : 0
 	});
 
-	await redeemList.getByName("Flip a Coin").enable(isIntermission);
-	await redeemList.getByName("gib coin hint pls?").enable(isIntermission);
+	if(initialCategory != "VRChat") {
+		await axios.post(`http://${settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
+	}
 }
 
 async function onOBSStreamStateChanged(state) {
@@ -1889,6 +1901,7 @@ obs.on('ConnectionOpened', onOBSConnectionOpened);
 obs.on('ConnectionClosed', onOBSConnectionClosed);
 obs.on('CurrentProgramSceneChanged', onOBSSceneChanged);
 obs.on('StreamStateChanged', onOBSStreamStateChanged);
+obs.on('SceneTransitionStarted', onOBSSceneTransitionStarted)
 
 initOBS();
 
