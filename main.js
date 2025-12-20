@@ -1281,10 +1281,20 @@ chatClient.onRaidCancel((channel, msg) => {
 	say(channel, "wait nevermind...");
 });
 chatClient.onSub((channel, user, subInfo, msg) => {
+	if(seenUsers.indexOf(msg.userInfo.userName) === -1) {
+		seenUsers.push(msg.userInfo.userName);
+		onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
+	}
+
 	tts(settings.tts.voices.system, `${user} subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
 	say(channel, hypeEmoteString());
 })
 chatClient.onResub((channel, user, subInfo, msg) => {
+	if(seenUsers.indexOf(msg.userInfo.userName) === -1) {
+		seenUsers.push(msg.userInfo.userName);
+		onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
+	}
+	
 	tts(settings.tts.voices.system, `${user} re-subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
 	say(channel, hypeEmoteString());
 })
