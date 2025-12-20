@@ -1132,6 +1132,8 @@ function onUserFirstSeenForSession(channel, user, isFirst) {
 	tts(settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(user)} has entered the chat${isFirst ? " for the first time." : "."}`);
 }
 
+var previousMessageOwner = null;
+var clearPreviousMessageOwnerTimeout;
 async function onStandardMessage(channel, user, message, emoteOffsets) {
 	// user: https://twurple.js.org/reference/chat/classes/ChatUser.html
 
@@ -1177,8 +1179,14 @@ async function onStandardMessage(channel, user, message, emoteOffsets) {
 	if(!(message.startsWith('@') || message.startsWith('!')) && initialCategory != "VRChat" && !wasGemSwap) {
 		const userData = users.getUser(user.userId);
 
-		const ttsName = userData.getPersistentData("ttsName");
-		await tts(settings.tts.voices.names, ttsName ? ttsName : ensureEnglishName(user));
+		if(previousMessageOwner != user.userName) {
+			const ttsName = userData.getPersistentData("ttsName");
+			await tts(settings.tts.voices.names, ttsName ? ttsName : ensureEnglishName(user));
+		}
+		
+		previousMessageOwner = user.userName;
+		clearTimeout(clearPreviousMessageOwnerTimeout);
+		clearPreviousMessageOwnerTimeout = setTimeout(clearPreviousMessageOwner, settings.tts.clearPreviousOwnerTimeout * 1000);
 
 		const voice = userData.getPersistentData("ttsVoice");
 		await tts(voice == null ? settings.tts.voices.messages : voice, filtered);
@@ -1187,6 +1195,11 @@ async function onStandardMessage(channel, user, message, emoteOffsets) {
 	if(Math.floor(Math.random() * 1000) == 69) {
 		say(channel, uniEmotes[Math.floor(Math.random() * uniEmotes.length)]);
 	}
+}
+function clearPreviousMessageOwner() {
+	// doing this to allow names through tts again from the same person, keeps context in my memory better
+	clearTimeout(clearPreviousMessageOwnerTimeout);
+	previousMessageOwner = null;
 }
 
 const vnyanOnlyRedeems = [
@@ -1294,7 +1307,7 @@ chatClient.onResub((channel, user, subInfo, msg) => {
 		seenUsers.push(msg.userInfo.userName);
 		onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
 	}
-	
+
 	tts(settings.tts.voices.system, `${user} re-subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
 	say(channel, hypeEmoteString());
 })
