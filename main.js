@@ -46,6 +46,7 @@ var foobarTagSchema = {};
 for(const key in foobarSchema) {
 	foobarTagSchema[foobarSchema[key].tag] = key;
 }
+const whitelistedDomains = JSON.parse(await fs.readFile('./static/whitelistedDomains.json'));
 
 fs.mkdir("./logs").catch((err) => {
 	// ignored 
@@ -1115,12 +1116,12 @@ async function messageHandler(channel, userString, text, msg) {
 
 		if(isRegex) {
 			if(command.fallThroughAsMessage) {
-				onStandardMessage(channel, msg.userInfo, text, msg.emoteOffsets);
+				onStandardMessage(channel, msg, text);
 			}
 		}
 	} else {
 		// not a command or regex, standard message
-		onStandardMessage(channel, msg.userInfo, text, msg.emoteOffsets);
+		onStandardMessage(channel, msg, text);
 	}
 }
 const commandListener = chatClient.onMessage(messageHandler);
@@ -1134,19 +1135,43 @@ function onUserFirstSeenForSession(channel, user, isFirst) {
 
 var previousMessageOwner = null;
 var clearPreviousMessageOwnerTimeout;
-async function onStandardMessage(channel, user, message, emoteOffsets) {
+async function onStandardMessage(channel, msgObject, message) {
 	// user: https://twurple.js.org/reference/chat/classes/ChatUser.html
+
+	const user = msgObject.userInfo;
+	const emoteOffsets = msgObject.emoteOffsets;
 
 	const emotes = parseEmotePositions(message, emoteOffsets);
 
-	let filtered = message.split(" ").filter((part) => {
+	let filtered = message.split(" ").filter(async (part) => {
 		for(const emote of emotes) {
 			if(part === emote.name) {
 				return false;
 			}
 		}
 
-		return !part.startsWith('http:') && !part.startsWith('https:');
+		// doing link checking here since we're looping through the entire message anyways, doesn't apply to those with a role
+		if(part.indexOf(".") !== -1 && (part.startsWith('http:') || part.startsWith('https:')) && !(user.isMod || user.isVip || user.isBroadcaster)) {
+			var url = null;
+
+			try {
+				url = new URL(part.toLowerCase());
+			} catch(err) {
+				// ignored
+			}
+
+			if(url) {
+				const hostParts = url.hostname.split(".");
+				// only need the domain and TLD
+				const host = [hostParts[hostParts.length - 2], hostParts[hostParts.length - 1]].join(".");
+				if(whitelistedDomains.indexOf(host) === -1) {
+					await reply(channel, msgObject, 'This internet domain is not whitelisted, sorry!');
+					await apiClient.moderation.deleteChatMessages(broadcasterUser.id, msgObject.id);
+				}
+			}
+		}
+
+		return !part.startsWith('http:') && !part.startsWith('https:'); // filter it anyways
 	}).join(" ");
 	filtered = global.emotes.getFilteredString(filtered);
 
