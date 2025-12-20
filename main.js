@@ -763,6 +763,13 @@ commandList.addTrigger("steam", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+// --- !streamonline ---
+commandList.addTrigger("streamonline", async(channel, args, msg, user) => {
+	triggerTwitchStreamOnlineEvents();
+}, {
+	whitelist: ["broadcaster"]
+});
+
 // --- !t1d ---
 commandList.addTrigger("t1d", async(channel, args, msg, user) => {
 	await say(channel, 'Type 1 diabetes (T1D) is an autoimmune disease in which insulin-producing beta cells in the pancreas are mistakenly destroyed by the body’s immune system. People with T1D are dependent on injected or pumped insulin to survive. Its causes are not fully known, and there is currently no cure. Learn more: https://www.breakthrought1d.org/t1d-basics/');
@@ -1616,11 +1623,14 @@ async function onTwitchStreamOnline(event) {
 			content: `https://twitch.tv/theblackparrot\n\n# ${event.broadcasterDisplayName} is now live with *${channelInfo.gameName}*!\n> ${channelInfo.title}`
 		});
 
-		if(initialCategory == "Spin Rhythm XD") {
-			swapCategoryInterval = setInterval(swapCategoryInSRXD, 45 * 60 * 1000);
-		};
+		triggerTwitchStreamOnlineEvents();
 	}
 	hasSetFirstRedeem = true;
+}
+function triggerTwitchStreamOnlineEvents() {
+	if(initialCategory == "Spin Rhythm XD") {
+		swapCategoryInterval = setInterval(swapCategoryInSRXD, 45 * 60 * 1000);
+	};
 
 	adTimer();
 }
