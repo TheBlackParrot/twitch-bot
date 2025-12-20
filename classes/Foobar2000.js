@@ -94,6 +94,7 @@ export class Foobar2000 {
 		}
 
 		global.log("FOOBAR2K", `Initialized library with ${this.length.toLocaleString()} tracks`, false, ['whiteBright']);
+		await this.exportLibrary();
 	}
 
 	addToLibrary(trackData) {
@@ -193,5 +194,12 @@ export class Foobar2000 {
 		}
 
 		return track;
+	}
+
+	async exportLibrary() {
+		const library = this.library;
+		await fs.writeFile(global.settings.foobar.exportLocation, JSON.stringify(library, null, '\t'));
+
+		await global.log("FOOBAR2K", `Exported library to ${global.settings.foobar.exportLocation}`, false, ['gray']);
 	}
 }
