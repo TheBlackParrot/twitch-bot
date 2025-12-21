@@ -1,0 +1,146 @@
+body {
+	font-family: sans-serif;
+	font-size: 10pt;
+
+	background-color: #2a2b2e;
+	margin: 16px;
+	padding: 0px;
+}
+
+#wrapper {
+	filter: drop-shadow(0px 1px 3px #00000080);
+}
+
+* {
+	border: 0px !important;
+	box-shadow: 0px 0px 0px transparent !important;
+}
+
+.gridjs-container {
+	padding: 0px !important;
+}
+
+.gridjs-search {
+	width: 100%;
+}
+.gridjs-search-input {
+	padding: 4px 8px !important;
+	background-color: #111 !important;
+	color: #ccc !important;
+	outline: 1px solid #ffffff40 !important;
+	width: 100%;
+}
+
+.gridjs-table {
+	height: unset !important;
+}
+
+.cell {
+	padding: 4px 8px !important;
+	color: #fff !important;
+	border-bottom: 1px solid #ffffff20 !important
+}
+.row:nth-child(even) .cell {
+	background-color: #404040 !important;
+}
+.row:nth-child(odd) .cell {
+	background-color: #4c4c4c !important;
+}
+
+.header {
+	padding: 4px 8px !important;
+	background-image: linear-gradient(to bottom, #252525, #161616) !important;
+	color: #ccc !important;
+	border: 0px !important;
+	font-size: 11pt;
+}
+
+.header:nth-child(1) {
+	border-top-left-radius: 8px;
+}
+.header:last-child {
+	border-top-right-radius: 8px;
+}
+
+.headerHeader {
+	height: 32px;
+	box-shadow: 0px 2px 4px -2px #000 !important;
+	position: sticky;
+	top: 0px;
+}
+
+.gridjs-sort {
+	height: 16px !important;
+	filter: invert(100%);
+}
+
+.footer {
+	background-image: linear-gradient(to bottom, #252525, #161616) !important;
+	font-size: 11pt !important;
+	border-top: 1px solid #ffffff40 !important;
+	box-shadow: 0px -2px 4px -2px #000 !important;
+}
+.summary {
+	color: #fff !important;
+}
+
+.pageButton {
+	color: #ccc !important;
+	background-color: #111 !important;
+	font-size: 11pt !important;
+}
+.pageButtonCurrent {
+	color: #fff !important;
+	background-color: #333 !important;
+}
+
+.pageButton:hover {
+	filter: brightness(150%);
+}
+
+.codeButton {
+	border-radius: 4px;
+	background-color: #222;
+	color: #ccc;
+	font-family: monospace;
+	font-size: 8pt;
+	padding: 2px 4px;
+	font-weight: 600;
+	outline: 1px solid #ffffff20 !important;
+	transition: 0.2s;
+}
+
+.codeButton:hover {
+	transition: 0s;
+	filter: brightness(150%);
+}
+.codeButton:active {
+	transition: 0s;
+	position: relative;
+	top: 1px;
+	filter: brightness(75%);
+}
+
+.invert {
+	transition: 0.5s;
+	filter: invert(100%) !important;
+}
+
+@media screen and (width <= 700px) {
+	.gridjs-table, .gridjs-wrapper {
+		height: calc(-160px + 100vh) !important;
+	}
+	.summary {
+		text-align: center;
+  		width: 100%;
+  		margin-top: 0px !important;
+  		margin-bottom: 10px;
+	}
+	.gridjs-pages {
+		float: unset !important;
+		text-align: center;
+	}
+	.pageButton {
+		padding: 5px 2vw !important;
+	}
+}
