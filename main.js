@@ -1119,9 +1119,9 @@ async function onStandardMessage(channel, msgObject, message) {
 
 	const emotes = parseEmotePositions(message, emoteOffsets);
 
-	let filtered = message.split(" ").filter(async (part) => {
+	let filtered = message.split(" ").filter((part) => {
 		for(const emote of emotes) {
-			if(part === emote.name) {
+			if(part == emote.name) {
 				return false;
 			}
 		}
@@ -1141,8 +1141,8 @@ async function onStandardMessage(channel, msgObject, message) {
 				// only need the domain and TLD
 				const host = [hostParts[hostParts.length - 2], hostParts[hostParts.length - 1]].join(".");
 				if(whitelistedDomains.indexOf(host) === -1) {
-					await reply(channel, msgObject, 'This internet domain is not whitelisted, sorry!');
-					await apiClient.moderation.deleteChatMessages(broadcasterUser.id, msgObject.id);
+					reply(channel, msgObject, 'This internet domain is not whitelisted, sorry!');
+					apiClient.moderation.deleteChatMessages(broadcasterUser.id, msgObject.id);
 				}
 			}
 		}
@@ -1859,11 +1859,10 @@ async function onOBSSceneChanged(sceneObject) {
 }
 async function onOBSSceneTransitionStarted(transitionObject) {
 	const sceneObject = await obs.call('GetCurrentProgramScene');
-
-	global.log("OBS", `Scene transition to scene ${name} started`, false, ['gray']);
 	
 	const name = sceneObject.sceneName;
-
+	global.log("OBS", `Scene transition to scene ${name} started`, false, ['gray']);
+	
 	const isVRChat = (name === "VRChat");
 	const isIntermission = (name === "Ad Wall" || name === "Starting Soon");
 	const isMenu = (name === "SRXD Menu");
