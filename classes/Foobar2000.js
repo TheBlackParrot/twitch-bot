@@ -49,6 +49,11 @@ export class Foobar2000 {
 
 	async getLibraryState() {
 		const rootResponse = await axios.get(`http://${global.settings.foobar.address}/api/playlists`).catch((err) => {});
+
+		if(!rootResponse) {
+			global.log("FOOBAR2K", "No response from foobar2000", false, ['redBright']);
+			return [];
+		}
 		
 		let wantedPlaylist = {};
 		for(const playlist of rootResponse.data.playlists) {
@@ -197,6 +202,11 @@ export class Foobar2000 {
 	}
 
 	async exportLibrary() {
+		if(!this.library.length) {
+			await global.log("FOOBAR2K", `Not exporting library to a file, library is empty`, false, ['gray']);
+			return;
+		}
+
 		const library = this.library;
 		await fs.writeFile(global.settings.foobar.exportLocation, JSON.stringify(library, null, '\t'));
 

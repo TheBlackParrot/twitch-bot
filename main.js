@@ -13,6 +13,35 @@ import { ApiClient } from '@twurple/api';
 import { ChatClient, parseEmotePositions } from '@twurple/chat';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 
+const sessionStart = Date.now();
+
+await fs.writeFile(`./logs/${sessionStart}.log`, '');
+const logFileHandle = await fs.open(`./logs/${sessionStart}.log`, 'r+');
+const logOutput = await logFileHandle.createWriteStream();
+const logWriter = new Console({ stdout: logOutput });
+function log(type, data, showTrace = false, style = []) {
+	let date = new Date();
+	let timestamp = `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}`;
+
+	const header = `[${timestamp}]${type != "" ? ` [${type}]` : ''}`;
+
+	if(typeof(data) != "object") {
+		console.log(styleText(style, `${header} ${data}`));
+		logWriter.log(`${header} ${data}`);
+	} else {
+		console.log(header);
+		logWriter.log(header);
+		console.log(data);
+		logWriter.log(data);
+	}
+
+	if(showTrace) {
+		console.trace();
+		logWriter.trace();
+	}
+}
+global.log = log;
+
 import { UserList } from "./classes/User.js";
 import { CommandList } from "./classes/Command.js";
 import { WebSocketListener } from "./classes/WebSocketListener.js";
@@ -69,41 +98,11 @@ const apiClient = new ApiClient({
 });
 global.apiClient = apiClient;
 
-const sessionStart = Date.now();
-
-await fs.writeFile(`./logs/${sessionStart}.log`, '');
-const logFileHandle = await fs.open(`./logs/${sessionStart}.log`, 'r+');
-const logOutput = await logFileHandle.createWriteStream();
-const logWriter = new Console({ stdout: logOutput });
-
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 var allowBejeweled = false;
 
 // ====== SYSTEM STUFF ======
-
-function log(type, data, showTrace = false, style = []) {
-	let date = new Date();
-	let timestamp = `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}`;
-
-	const header = `[${timestamp}]${type != "" ? ` [${type}]` : ''}`;
-
-	if(typeof(data) != "object") {
-		console.log(styleText(style, `${header} ${data}`));
-		logWriter.log(`${header} ${data}`);
-	} else {
-		console.log(header);
-		logWriter.log(header);
-		console.log(data);
-		logWriter.log(data);
-	}
-
-	if(showTrace) {
-		console.trace();
-		logWriter.trace();
-	}
-}
-global.log = log;
 
 async function tts(voice, string, rate = 0) {
 	let url = new URL('/', settings.tts.URL);
