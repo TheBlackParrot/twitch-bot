@@ -146,7 +146,7 @@ function formatFoobarTagResponse(data, tag) {
 // ====== AUTH ======
 
 async function refreshHandler(userId, newTokenData) {
-	await fs.writeFile(`./tokens.${userId}.json`, JSON.stringify(newTokenData, null, 4));
+	await fs.writeFile(`./data/tokens.${userId}.json`, JSON.stringify(newTokenData, null, 4));
 	log("AUTH", `Refreshed tokens for ${userId}`);
 }
 
