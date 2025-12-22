@@ -1888,7 +1888,7 @@ async function onOBSSceneChanged(sceneObject) {
 	if(initialCategory == "Spin Rhythm XD") {
 		const throwStuff = redeemList.getByName("Throw stuff at me");
 		apiClient.channelPoints.updateCustomReward(broadcasterUser.id, throwStuff.id, {
-			isPaused: isMenu
+			isPaused: !isMenu
 		});
 	}
 
