@@ -996,6 +996,17 @@ commandList.addRegex(`^(do|play|try)\\s.*\\s(song|pls|please|plz|plx)`, async(ch
 	cooldown: 30
 });
 
+// choppy audio response
+commandList.addRegex(`(audio|music)\\s.*\\s(choppy|crackly|chopping|crackling)`, async(channel, args, msg, user) => {
+	await reply(channel, msg, "It's a Windows audio bug. It will fix itself shortly, give it a minute!");
+}, {
+	aliases: [
+		`(choppy|crackly|chopping|crackling)\\s(audio|music)`,
+		`(audio|music)\\s(choppy|crackly|chopping|crackling)`
+	],
+	cooldown: 30
+});
+
 // ====== CHAT STUFF ======
 
 const uniEmotes = ["boobsPolite", "boobsFlower", "BigBoobsStare", "bigboobs"];
