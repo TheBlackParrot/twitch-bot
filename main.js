@@ -270,6 +270,25 @@ commandList.addTrigger("ad", async(channel, args, msg, user) => {
 	whitelist: ["broadcaster"]
 });
 
+// --- !addrotr ---
+commandList.addTrigger("addrotr", async(channel, args, msg, user) => {
+	if(args.length != 2) {
+		return;
+	}
+
+	const userCheck = await apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
+
+	if(!userCheck) {
+		await reply(channel, msg, "⚠️ Could not find any users matching that username");
+		return;
+	}
+
+	await updateLeaderboardValues(userCheck.id, "Ruler of the Redeem", parseInt(args[1]));
+	await reply(channel, msg, `🆗 Added ${parseInt(args[1]).toLocaleString()} seconds to Ruler of the Redeem for ${userCheck.name}`);
+}, {
+	whitelist: ["broadcaster"]
+});
+
 // --- !amhere ---
 commandList.addTrigger("amhere", async(channel, args, msg, user) => {
 	await updateLeaderboardValues(user.userId, "Gamba Credits", 20);
