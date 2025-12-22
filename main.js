@@ -493,7 +493,9 @@ commandList.addTrigger("modadd", async(channel, args, msg, user) => {
 
 	let addResponse = await querySRXD('add', queryString, { user: user.displayName, service: "twitch" });
 
-	if("data" in addResponse) {
+	if(!addResponse) {
+		await reply(channel, msg, "⚠️ Could not query SpinRequests.");
+	} else if("data" in addResponse) {
 		if("message" in addResponse.data) { return await reply(channel, msg, `⚠️ Something went wrong: ${addResponse.data.message}`); }
 		await reply(channel, msg, `🆗 ${formatSRXDLinkResponse(addResponse.data, "Added ", true)} to the queue.`);
 		sound.play("sounds/notif.wav", { volume: 0.9 });
@@ -556,7 +558,10 @@ commandList.addTrigger("overlays", async(channel, args, msg, user) => {
 // --- !prevlink ---
 commandList.addTrigger("prevlink", async(channel, args, msg, user) => {
 	let response = await querySRXD('history', '', { limit: 2 });
-	if("data" in response) {
+
+	if(!response) {
+		await reply(channel, msg, "⚠️ Could not query SpinRequests.");
+	} else if("data" in response) {
 		if(response.data.length === 2) {
 			await reply(channel, msg, formatSRXDLinkResponse(response.data[1], "Previous chart: "));
 		} else {
@@ -617,7 +622,9 @@ commandList.addTrigger("request", async(channel, args, msg, user) => {
 
 	let response = await querySRXD('query', queryString);
 
-	if("data" in response) {
+	if(!response) {
+		await reply(channel, msg, "⚠️ Could not query SpinRequests.");
+	} else if("data" in response) {
 		if("message" in response.data) { return await reply(channel, msg, `⚠️ Something went wrong: ${response.data.message}`); }
 		if(response.data.HasPlayed) { return await reply(channel, msg, '⚠️ This map has already been played this session!'); }
 		if(response.data.InQueue) { return await reply(channel, msg, '⚠️ This map is already in the queue!'); }
@@ -630,7 +637,9 @@ commandList.addTrigger("request", async(channel, args, msg, user) => {
 		}
 
 		let addResponse = await querySRXD('add', queryString, { user: user.displayName, service: "twitch" });
-		if("data" in addResponse) {
+		if(!addResponse) {
+			await reply(channel, msg, "⚠️ Could not query SpinRequests.");
+		} else if("data" in addResponse) {
 			if("message" in addResponse.data) { return await reply(channel, msg, `⚠️ Something went wrong: ${addResponse.data.message}`); }
 			await reply(channel, msg, `🆗 ${formatSRXDLinkResponse(addResponse.data, "Added ", true)} to the queue.`);
 			sound.play("sounds/notif.wav", { volume: 0.9 });
