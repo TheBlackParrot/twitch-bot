@@ -202,12 +202,12 @@ export class Foobar2000 {
 	}
 
 	async exportLibrary() {
-		if(!this.library.length) {
+		const library = this.library;
+		if(!Object.keys(library).length) {
 			await global.log("FOOBAR2K", `Not exporting library to a file, library is empty`, false, ['gray']);
 			return;
 		}
 
-		const library = this.library;
 		await fs.writeFile(global.settings.foobar.exportLocation, JSON.stringify(library, null, '\t'));
 
 		await global.log("FOOBAR2K", `Exported library to ${global.settings.foobar.exportLocation}`, false, ['gray']);
