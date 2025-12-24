@@ -96,10 +96,15 @@ export class BaseCommand {
 		this.cooldown = "cooldown" in opts ? opts.cooldown * 1000 : 0;
 		this.userCooldown = "userCooldown" in opts ? opts.userCooldown * 1000 : 0;
 		this.whitelist = "whitelist" in opts ? opts.whitelist : [];
+		this.respondWithCooldownMessage = "respondWithCooldownMessage" in opts ? opts.respondWithCooldownMessage : false;
 	}
 
 	get canUse() {
-		return Date.now() >= this.lastTriggered + this.cooldown
+		return Date.now() >= this.lastTriggered + this.cooldown;
+	}
+
+	get cooldownTimeLeft() {
+		return Math.ceil(((this.lastTriggered + this.cooldown) - Date.now()) / 1000);
 	}
 
 	async trigger(channel, args, msg, user) {

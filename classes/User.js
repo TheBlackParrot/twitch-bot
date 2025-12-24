@@ -57,4 +57,13 @@ export class User {
 
 		return Date.now() >= this.lastUsedCommand[which] + command.userCooldown;
 	}
+
+	cooldownTimeLeft(command) {
+		let which = typeof(command.name) === "undefined" ? command.regexStrings[0] : command.name;
+		if(!(which in this.lastUsedCommand)) {
+			return 0;
+		}
+
+		return Math.ceil(((this.lastUsedCommand[which] + command.userCooldown) - Date.now()) / 1000);
+	}
 }

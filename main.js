@@ -294,7 +294,8 @@ commandList.addTrigger("amhere", async(channel, args, msg, user) => {
 	await updateLeaderboardValues(user.userId, "Gamba Credits", 20);
 	await reply(channel, msg, '20 Gamba Credits to you! Okayge');
 }, {
-	userCooldown: 1800
+	userCooldown: 1800,
+	respondWithCooldownMessage: true
 });
 
 // --- !cancelraffle ---
@@ -343,7 +344,8 @@ commandList.addTrigger("credits", async(channel, args, msg, user) => {
 		await reply(channel, msg, `${value.userId == user.userId ? "You have" : `${value.userDisplayName} has`} ${value.value.toLocaleString()} Gamba ${value.value != 1 ? "Credits" : "Credit"}`);
 	}
 }, {
-	userCooldown: 5
+	userCooldown: 5,
+	respondWithCooldownMessage: true
 });
 
 // --- !csp ---
@@ -377,7 +379,8 @@ commandList.addTrigger("endraffle", async(channel, args, msg, user) => {
 	await creditRaffle.end();
 }, {
 	whitelist: ["broadcaster", "mod"],
-	cooldown: 10
+	cooldown: 10,
+	respondWithCooldownMessage: true
 });
 
 // --- !f2kr ---
@@ -400,7 +403,8 @@ commandList.addTrigger("f2kr", async(channel, args, msg, user) => {
 	}
 }, {
 	aliases: ["f2kreq", "f2ksr", "rf2k", "srf2k", "reqf2k", "f2krequest", "requestf2k", "fb2kr"],
-	userCooldown: 10
+	userCooldown: 10,
+	respondWithCooldownMessage: true
 });
 
 // --- !foobar ---
@@ -452,7 +456,8 @@ commandList.addTrigger("give", async(channel, args, msg, user) => {
 	await rulerOfTheRedeem.swapHands({ userId: userCheck.id, userName: userCheck.name }); // guh
 	await say(channel, `${user.displayName} has given the crown to ${userCheck.displayName}! That's so sweet, awww!`);
 }, {
-	cooldown: 10
+	cooldown: 10,
+	respondWithCooldownMessage: true
 });
 
 // --- !insulin ---
@@ -520,7 +525,8 @@ commandList.addTrigger("modadd", async(channel, args, msg, user) => {
 		sound.play("sounds/notif.wav", { volume: 0.9 });
 	}
 }, {
-	whitelist: ["broadcaster", "mod", "vip"]
+	whitelist: ["broadcaster", "mod", "vip"],
+	respondWithCooldownMessage: true
 });
 
 // --- !music ---
@@ -588,7 +594,8 @@ commandList.addTrigger("prevlink", async(channel, args, msg, user) => {
 		}
 	}
 }, {
-	aliases: ["prevsong", "prevchart", "prev", "previous"]
+	aliases: ["prevsong", "prevchart", "prev", "previous"],
+	cooldown: 10
 });
 
 // --- !pronouns ---
@@ -666,7 +673,8 @@ commandList.addTrigger("request", async(channel, args, msg, user) => {
 	}
 }, {
 	aliases: ["srxd", "req", "bsr", "sr", "add", "ssr"],
-	userCooldown: 10
+	userCooldown: 10,
+	respondWithCooldownMessage: true
 });
 
 // --- !rotr ---
@@ -681,7 +689,8 @@ commandList.addTrigger("rotr", async(channel, args, msg, user) => {
 		await reply(channel, msg, `${value.userId == user.userId ? "You have" : `${value.userDisplayName} has`} been Ruler of the Redeem for ${hours}h ${minutes}m ${seconds}s`);
 	}
 }, {
-	userCooldown: 5
+	userCooldown: 5,
+	respondWithCooldownMessage: true
 });
 
 // --- !ruler ---
@@ -717,7 +726,8 @@ commandList.addTrigger("so", async(channel, args, msg, user) => {
 }, {
 	whitelist: ["broadcaster", "mod"],
 	aliases: ["shoutout", "sso", "cso"],
-	cooldown: 60
+	cooldown: 60,
+	respondWithCooldownMessage: true
 });
 
 // --- !specs ---
@@ -758,7 +768,8 @@ commandList.addTrigger("startraffle", async(channel, args, msg, user) => {
 	await creditRaffle.start();
 }, {
 	whitelist: ["broadcaster", "mod"],
-	cooldown: 10
+	cooldown: 10,
+	respondWithCooldownMessage: true
 });
 
 // --- !steam ---
@@ -803,7 +814,8 @@ commandList.addTrigger("thrown", async(channel, args, msg, user) => {
 		await reply(channel, msg, `${value.userId == user.userId ? "You have" : `${value.userDisplayName} has`} thrown ${value.value.toLocaleString()} ${value.value != 1 ? "items" : "item"} at me`);
 	}
 }, {
-	userCooldown: 5
+	userCooldown: 5,
+	respondWithCooldownMessage: true
 });
 
 // --- !tipping ---
@@ -819,8 +831,7 @@ commandList.addTrigger("toggleswapping", async(channel, args, msg, user) => {
 	allowBejeweled = !allowBejeweled;
 	await reply(channel, msg, `Gem swapping is now ${allowBejeweled ? "enabled SkeletonPls" : "disabled SkeletonPause"}`);
 }, {
-	whitelist: ["broadcaster", "mod"],
-	cooldown: 0
+	whitelist: ["broadcaster", "mod"]
 });
 
 // --- !uptime ---
@@ -905,7 +916,9 @@ commandList.addTrigger("weather", async(channel, args, msg, user) => {
 
 	await reply(channel, msg, parts.join(" "));
 }, {
-	cooldown: 300
+	cooldown: 300,
+	userCooldown: 1800,
+	respondWithCooldownMessage: true
 });
 
 // ====== SOUND COMMANDS ======
@@ -1124,9 +1137,17 @@ async function messageHandler(channel, userString, text, msg) {
 				}
 			} else {
 				log("COMMANDS", `Command ${triggerName} is on global cooldown`);
+
+				if(command.respondWithCooldownMessage) {
+					await reply(channel, msg, `This command is on cooldown (globally) for another ${command.cooldownTimeLeft} ${command.cooldownTimeLeft != 1 ? "seconds" : "second"}`);
+				}
 			}
 		} else {
 			log("COMMANDS", `Command ${triggerName} is on cooldown for ${msg.userInfo.userName}`);
+
+			if(command.respondWithCooldownMessage) {
+				await reply(channel, msg, `This command is on cooldown (for yourself) for another ${user.cooldownTimeLeft(command)} ${user.cooldownTimeLeft(command) != 1 ? "seconds" : "second"}`);
+			}
 		}
 
 		if(isRegex) {
