@@ -916,6 +916,7 @@ for(const soundCommandName in soundCommands) {
 		commandList.addRegex(soundCommandName, async(channel, args, msg, user) => {
 			await remoteSound.play(params.filename, ("volume" in params ? params.volume : 1), ("pitch" in params ? params.pitch : [1, 1]));
 		}, {
+			caseInsensitive: "caseInsensitive" in params ? params.caseInsensitive : true,
 			userCooldown: "cooldown" in params ? params.cooldown : 5,
 		});
 	} else {
