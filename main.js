@@ -665,7 +665,7 @@ commandList.addTrigger("request", async(channel, args, msg, user) => {
 		}
 	}
 }, {
-	aliases: ["srxd", "req", "bsr", "sr", "add"],
+	aliases: ["srxd", "req", "bsr", "sr", "add", "ssr"],
 	userCooldown: 10
 });
 
