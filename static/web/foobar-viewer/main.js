@@ -13,6 +13,9 @@ function sortFunction(a, b) {
 	}
 }
 
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const now = new Date();
+
 async function fetchLibrary() {
 	const response = await fetch("./foobarLibrary.json");
 	const libraryData = await response.json();
@@ -40,7 +43,28 @@ async function fetchLibrary() {
 							await navigator.clipboard.writeText(`!fb2kr ${row.cells[0].data}`);
 						}
 					}, row.cells[0].data)
+				},
+				attributes: (cell, row) => {
+					if(row) {
+						return {
+							'data-id': row._id
+						};
+					}
 				}
+			},
+			{
+				id: "id", // ignore
+				name: "",
+				formatter: (cell, row) => {
+					if(Date.now() - row.cells[row.cells.length - 1].data < 2592000000) {
+						return "NEW";
+					} else {
+						const then = new Date(row.cells[row.cells.length - 1].data);
+						const months = ((now.getFullYear() - then.getFullYear()) * 12) + (now.getMonth() - then.getMonth());
+						return `${months}mo`;
+					}
+				},
+				sort: false
 			},
 			{
 				id: "title",
@@ -61,6 +85,40 @@ async function fetchLibrary() {
 				name: "Album",
 				sort: {
 					compare: sortFunction
+				}
+			},
+			{
+				id: "created",
+				name: "Date Added",
+				formatter: (cell, row) => {
+					const then = new Date(cell);
+					const output = [
+						then.getDate(),
+						monthNames[then.getMonth()],
+						then.getFullYear()
+					];
+
+					const elements = $(`.cell[data-id="${row._id}"]`);
+					if(elements.length) {
+						const parent = $(elements[0].closest(".row"));
+
+						// 2592000 seconds is 30 days
+						if(Date.now() - cell < 2592000000) {
+							if(elements.length) {
+								parent.addClass("new");
+							}
+						} else {
+							// 2592000 seconds is 30 days, 63113904 seconds is 2 years
+							const multiplier = 1 - Math.min(Math.max((now.getTime() - then.getTime() + 2592000000) / 63113904000, 0), 1);
+							
+							const alpha = Math.min(Math.max(Math.round(255 * multiplier), 32), 255).toString(16).padStart(2, "0");
+							const fontSize = Math.min(Math.max(7 + (3 * multiplier), 7), 10);
+
+							parent.children(`.cell[data-column-id="id"]`).css("color", `#ffffff${alpha}`).css("font-size", `${fontSize}pt`);
+						}
+					}
+
+					return output.join(" ");
 				}
 			}
 		],
