@@ -160,7 +160,9 @@ export class RegexCommand extends BaseCommand {
 		super(trigger, opts);
 
 		this.regexStrings = [regex];
-		this.validRegex = [new RegExp(regex, "i")];
+
+		const caseInsensitive = "caseInsensitive" in opts ? opts.caseInsensitive : true;
+		this.validRegex = [new RegExp(regex, caseInsensitive ? "i" : "")];
 
 		if("aliases" in opts) {
 			for(const aliasedRegex of opts.aliases) {
