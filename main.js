@@ -917,7 +917,6 @@ for(const soundCommandName in soundCommands) {
 			await remoteSound.play(params.filename, ("volume" in params ? params.volume : 1), ("pitch" in params ? params.pitch : [1, 1]));
 		}, {
 			userCooldown: "cooldown" in params ? params.cooldown : 5,
-			fallThroughAsMessage: false
 		});
 	} else {
 		commandList.addTrigger(soundCommandName, async(channel, args, msg, user) => {
