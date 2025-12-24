@@ -17,8 +17,12 @@ function formatFoobarTagResponse(data, tag) {
 			return data;
 			break;
 
-		case "date":
+		case "year":
 			return new Date(data).getUTCFullYear();
+			break;
+
+		case "timestamp":
+			return new Date(data).getTime();
 			break;
 
 		case "number":

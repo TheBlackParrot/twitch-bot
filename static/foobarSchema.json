@@ -13,7 +13,7 @@
 	},
 	"year": {
 		"tag": "%year%",
-		"type": "date"
+		"type": "year"
 	},
 	"isrc": {
 		"tag": "%isrc%",
@@ -40,5 +40,9 @@
 		"tag": "$lower($substr($meta(AUDIOMD5)\\, 0\\, 7))",
 		"type": "string",
 		"skipPercents": true
+	},
+	"created": {
+		"tag": "%file_created%",
+		"type": "timestamp"
 	}
 }
