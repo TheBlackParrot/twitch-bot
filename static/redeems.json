@@ -4,7 +4,10 @@
 		"cost": 500,
 		"color": "FF7700",
 		"autoFulfill": true,
-		"globalCooldown": 1200
+		"globalCooldown": 1200,
+		"tags": [
+			"vnyan"
+		]
 	},
 
 	"amogus": {
@@ -13,7 +16,10 @@
 		"color": "FF7700",
 		"autoFulfill": true,
 		"globalCooldown": 1200,
-		"maxRedemptionsPerUserPerStream": 2
+		"maxRedemptionsPerUserPerStream": 2,
+		"tags": [
+			"vnyan"
+		]
 	},
 
 	"balls": {
@@ -22,7 +28,10 @@
 		"color": "FF7700",
 		"autoFulfill": true,
 		"globalCooldown": 1800,
-		"maxRedemptionsPerUserPerStream": 1
+		"maxRedemptionsPerUserPerStream": 1,
+		"tags": [
+			"vnyan"
+		]
 	},
 
 	"blep": {
@@ -30,7 +39,10 @@
 		"cost": 20,
 		"color": "FF7700",
 		"autoFulfill": true,
-		"globalCooldown": 60
+		"globalCooldown": 60,
+		"tags": [
+			"vnyan"
+		]
 	},
 
 	"Credit Exchange": {
@@ -46,21 +58,30 @@
 		"cost": 500,
 		"color": "FF7700",
 		"autoFulfill": true,
-		"globalCooldown": 1200
+		"globalCooldown": 1200,
+		"tags": [
+			"vnyan"
+		]
 	},
 
 	"Drop a thing on my head": {
 		"cost": 200,
 		"color": "FF7700",
 		"autoFulfill": true,
-		"globalCooldown": 600
+		"globalCooldown": 600,
+		"tags": [
+			"vnyan"
+		]
 	},
 
 	"E": {
 		"cost": 500,
 		"color": "FF7700",
 		"autoFulfill": true,
-		"globalCooldown": 1200
+		"globalCooldown": 1200,
+		"tags": [
+			"vnyan"
+		]
 	},
 
 	"first": {
@@ -101,7 +122,10 @@
 		"cost": 300,
 		"color": "FF7700",
 		"autoFulfill": true,
-		"globalCooldown": 300
+		"globalCooldown": 300,
+		"tags": [
+			"vnyan"
+		]
 	},
 	
 	"GIVE ME THE CROWN RIGHT NOW!!!!!!! >:(((": {
@@ -140,7 +164,10 @@
 		"color": "7b24cd",
 		"autoFulfill": false,
 		"userInputRequired": true,
-		"globalCooldown": 900
+		"globalCooldown": 900,
+		"tags": [
+			"vnyan"
+		]
 	},
 	
 	"Take a picture!": {
@@ -164,7 +191,10 @@
 		"cost": 300,
 		"color": "FF7700",
 		"autoFulfill": true,
-		"globalCooldown": 300
+		"globalCooldown": 300,
+		"tags": [
+			"vnyan"
+		]
 	},
 	
 	"Throw a lot of stuff at me": {
@@ -172,7 +202,10 @@
 		"cost": 200,
 		"color": "FF7700",
 		"autoFulfill": true,
-		"globalCooldown": 300
+		"globalCooldown": 300,
+		"tags": [
+			"vnyan"
+		]
 	},
 	
 	"Throw stuff at me": {
@@ -180,7 +213,10 @@
 		"cost": 20,
 		"color": "FF7700",
 		"autoFulfill": true,
-		"globalCooldown": 1
+		"globalCooldown": 1,
+		"tags": [
+			"vnyan"
+		]
 	},
 	
 	"yay!": {
@@ -188,7 +224,10 @@
 		"cost": 300,
 		"color": "FF7700",
 		"autoFulfill": true,
-		"globalCooldown": 1800
+		"globalCooldown": 1800,
+		"tags": [
+			"vnyan"
+		]
 	},
 
 	"Set TTS Name": {

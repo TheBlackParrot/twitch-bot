@@ -76,6 +76,7 @@ const authProvider = new RefreshingAuthProvider(
 const allowedTTSVoices = JSON.parse(await fs.readFile('./static/allowedTTSVoices.json'));
 const weatherConditionCodes = JSON.parse(await fs.readFile('./static/weatherConditionCodes.json'));
 const initialRedeemList = JSON.parse(await fs.readFile('./static/redeems.json'));
+global.initialRedeemList = initialRedeemList;
 const rotatingMessageLines = JSON.parse(await fs.readFile('./static/rotatingMessages.json'));
 const soundCommands = JSON.parse(await fs.readFile('./static/soundCommands.json'));
 const whitelistedDomains = JSON.parse(await fs.readFile('./static/whitelistedDomains.json'));
@@ -1886,10 +1887,13 @@ async function onOBSSceneChanged(sceneObject) {
 	allowBejeweled = (name === "Ad Wall");
 
 	if(initialCategory == "Spin Rhythm XD") {
-		const throwStuff = redeemList.getByName("Throw stuff at me");
-		apiClient.channelPoints.updateCustomReward(broadcasterUser.id, throwStuff.id, {
-			isPaused: !isMenu
-		});
+		for(const redeem of redeemList.getTaggedRedeems("vnyan")) {
+			if(redeem.name == "Throw stuff at me") {
+				await redeem.pause(isIntermission | !isMenu);
+			} else {
+				await redeem.pause(isIntermission);
+			}
+		}
 	}
 
 	await redeemList.getByName("Flip a Coin").enable(isIntermission);

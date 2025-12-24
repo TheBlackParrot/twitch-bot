@@ -9,6 +9,12 @@ export class ChannelRedeemList {
 		}
 	}
 
+	getTaggedRedeems(tag) {
+		return this.redeems.filter((redeem) => {
+			return redeem.tags.indexOf(tag) !== -1;
+		});
+	}
+
 	getByID(id) {
 		for(const redeem of this.redeems) {
 			if(redeem.id == id) {
@@ -38,6 +44,14 @@ class ChannelRedeem {
 	constructor(redeemObject) {
 		this.redeemObject = redeemObject;
 		this.id = redeemObject.id;
+		this.name = redeemObject.title;
+		this.tags = [];
+
+		if(redeemObject.title in global.initialRedeemList) {
+			if("tags" in global.initialRedeemList[redeemObject.title]) {
+				this.tags = global.initialRedeemList[redeemObject.title].tags;
+			}
+		}
 
 		this.update(redeemObject);
 	}
