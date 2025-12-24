@@ -416,7 +416,7 @@ commandList.addTrigger("foobar", async(channel, args, msg, user) => {
 		await reply(channel, msg, `⚠️ Could not fetch data from foobar2000.`);
 	}
 }, {
-	aliases: ["foobar2k"],
+	aliases: ["foobar2k", "fb2k"],
 	cooldown: 10
 });
 
