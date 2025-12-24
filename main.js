@@ -1084,6 +1084,15 @@ function ensureEnglishName(user) {
 	return user.displayName.replace(/[0-9a-z\-\_]/gi, '').length ? user.userName : user.displayName;
 }
 
+function getReadableTimeLeft(seconds) {
+	if(seconds < 60) {
+		return `${seconds} ${seconds != 1 ? "seconds" : "second"}`;
+	}
+
+	const minutes = Math.ceil(seconds / 60);
+	return `${minutes} ${minutes != 1 ? "minutes" : "minute"}`;
+}
+
 async function messageHandler(channel, userString, text, msg) {
 	let args = text.split(" ");
 
@@ -1139,14 +1148,14 @@ async function messageHandler(channel, userString, text, msg) {
 				log("COMMANDS", `Command ${triggerName} is on global cooldown`);
 
 				if(command.respondWithCooldownMessage) {
-					await reply(channel, msg, `This command is on cooldown (globally) for another ${command.cooldownTimeLeft} ${command.cooldownTimeLeft != 1 ? "seconds" : "second"}`);
+					await reply(channel, msg, `This command is on cooldown (globally) for another ${getReadableTimeLeft(command.cooldownTimeLeft)}`);
 				}
 			}
 		} else {
 			log("COMMANDS", `Command ${triggerName} is on cooldown for ${msg.userInfo.userName}`);
 
 			if(command.respondWithCooldownMessage) {
-				await reply(channel, msg, `This command is on cooldown (for yourself) for another ${user.cooldownTimeLeft(command)} ${user.cooldownTimeLeft(command) != 1 ? "seconds" : "second"}`);
+				await reply(channel, msg, `This command is on cooldown (for yourself) for another ${getReadableTimeLeft(user.cooldownTimeLeft(command))}`);
 			}
 		}
 
