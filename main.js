@@ -1998,7 +1998,7 @@ async function onStreamStarted() {
 		await redeemList.getByName("gib coin hint pls?").enable(true);
 	}
 
-	//await axios.post('http://127.0.0.1:8880/api/player', { volume: -32.5 }).catch((err) => {});
+	await axios.post('http://127.0.0.1:8880/api/player', { volume: -32.5 }).catch((err) => {});
 }
 async function onStreamStopped() {
 	clearInterval(rotatingMessageInterval);
