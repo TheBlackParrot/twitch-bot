@@ -229,7 +229,7 @@ export class Foobar2000 {
 	}
 
 	async saveQueue() {
-		const response = await axios.get(`http://${global.settings.foobar.address}/api/playqueue?columns=${foobarSchema["requestCode"].tag}`);
+		const response = await axios.get(`http://${global.settings.foobar.address}/api/playqueue?columns=${foobarSchema["requestCode"].tag}`).catch((err) => {});
 
 		if(!response) {
 			global.log("FOOBAR2K", `Could not save queue, no response from foobar2000`, false, ['redBright']);
