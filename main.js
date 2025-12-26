@@ -2054,6 +2054,11 @@ async function getInfoToDetermineOBSBitrate() {
 	
 	obsBytesSentData[0] = obsBytesSentData[1];
 	obsBytesSentData[1] = data.outputBytes;
+
+	if(obsBytesSentData[0] == obsBytesSentData[1] && data.outputActive) {
+		// no bytes were sent, alert me
+		sound.play("sounds/no_bytes_alert.ogg", { volume: 0.9 });
+	}
 }
 
 // ====== WEBHOOKS ======
