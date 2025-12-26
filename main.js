@@ -927,11 +927,11 @@ commandList.addTrigger("vnyandeath", async(channel, args, msg, user) => {
 });
 
 // --- !vrc ---
-commandList.addTrigger("vrc", async(channel, args, msg, user) => {
+/*commandList.addTrigger("vrc", async(channel, args, msg, user) => {
 	await reply(channel, msg, 'https://vrc.group/TBP.1829 (IGN: TheBlackParrot) (If I\'m comfortable with you, I\'ll give you a role upon joining the group and you can join the stream instances whenever)');
 }, {
 	cooldown: 10
-});
+});*/
 
 // --- !weather ---
 commandList.addTrigger("weather", async(channel, args, msg, user) => {
@@ -1299,7 +1299,7 @@ async function onStandardMessage(channel, msgObject, message) {
 		}
 	}
 
-	if(!(message.startsWith('@') || message.startsWith('!')) && initialCategory != "VRChat" && !wasGemSwap) {
+	if(!(message.startsWith('@') || message.startsWith('!')) && initialCategory != "Resonite" && !wasGemSwap) {
 		const userData = users.getUser(user.userId);
 
 		if(previousMessageOwner != user.userName) {
@@ -1386,7 +1386,7 @@ chatClient.onJoin(async (channel, user) => {
 		}
 
 		for(const redeemName of vnyanOnlyRedeems) {
-			await redeemList.getByName(redeemName).enable(initialCategory != "VRChat");
+			await redeemList.getByName(redeemName).enable(initialCategory != "Resonite");
 		}
 
 		await redeemList.getByName("Flip a Coin").setCooldown(30); // can't do this on the twitch dashboard, so we do it here
@@ -1966,7 +1966,7 @@ async function onOBSSceneChanged(sceneObject) {
 
 	global.log("OBS", `Scene changed to ${name}`, false, ['gray']);
 
-	const isVRChat = (name === "VRChat");
+	const isVRChat = (name === "VRChat" || name === "Resonite");
 	const isIntermission = (name === "Ad Wall" || name === "Starting Soon");
 	const isMenu = (name === "SRXD Menu");
 	const isGameplay = (name === "SRXD Gameplay");
@@ -1992,7 +1992,7 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 	const name = sceneObject.sceneName;
 	global.log("OBS", `Scene transition to scene ${name} started`, false, ['gray']);
 	
-	const isVRChat = (name === "VRChat");
+	const isVRChat = (name === "VRChat" || name === "Resonite");
 	const isIntermission = (name === "Ad Wall" || name === "Starting Soon");
 	const isMenu = (name === "SRXD Menu");
 	const isGameplay = (name === "SRXD Gameplay");
@@ -2007,7 +2007,7 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 		inputVolumeDb: isVRChat ? -4 : 0
 	});
 
-	if(initialCategory != "VRChat") {
+	if(initialCategory != "Resonite") {
 		await axios.post(`http://${settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
 	}
 }
