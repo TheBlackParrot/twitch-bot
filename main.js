@@ -298,6 +298,15 @@ commandList.addTrigger("amhere", async(channel, args, msg, user) => {
 	respondWithCooldownMessage: true
 });
 
+// --- !bitrate ---
+commandList.addTrigger("bitrate", async(channel, args, msg, user) => {
+	const bytes = (obsBytesSentData[1] - obsBytesSentData[0]) / settings.obs.bitrateInterval;
+	await reply(channel, msg, `Stream bitrate: ${((bytes * 8) / 1048576).toFixed(2)} mbps (${Math.floor((bytes * 8) / 1024).toLocaleString()} kbps)`)
+}, {
+	userCooldown: 10,
+	cooldown: 5
+});
+
 // --- !cancelraffle ---
 commandList.addTrigger("cancelraffle", async(channel, args, msg, user) => {
 	if(!creditRaffle.active) {
@@ -1894,6 +1903,8 @@ function onOBSConnectionOpened() {
 
 	clearTimeout(obsConnectionTimeout);
 	global.log("OBS", `Established connection to OBS at ${address}`, false, ['greenBright']);
+
+	obsBitrateInterval = setInterval(getInfoToDetermineOBSBitrate, settings.obs.bitrateInterval * 1000);
 }
 
 function onOBSConnectionClosed() {
@@ -1902,6 +1913,8 @@ function onOBSConnectionClosed() {
 	clearTimeout(obsConnectionTimeout);
 	global.log("OBS", `Connection to OBS at ${address} closed`, false, ['redBright']);
 	obsConnectionTimeout = setTimeout(initOBS, settings.obs.reconnectDelay * 1000);
+
+	clearInterval(obsBitrateInterval);
 }
 
 async function onOBSSceneChanged(sceneObject) {
@@ -1985,7 +1998,7 @@ async function onStreamStarted() {
 		await redeemList.getByName("gib coin hint pls?").enable(true);
 	}
 
-	await axios.post('http://127.0.0.1:8880/api/player', { volume: -32.5 }).catch((err) => {});
+	//await axios.post('http://127.0.0.1:8880/api/player', { volume: -32.5 }).catch((err) => {});
 }
 async function onStreamStopped() {
 	clearInterval(rotatingMessageInterval);
@@ -2031,6 +2044,16 @@ async function swapCategoryInSRXD() {
 	await apiClient.channels.updateChannelInfo(broadcasterUser.id, {
 		gameId: gameInfo.id
 	});
+}
+
+var obsBitrateInterval;
+var obsBytesSentData = [0, 0];
+
+async function getInfoToDetermineOBSBitrate() {
+	const data = await obs.call('GetStreamStatus');
+	
+	obsBytesSentData[0] = obsBytesSentData[1];
+	obsBytesSentData[1] = data.outputBytes;
 }
 
 // ====== WEBHOOKS ======
