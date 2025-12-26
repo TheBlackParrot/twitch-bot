@@ -104,6 +104,8 @@ export class Foobar2000 {
 
 		global.log("FOOBAR2K", `Initialized library with ${this.length.toLocaleString()} tracks`, false, ['whiteBright']);
 		await this.exportLibrary();
+
+		await this.loadQueue();
 	}
 
 	addToLibrary(trackData) {
@@ -124,7 +126,7 @@ export class Foobar2000 {
 		this.library[trackData.requestCode] = trackData;
 	}
 
-	async enqueueTrack(requestCode) {
+	async enqueueTrack(requestCode, skipSaving = true) {
 		const currentStateItems = await this.getLibraryState();
 
 		const foundItems = currentStateItems.filter((item) => {
@@ -149,6 +151,10 @@ export class Foobar2000 {
 
 		global.log("FOOBAR2K", `Enqueued track ${foundItem.requestCode} (${foundItem.artist} - ${foundItem.title})`, false, ['whiteBright']);
 		foundItem.queuePosition = queueState.data.playQueue.length + 1;
+
+		if(!skipSaving) {
+			await this.saveQueue();
+		}
 
 		return foundItem;
 	}
@@ -215,5 +221,53 @@ export class Foobar2000 {
 		await fs.writeFile(global.settings.foobar.exportLocation, JSON.stringify(library, null, '\t'));
 
 		await global.log("FOOBAR2K", `Exported library to ${global.settings.foobar.exportLocation}`, false, ['gray']);
+	}
+
+	async clearQueue() {
+		await axios.post(`http://${global.settings.foobar.address}/api/playqueue/clear`).catch((err) => {});
+		global.log("FOOBAR2K", "Queue was cleared", false, ['whiteBright']);
+	}
+
+	async saveQueue() {
+		const response = await axios.get(`http://${global.settings.foobar.address}/api/playqueue?columns=${foobarSchema["requestCode"].tag}`);
+
+		if(!response) {
+			global.log("FOOBAR2K", `Could not save queue, no response from foobar2000`, false, ['redBright']);
+			return;
+		}
+
+		let queue = [];
+		if("data" in response) {
+			if("playQueue" in response.data) {
+				for(let idx in response.data.playQueue) {
+					const requestCode = response.data.playQueue[idx].columns[0];
+					if(requestCode != "?") {
+						queue.push(requestCode);
+					}
+				}
+			}
+		}
+
+		await fs.writeFile("./data/foobarQueue.json", JSON.stringify(queue, null, '\t'));
+		global.log("FOOBAR2K", `Saved ${queue.length} queue entries`, false, ['gray']);
+	}
+
+	async loadQueue() {
+		var queueEntries = [];
+
+		try {
+			queueEntries = JSON.parse(await fs.readFile('./data/foobarQueue.json'));
+		} catch(err) {
+			global.log("FOOBAR2K", "Could not load persistent queue data", false, ['yellowBright']);
+			return;
+		}
+
+		await this.clearQueue();
+
+		for(const requestCode of queueEntries) {
+			await this.enqueueTrack(requestCode);
+		}
+
+		global.log("FOOBAR2K", "Loaded persistent queue data", false, ['gray']);
 	}
 }

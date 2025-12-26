@@ -395,7 +395,7 @@ commandList.addTrigger("f2kr", async(channel, args, msg, user) => {
 		return;
 	}
 
-	const track = await foobar2000.enqueueTrack(args[0].toLowerCase());
+	const track = await foobar2000.enqueueTrack(args[0].toLowerCase(), false);
 	if(track) {
 		await reply(channel, msg, `Queued "${track.title}" by ${track.artist} (from "${track.album}") at position #${track.queuePosition}`);
 	} else {
@@ -2047,5 +2047,6 @@ const byeMessages = ["alright bye", "i'm out bye", "bye bye", "ok bye", "cya lat
 
 process.on('SIGINT', async function() {
 	await say(broadcasterUser.name, `${byeMessages[Math.floor(Math.random() * byeMessages.length)]} ${byeEmotes[Math.floor(Math.random() * byeEmotes.length)]}`);
+	await foobar2000.saveQueue();
 	process.exit();
 });
