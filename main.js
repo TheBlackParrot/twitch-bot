@@ -637,10 +637,10 @@ commandList.addTrigger("random", async(channel, args, msg, user) => {
 	var max = 10;
 	
 	if(args.length == 1) {
-		max = parseInt(args[0]);
+		max = Math.abs(parseInt(args[0]));
 	} else if(args.length == 2) {
-		min = parseInt(args[0]);
-		max = parseInt(args[1]);
+		min = Math.abs(parseInt(args[0]));
+		max = Math.abs(parseInt(args[1]));
 	}
 
 	if(max < min) {
