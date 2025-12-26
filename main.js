@@ -416,6 +416,14 @@ commandList.addTrigger("f2kr", async(channel, args, msg, user) => {
 	respondWithCooldownMessage: true
 });
 
+// --- !flip ---
+commandList.addTrigger("flip", async(channel, args, msg, user) => {
+	await reply(channel, msg, `You flip a coin, it lands on ${Math.round(Math.random()) ? "heads" : "tails"}!`);
+}, {
+	aliases: ["coin", "coinflip", "flipcoin"],
+	userCooldown: 5
+});
+
 // --- !foobar ---
 commandList.addTrigger("foobar", async(channel, args, msg, user) => {
 	const track = await foobar2000.getCurrentTrack();
@@ -621,6 +629,42 @@ commandList.addTrigger("r", async(channel, args, msg, user) => {
 }, {
 	aliases: ["rhelp", "requests", "srxdhelp", "helpsrxd", "reqs", "howto"],
 	cooldown: 15
+});
+
+// --- !random ---
+commandList.addTrigger("random", async(channel, args, msg, user) => {
+	var min = 1;
+	var max = 10;
+	
+	if(args.length == 1) {
+		max = parseInt(args[0]);
+	} else if(args.length == 2) {
+		min = parseInt(args[0]);
+		max = parseInt(args[1]);
+	}
+
+	if(max < min) {
+		let oldMin = min;
+		let oldMax = max;
+
+		min = oldMax;
+		max = oldMin;
+	}
+
+	if(max == min) {
+		await reply(channel, msg, `...but that's the only option? erm...`);
+		return;
+	}
+
+	if(max - min <= 1) {
+		await reply(channel, msg, `erm, how is there only one side...`);
+		return;
+	}
+
+	await reply(channel, msg, `You roll a ${(max - min) + 1}-sided die numbered ${min} to ${max}, it lands on ${min + (Math.floor(Math.random() * max))}!`);
+}, {
+	aliases: ["dice", "roll", "rolldice", "diceroll", "rand", "number", "num"],
+	userCooldown: 5
 });
 
 // --- !rafjoin ---
