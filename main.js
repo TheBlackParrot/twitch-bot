@@ -754,6 +754,24 @@ commandList.addTrigger("ruler", async(channel, args, msg, user) => {
 	cooldown: 5
 });
 
+// --- !runads ---
+commandList.addTrigger("runads", async(channel, args, msg, user) => {
+	try {
+		await apiClient.channels.startChannelCommercial(broadcasterUser.id, settings.twitch.scheduledAdBreakLength);
+	} catch(err) {
+		console.error(err);
+		await reply(channel, msg, "⚠️ Failed to snooze ads");
+		return;
+	}
+
+	await reply(channel, msg, "🆗 Snoozed the next scheduled ad break for 5 minutes");
+}, {
+	whitelist: ["broadcaster", "mod"],
+	aliases: ["runad", "startads", "startad"],
+	cooldown: 900,
+	respondWithCooldownMessage: true
+});
+
 // --- !smack ---
 commandList.addTrigger("smack", async(channel, args, msg, user) => {
 	counter.increment("smack", 1);
@@ -762,6 +780,24 @@ commandList.addTrigger("smack", async(channel, args, msg, user) => {
 	whitelist: ["broadcaster", "mod", "vip"],
 	aliases: ["slap", "hit", "selfown"],
 	cooldown: 10
+});
+
+// --- !snooze ---
+commandList.addTrigger("snooze", async(channel, args, msg, user) => {
+	try {
+		await apiClient.channels.snoozeNextAd(broadcasterUser.id);
+	} catch(err) {
+		console.error(err);
+		await reply(channel, msg, "⚠️ Failed to snooze ads");
+		return;
+	}
+
+	await reply(channel, msg, "🆗 Snoozed the next scheduled ad break for 5 minutes");
+}, {
+	whitelist: ["broadcaster", "mod"],
+	aliases: ["snoozeads", "delayads", "snoozead", "delayad"],
+	cooldown: 30,
+	respondWithCooldownMessage: true
 });
 
 // --- !so ---
