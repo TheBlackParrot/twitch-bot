@@ -263,11 +263,28 @@ async function getLeaderboardValueFromUserTarget(channel, args, msg, user, key) 
 
 // --- !ad ---
 commandList.addTrigger("ad", async(channel, args, msg, user) => {
+	if(args.length) {
+		if(args[0].toLowerCase()[0] == "y") {
+			try {
+				await apiClient.channels.startChannelCommercial(broadcasterUser.id, settings.twitch.scheduledAdBreakLength);
+			} catch(err) {
+				console.error(err);
+				await reply(channel, msg, "⚠️ Failed to start an ad break");
+				return;
+			}
+
+			await reply(channel, msg, `🆗 Started a ${settings.twitch.scheduledAdBreakLength} second ad break`);
+		}
+	}
+
 	await obs.call('SetCurrentProgramScene', {
 		sceneName: "Ad Wall"
 	});
 }, {
-	whitelist: ["broadcaster"]
+	whitelist: ["broadcaster", "mod"],
+	aliases: ["runad", "runads", "startads", "startad"],
+	cooldown: 900,
+	respondWithCooldownMessage: true
 });
 
 // --- !addrotr ---
@@ -754,24 +771,6 @@ commandList.addTrigger("ruler", async(channel, args, msg, user) => {
 	cooldown: 5
 });
 
-// --- !runads ---
-commandList.addTrigger("runads", async(channel, args, msg, user) => {
-	try {
-		await apiClient.channels.startChannelCommercial(broadcasterUser.id, settings.twitch.scheduledAdBreakLength);
-	} catch(err) {
-		console.error(err);
-		await reply(channel, msg, "⚠️ Failed to snooze ads");
-		return;
-	}
-
-	await reply(channel, msg, "🆗 Snoozed the next scheduled ad break for 5 minutes");
-}, {
-	whitelist: ["broadcaster", "mod"],
-	aliases: ["runad", "startads", "startad"],
-	cooldown: 900,
-	respondWithCooldownMessage: true
-});
-
 // --- !smack ---
 commandList.addTrigger("smack", async(channel, args, msg, user) => {
 	counter.increment("smack", 1);
@@ -826,7 +825,7 @@ commandList.addTrigger("specs", async(channel, args, msg, user) => {
 		"RAM": "32GB (2x16GB) Team Group UD5-6000 DDR5-6000",
 		"GPU": "AMD Radeon RX 6800XT (Reference)",
 		"Motherboard": "ASRock B650M-HDV/M.2",
-		"VR stuff": "Valve Index w/ Knuckles Controllers, 2x Tundra Trackers, 1x Vive 2.0 Tracker, 4x SteamVR 2.0 Base Stations"
+		"VR stuff": "Valve Index w/ Knuckles Controllers, 2x Tundra Trackers, 2x SlimeVR trackers, 4x SteamVR 2.0 Base Stations"
 	};
 
 	let output = [];
