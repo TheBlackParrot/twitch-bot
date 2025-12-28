@@ -139,7 +139,7 @@ body {
 
 .new td:nth-child(n + 3) {
 	color: unset;
-	animation-name: "blink";
+	animation-name: blink;
 	animation-duration: 1.5s;
 	animation-timing-function: ease-in-out;
 	animation-iteration-count: infinite;

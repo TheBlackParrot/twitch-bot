@@ -2037,6 +2037,11 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 		inputMuted: isIntermission
 	});
 
+	await obs.call('SetInputMute', {
+		inputName: 'Resonite Audio',
+		inputMuted: isIntermission
+	});
+
 	await obs.call('SetInputVolume', {
 		inputName: "Spotify Audio",
 		inputVolumeDb: isVRChat ? -4 : 0
@@ -2066,6 +2071,11 @@ async function onStreamStarted() {
 	if(scene.sceneName == "Starting Soon") {
 		await obs.call('SetInputMute', {
 			inputName: 'Microphone',
+			inputMuted: true
+		});
+
+		await obs.call('SetInputMute', {
+			inputName: 'Resonite Audio',
 			inputMuted: true
 		});
 
