@@ -2049,6 +2049,8 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 
 	if(initialCategory != "Resonite") {
 		await axios.post(`http://${settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
+	} else {
+		await axios.post('http://127.0.0.1:8880/api/player', { volume: (isVRChat ? -36.5 : -32.5) }).catch((err) => {});
 	}
 }
 
