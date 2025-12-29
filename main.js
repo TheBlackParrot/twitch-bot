@@ -1976,7 +1976,7 @@ async function initOBS() {
 	}
 }
 
-function onOBSConnectionOpened() {
+async function onOBSConnectionOpened() {
 	const address = `ws://${settings.obs.address}`;
 
 	clearTimeout(obsConnectionTimeout);
