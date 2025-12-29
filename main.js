@@ -2097,7 +2097,7 @@ async function onStreamStopped() {
 	global.log("OBS", "Stream stopped", false, ['yellow']);
 }
 
-obs.on('ConnectionOpened', onOBSConnectionOpened);
+obs.on('Identified', onOBSConnectionOpened);
 obs.on('ConnectionClosed', onOBSConnectionClosed);
 obs.on('CurrentProgramSceneChanged', onOBSSceneChanged);
 obs.on('StreamStateChanged', onOBSStreamStateChanged);
