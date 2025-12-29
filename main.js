@@ -503,9 +503,7 @@ commandList.addTrigger("insulin", async(channel, args, msg, user) => {
 
 // --- !link ---
 commandList.addTrigger("link", async(channel, args, msg, user) => {
-	const scene = await obs.call('GetCurrentProgramScene');
-
-	if(scene.sceneName.split(" ")[0] == "SRXD") {
+	if(currentOBSSceneName.split(" ")[0] == "SRXD") {
 		let response = await querySRXD('history', '', { limit: 1 });
 		if(!response) {
 			await reply(channel, msg, "⚠️ Could not query SpinRequests.");
@@ -1334,7 +1332,8 @@ async function onStandardMessage(channel, msgObject, message) {
 		}
 	}
 
-	if(!(message.startsWith('@') || message.startsWith('!')) && initialCategory != "Resonite" && !wasGemSwap) {
+	if(!(message.startsWith('@') || message.startsWith('!')) && !wasGemSwap && !(currentOBSSceneName == "Resonite" || currentOBSSceneName == "VRChat")) {
+
 		const userData = users.getUser(user.userId);
 
 		if(previousMessageOwner != user.userName) {
@@ -1984,6 +1983,9 @@ function onOBSConnectionOpened() {
 	global.log("OBS", `Established connection to OBS at ${address}`, false, ['greenBright']);
 
 	obsBitrateInterval = setInterval(getInfoToDetermineOBSBitrate, settings.obs.bitrateInterval * 1000);
+
+	const sceneObject = await obs.call('GetCurrentProgramScene');
+	currentOBSSceneName = sceneObject.sceneName;
 }
 
 function onOBSConnectionClosed() {
@@ -1996,17 +1998,18 @@ function onOBSConnectionClosed() {
 	clearInterval(obsBitrateInterval);
 }
 
+var currentOBSSceneName;
 async function onOBSSceneChanged(sceneObject) {
-	const name = sceneObject.sceneName;
+	currentOBSSceneName = sceneObject.sceneName;
 
-	global.log("OBS", `Scene changed to ${name}`, false, ['gray']);
+	global.log("OBS", `Scene changed to ${currentOBSSceneName}`, false, ['gray']);
 
-	const isVRChat = (name === "VRChat" || name === "Resonite");
-	const isIntermission = (name === "Ad Wall" || name === "Starting Soon");
-	const isMenu = (name === "SRXD Menu");
-	const isGameplay = (name === "SRXD Gameplay");
+	const isVRChat = (currentOBSSceneName === "VRChat" || currentOBSSceneName === "Resonite");
+	const isIntermission = (currentOBSSceneName === "Ad Wall" || currentOBSSceneName === "Starting Soon");
+	const isMenu = (currentOBSSceneName === "SRXD Menu");
+	const isGameplay = (currentOBSSceneName === "SRXD Gameplay");
 
-	allowBejeweled = (name === "Ad Wall");
+	allowBejeweled = (currentOBSSceneName === "Ad Wall");
 
 	if(initialCategory == "Spin Rhythm XD") {
 		for(const redeem of redeemList.getTaggedRedeems("vnyan")) {
@@ -2068,9 +2071,7 @@ async function onStreamStarted() {
 	clearInterval(rotatingMessageInterval);
 	rotatingMessageInterval = setInterval(doRotatingMessage, settings.bot.rotatingMessageInterval * 1000);
 
-	const scene = await obs.call('GetCurrentProgramScene');
-
-	if(scene.sceneName == "Starting Soon") {
+	if(currentOBSSceneName == "Starting Soon") {
 		await obs.call('SetInputMute', {
 			inputName: 'Microphone',
 			inputMuted: true
