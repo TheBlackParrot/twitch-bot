@@ -2089,6 +2089,11 @@ async function onStreamStarted() {
 			inputMuted: true
 		});
 
+		await obs.call('SetInputMute', {
+			inputName: "TTS",
+			inputMuted: false
+		});
+
 		await redeemList.getByName("first").enable(!hasSetFirstRedeem);
 		await redeemList.getByName("second").enable(false);
 		await redeemList.getByName("third").enable(false);
