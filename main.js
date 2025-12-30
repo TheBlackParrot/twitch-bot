@@ -2094,6 +2094,11 @@ async function onStreamStarted() {
 			inputMuted: false
 		});
 
+		await obs.call('SetInputVolume', {
+			inputName: "Spotify Audio",
+			inputVolumeDb: 0
+		});
+
 		await redeemList.getByName("first").enable(!hasSetFirstRedeem);
 		await redeemList.getByName("second").enable(false);
 		await redeemList.getByName("third").enable(false);
