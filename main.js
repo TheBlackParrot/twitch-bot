@@ -2050,6 +2050,13 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 		inputVolumeDb: isVRChat ? -4 : 0
 	});
 
+	if(initialCategory == "Spin Rhythm XD") {
+		await obs.call('SetInputMute', {
+			inputName: "TTS",
+			inputMuted: isGameplay
+		});
+	}
+
 	if(initialCategory != "Resonite") {
 		await axios.post(`http://${settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
 	} else {
