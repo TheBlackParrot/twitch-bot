@@ -318,7 +318,13 @@ commandList.addTrigger("amhere", async(channel, args, msg, user) => {
 // --- !bitrate ---
 commandList.addTrigger("bitrate", async(channel, args, msg, user) => {
 	const bytes = (obsBytesSentData[1] - obsBytesSentData[0]) / settings.obs.bitrateInterval;
-	await reply(channel, msg, `Stream bitrate: ${((bytes * 8) / 1048576).toFixed(2)} mbps (${Math.floor((bytes * 8) / 1024).toLocaleString()} kbps)`)
+
+	const historyLength = (settings.obs.bitrateInterval * settings.obs.droppedFramesHistoryLength);
+	const historyMinutes = Math.floor(historyLength / 60);
+	const droppedFramesTimeframe = historyMinutes > 2 ? `${historyMinutes} minutes` : `${historyLength} seconds`;
+	const droppedFrames = obsDroppedFramesHistory[obsDroppedFramesHistory.length - 1] - obsDroppedFramesHistory[0];
+
+	await reply(channel, msg, `Stream bitrate: ${((bytes * 8) / 1048576).toFixed(2)} mbps (${Math.floor((bytes * 8) / 1024).toLocaleString()} kbps), ${droppedFrames.toLocaleString()} ${droppedFrames != 1 ? "frames" : "frame"} dropped in the last ${droppedFramesTimeframe} (${obsDroppedFrames.toLocaleString()} frames dropped in the current stream)`);
 }, {
 	userCooldown: 10,
 	cooldown: 5
@@ -2008,7 +2014,7 @@ async function onOBSConnectionOpened() {
 	clearTimeout(obsConnectionTimeout);
 	global.log("OBS", `Established connection to OBS at ${address}`, false, ['greenBright']);
 
-	obsBitrateInterval = setInterval(getInfoToDetermineOBSBitrate, settings.obs.bitrateInterval * 1000);
+	obsBitrateInterval = setInterval(getInfoToDetermineOBSStatus, settings.obs.bitrateInterval * 1000);
 
 	const sceneObject = await obs.call('GetCurrentProgramScene');
 	currentOBSSceneName = sceneObject.sceneName;
@@ -2104,6 +2110,8 @@ async function onStreamStarted() {
 	clearInterval(rotatingMessageInterval);
 	rotatingMessageInterval = setInterval(doRotatingMessage, settings.bot.rotatingMessageInterval * 1000);
 
+	obsDroppedFramesHistory = [];
+
 	if(currentOBSSceneName == "Starting Soon") {
 		await obs.call('SetInputMute', {
 			inputName: 'Microphone',
@@ -2183,16 +2191,27 @@ async function swapCategoryInSRXD() {
 
 var obsBitrateInterval;
 var obsBytesSentData = [0, 0];
+var obsDroppedFrames = 0;
+var obsDroppedFramesHistory = [];
 
-async function getInfoToDetermineOBSBitrate() {
+async function getInfoToDetermineOBSStatus() {
 	const data = await obs.call('GetStreamStatus');
 	
 	obsBytesSentData[0] = obsBytesSentData[1];
 	obsBytesSentData[1] = data.outputBytes;
 
-	if(obsBytesSentData[0] == obsBytesSentData[1] && data.outputActive) {
-		// no bytes were sent, alert me
-		sound.play("sounds/no_bytes_alert.ogg", { volume: 0.9 });
+	if(data.outputActive) {
+		if(obsBytesSentData[0] == obsBytesSentData[1]) {
+			// no bytes were sent, alert me
+			sound.play("sounds/no_bytes_alert.ogg", { volume: 0.9 });
+		}
+
+		obsDroppedFrames = data.outputSkippedFrames;
+
+		obsDroppedFramesHistory.push(data.outputSkippedFrames);
+		if(obsDroppedFramesHistory.length > settings.obs.droppedFramesHistoryLength) {
+			obsDroppedFramesHistory.pop(0);
+		}
 	}
 }
 
