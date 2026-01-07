@@ -443,7 +443,7 @@ commandList.addTrigger("flip", async(channel, args, msg, user) => {
 
 // --- !foobar ---
 commandList.addTrigger("foobar", async(channel, args, msg, user) => {
-	const track = await foobar2000.getCurrentTrack();
+	const track = foobar2000.getCurrentTrack();
 	if(track) {
 		await reply(channel, msg, `Current song: "${track.title}" by ${track.artist} (from "${track.album}")${"spotifyURL" in track ? ` -- ${track.spotifyURL}` : ""}`);
 	} else {
@@ -610,6 +610,24 @@ commandList.addTrigger("note", async(channel, args, msg, user) => {
 commandList.addTrigger("overlays", async(channel, args, msg, user) => {
 	await reply(channel, msg, 'All of the overlays you see on stream are my own creation, you can also use them if you\'d like! https://theblackparrot.me/overlays');
 }, {
+	cooldown: 10
+});
+
+// --- !prevfoobar ---
+commandList.addTrigger("prevfoobar", async(channel, args, msg, user) => {
+	if(foobar2000.history.length < 2) {
+		await reply(channel, msg, `⚠️ Nothing has played yet, or this is the first track being played.`);
+		return;
+	}
+
+	const track = foobar2000.history[1];
+	if(track) {
+		await reply(channel, msg, `Previous song: "${track.title}" by ${track.artist} (from "${track.album}")${"spotifyURL" in track ? ` -- ${track.spotifyURL}` : ""}`);
+	} else {
+		await reply(channel, msg, `⚠️ Could not fetch data from foobar2000.`);
+	}
+}, {
+	aliases: ["prevfoobar2k", "prevfb2k"],
 	cooldown: 10
 });
 

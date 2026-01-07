@@ -135,6 +135,15 @@ export class Foobar2000 {
 			return;
 		}
 
+		if("comment" in trackData) {
+			if(trackData.comment) {
+				if(trackData.comment.length == 22 && trackData.comment.split(" ").length == 1) {
+					// spotify code
+					trackData.spotifyURL = `https://open.spotify.com/track/${trackData.comment}`;
+				}
+			}
+		}
+
 		this.library[trackData.requestCode] = trackData;
 	}
 
@@ -171,56 +180,8 @@ export class Foobar2000 {
 		return foundItem;
 	}
 
-	async getCurrentTrack() {
-		const rootResponse = await axios.get(`http://${global.settings.foobar.address}/api/player`).catch((err) => {});
-
-		if(!("data" in rootResponse)) {
-			return null;
-		}
-
-		if(!("player" in rootResponse.data)) {
-			return null;
-		}
-
-		if(!("activeItem" in rootResponse.data.player)) {
-			return null;
-		}
-
-		const active = rootResponse.data.player.activeItem;
-
-		let columns = [];
-		for(const key in foobarSchema) {
-			columns.push(foobarSchema[key].tag);
-		}
-
-		const entryResponse = await axios.get(`http://${global.settings.foobar.address}/api/playlists/${active.playlistId}/items/${active.index}:1?columns=${columns.join(",")}`).catch((err) => {});
-
-		if(!entryResponse) {
-			return null;
-		}
-
-		if(!("data" in entryResponse)) {
-			return null;
-		}
-
-		var track = {};
-		const trackData = entryResponse.data.playlistItems.items[0].columns;
-
-		for(const idx in columns) {
-			const tag = columns[idx];
-			track[foobarTagSchema[tag]] = (trackData[idx] === "?" ? null : formatFoobarTagResponse(trackData[idx], foobarTagSchema[tag]));
-		}
-
-		if("comment" in track) {
-			if(track.comment) {
-				if(track.comment.length == 22 && track.comment.split(" ").length == 1) {
-					// spotify code
-					track.spotifyURL = `https://open.spotify.com/track/${track.comment}`;
-				}
-			}
-		}
-
-		return track;
+	getCurrentTrack() {
+		return this.history.length > 0 ? this.history[0] : null;
 	}
 
 	async exportLibrary() {
@@ -313,8 +274,13 @@ export class Foobar2000 {
 
 			if(requestCode in this.library) {
 				const trackData = this.library[requestCode];
-				console.log(trackData);
+
+				this.history.unshift(trackData);
+				global.log("FOOBAR2K", `Added "${trackData.title}" by ${trackData.artist} to the play history`, false, ['gray']);
 			}
 		}
+
+		this.state.activeItemIndex = active.index;
+		this.state.playlistId = active.playlistId;
 	}
 }
