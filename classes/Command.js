@@ -97,6 +97,7 @@ export class BaseCommand {
 		this.userCooldown = "userCooldown" in opts ? opts.userCooldown * 1000 : 0;
 		this.whitelist = "whitelist" in opts ? opts.whitelist : [];
 		this.respondWithCooldownMessage = "respondWithCooldownMessage" in opts ? opts.respondWithCooldownMessage : false;
+		this.allowedCategories = "allowedCategories" in opts ? opts.allowedCategories : [];
 	}
 
 	get canUse() {
@@ -143,6 +144,12 @@ export class BaseCommand {
 			}
 
 			if(!allowed) {
+				return;
+			}
+		}
+
+		if(this.allowedCategories.length) {
+			if(global.initialCategory == null || this.allowedCategories.indexOf(global.initialCategory) == -1) {
 				return;
 			}
 		}

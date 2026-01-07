@@ -557,6 +557,7 @@ commandList.addTrigger("modadd", async(channel, args, msg, user) => {
 		sound.play("sounds/notif.wav", { volume: 0.9 });
 	}
 }, {
+	allowedCategories: ["Spin Rhythm XD"],
 	whitelist: ["broadcaster", "mod", "vip"],
 	respondWithCooldownMessage: true
 });
@@ -740,6 +741,7 @@ commandList.addTrigger("request", async(channel, args, msg, user) => {
 		}
 	}
 }, {
+	allowedCategories: ["Spin Rhythm XD"],
 	aliases: ["srxd", "req", "bsr", "sr", "add", "ssr"],
 	userCooldown: 10,
 	respondWithCooldownMessage: true
@@ -1052,6 +1054,7 @@ commandList.addRegex("crazy", async(channel, args, msg, user) => {
 commandList.addRegex(`why\\s.*\\s(change|swap)\\s.*(category|categories|game|games)`, async(channel, args, msg, user) => {
 	await reply(channel, msg, 'I swap categories between Spin Rhythm XD and Games + Demos in order to get more eyes on the game and the stream while in Games + Demos, and to appear in the Spin Rhythm category for those browsing via categories.');
 }, {
+	allowedCategories: ["Spin Rhythm XD"],
 	cooldown: 30,
 	aliases: [`why\\s(change|swap)\\s.*(category|categories|game|games)`]
 });
@@ -1144,6 +1147,7 @@ const chatClient = new ChatClient({
 global.botUserName = "";
 
 var initialCategory = null;
+global.initialCategory = initialCategory;
 var seenUsers = [];
 
 async function say(channel, text) {
