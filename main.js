@@ -633,16 +633,20 @@ commandList.addTrigger("prevfoobar", async(channel, args, msg, user) => {
 
 // --- !prevlink ---
 commandList.addTrigger("prevlink", async(channel, args, msg, user) => {
-	let response = await querySRXD('history', '', { limit: 2 });
+	if(currentOBSSceneName.split(" ")[0] == "SRXD") {
+		let response = await querySRXD('history', '', { limit: 2 });
 
-	if(!response) {
-		await reply(channel, msg, "⚠️ Could not query SpinRequests.");
-	} else if("data" in response) {
-		if(response.data.length === 2) {
-			await reply(channel, msg, formatSRXDLinkResponse(response.data[1], "Previous chart: "));
-		} else {
-			await reply(channel, msg, "⚠️ No data");
+		if(!response) {
+			await reply(channel, msg, "⚠️ Could not query SpinRequests.");
+		} else if("data" in response) {
+			if(response.data.length === 2) {
+				await reply(channel, msg, formatSRXDLinkResponse(response.data[1], "Previous chart: "));
+			} else {
+				await reply(channel, msg, "⚠️ No data");
+			}
 		}
+	} else {
+		await commandList.get("prevfoobar").trigger(channel, args, msg, user);
 	}
 }, {
 	aliases: ["prevsong", "prevchart", "prev", "previous"],
