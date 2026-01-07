@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import axios from 'axios';
+import { EventSource } from 'eventsource';
 
 const foobarSchema = JSON.parse(await fs.readFile('./static/foobarSchema.json'));
 var foobarTagSchema = {};
@@ -42,6 +43,15 @@ export class Foobar2000 {
 	constructor(playlistName = "Library Viewer Selection") {
 		this.playlistName = playlistName
 		this.library = {};
+
+		this.state = {
+			activeItemIndex: 0,
+			playlistId: "",
+			playing: false,
+			elapsed: 0
+		};
+
+		this.history = [];
 
 		this.initLibrary();
 	}
@@ -106,6 +116,8 @@ export class Foobar2000 {
 		await this.exportLibrary();
 
 		await this.loadQueue();
+
+		this.initEventSource();
 	}
 
 	addToLibrary(trackData) {
@@ -269,5 +281,40 @@ export class Foobar2000 {
 		}
 
 		global.log("FOOBAR2K", "Loaded persistent queue data", false, ['gray']);
+	}
+
+	initEventSource() {
+		this.events = new EventSource(`http://${global.settings.foobar.address}/api/query/updates?player=true&trcolumns=${foobarSchema["requestCode"].tag}`);
+		this.events.addEventListener('message', this.onEventMessage.bind(this));
+	}
+
+	onEventMessage(message) {
+		const data = JSON.parse(message.data);
+		if(!Object.keys(data).length) {
+			return;
+		}
+
+		const player = data.player;
+		const active = player.activeItem;
+
+		this.state.playing = (player.playbackState === "playing" ? true : false);
+		this.state.elapsed = parseInt(active.position * 1000);
+
+		if(this.state.activeItemIndex !== active.index || this.state.playlistId !== active.playlistId) {
+			if(!active.columns.length) {
+				return;
+			}
+
+			let requestCode = active.columns[0];
+
+			if(requestCode == "?") {
+				return;
+			}
+
+			if(requestCode in this.library) {
+				const trackData = this.library[requestCode];
+				console.log(trackData);
+			}
+		}
 	}
 }
