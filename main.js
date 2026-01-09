@@ -60,10 +60,9 @@ fs.mkdir("./data/persistence", { recursive: true }).catch((err) => {
 	// ignored
 });
 
-const settings = JSON.parse(await fs.readFile('./settings.json'));
-global.settings = settings;
-const clientId = settings.auth.twitch.clientID;
-const clientSecret = settings.auth.twitch.clientSecret;
+global.settings = JSON.parse(await fs.readFile('./settings.json'));
+const clientId = global.settings.auth.twitch.clientID;
+const clientSecret = global.settings.auth.twitch.clientSecret;
 const botTokenData = JSON.parse(await fs.readFile('./data/tokens.738319562.json'));
 const streamerTokenData = JSON.parse(await fs.readFile('./data/tokens.43464015.json'));
 const authProvider = new RefreshingAuthProvider(
@@ -75,29 +74,23 @@ const authProvider = new RefreshingAuthProvider(
 
 const allowedTTSVoices = JSON.parse(await fs.readFile('./static/allowedTTSVoices.json'));
 const weatherConditionCodes = JSON.parse(await fs.readFile('./static/weatherConditionCodes.json'));
-const initialRedeemList = JSON.parse(await fs.readFile('./static/redeems.json'));
-global.initialRedeemList = initialRedeemList;
+global.initialRedeemList = JSON.parse(await fs.readFile('./static/redeems.json'));
 const rotatingMessageLines = JSON.parse(await fs.readFile('./static/rotatingMessages.json'));
 const soundCommands = JSON.parse(await fs.readFile('./static/soundCommands.json'));
 const whitelistedDomains = JSON.parse(await fs.readFile('./static/whitelistedDomains.json'));
 
 const users = new UserList();
 const commandList = new CommandList();
-const redeemList = new ChannelRedeemList();
-global.redeemList = redeemList;
-var broadcasterUser = null;
+global.redeemList = new ChannelRedeemList();
 global.broadcasterUser = null;
-const counter = new Counter();
-global.counter = counter;
-const remoteSound = new SoundServer();
-global.remoteSound = remoteSound;
+global.counter = new Counter();
+global.remoteSound = new SoundServer();
 const creditRaffle = new CreditRaffle();
 const foobar2000 = new Foobar2000("safe");
 
-const apiClient = new ApiClient({
+global.apiClient = new ApiClient({
 	authProvider
 });
-global.apiClient = apiClient;
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -106,7 +99,7 @@ var allowBejeweled = false;
 // ====== SYSTEM STUFF ======
 
 async function tts(voice, string, rate = 0) {
-	let url = new URL('/', settings.tts.URL);
+	let url = new URL('/', global.settings.tts.URL);
 	let data = {
 		voice: voice,
 		text: string.replaceAll('"', '').replace(/[^\x00-\x7F]/g, ''),
@@ -159,14 +152,14 @@ await authProvider.addUserForToken(streamerTokenData, ['channel']);
 var spinRequestsSocket;
 
 function initSpinRequestsSocket() {
-	if(initialCategory == "Spin Rhythm XD") {
+	if(global.initialCategory == "Spin Rhythm XD") {
 		spinRequestsSocket = new WebSocketListener('ws://127.0.0.1:6970/', handleSpinRequestsMessage);
 	}
 }
 
 const spinRequestsFunctions = {
 	RequestsAllowed: function(value) {
-		say(broadcasterUser.name, `The queue is now ${value ? "open! duckKill" : "closed! LetMeIn"}`);
+		say(global.broadcasterUser.name, `The queue is now ${value ? "open! duckKill" : "closed! LetMeIn"}`);
 	},
 
 	Played: function(data) {
@@ -174,12 +167,12 @@ const spinRequestsFunctions = {
 			return;
 		}
 
-		say(broadcasterUser.name, `@${data.Requester} Your map (${formatSRXDLinkResponse(data, "", true)}) is up next!`);
+		say(global.broadcasterUser.name, `@${data.Requester} Your map (${formatSRXDLinkResponse(data, "", true)}) is up next!`);
 	}
 }
 
 function handleSpinRequestsMessage(data) {
-	if(broadcasterUser == null) {
+	if(global.broadcasterUser == null) {
 		return;
 	}
 
@@ -206,7 +199,7 @@ function formatSRXDLinkResponse(chart, prefix = "", skipLink = false) {
 }
 
 async function querySRXD(endpoint, args, opts) {
-	let url = new URL(`/${endpoint}${args != '' ? `/${args}` : ''}`, settings.srxd.spinRequestsURL);
+	let url = new URL(`/${endpoint}${args != '' ? `/${args}` : ''}`, global.settings.srxd.spinRequestsURL);
 	let params = new URLSearchParams(opts);
 	url.search = params.toString();
 
@@ -221,7 +214,7 @@ async function getTargetedUser(channel, target, msg) {
 		return null;
 	}
 
-	const userCheck = await apiClient.users.getUserByName(target.replace("@", "").toLowerCase());
+	const userCheck = await global.apiClient.users.getUserByName(target.replace("@", "").toLowerCase());
 
 	if(!userCheck) {
 		await reply(channel, msg, "⚠️ Could not find any users matching that username");
@@ -242,7 +235,7 @@ async function getLeaderboardValueFromUserTarget(channel, args, msg, user, key) 
 	let wantedName = user.displayName;
 
 	if(args.length) {
-		const userCheck = await apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
+		const userCheck = await global.apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
 
 		if(!userCheck) {
 			await reply(channel, msg, "⚠️ Could not find any users matching that username");
@@ -266,14 +259,14 @@ commandList.addTrigger("ad", async(channel, args, msg, user) => {
 	if(args.length) {
 		if(args[0].toLowerCase()[0] == "y") {
 			try {
-				await apiClient.channels.startChannelCommercial(broadcasterUser.id, settings.twitch.scheduledAdBreakLength);
+				await global.apiClient.channels.startChannelCommercial(global.broadcasterUser.id, global.settings.twitch.scheduledAdBreakLength);
 			} catch(err) {
 				console.error(err);
 				await reply(channel, msg, "⚠️ Failed to start an ad break");
 				return;
 			}
 
-			await reply(channel, msg, `🆗 Started a ${settings.twitch.scheduledAdBreakLength} second ad break`);
+			await reply(channel, msg, `🆗 Started a ${global.settings.twitch.scheduledAdBreakLength} second ad break`);
 		}
 	}
 
@@ -293,7 +286,7 @@ commandList.addTrigger("addrotr", async(channel, args, msg, user) => {
 		return;
 	}
 
-	const userCheck = await apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
+	const userCheck = await global.apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
 
 	if(!userCheck) {
 		await reply(channel, msg, "⚠️ Could not find any users matching that username");
@@ -317,9 +310,9 @@ commandList.addTrigger("amhere", async(channel, args, msg, user) => {
 
 // --- !bitrate ---
 commandList.addTrigger("bitrate", async(channel, args, msg, user) => {
-	const bytes = (obsBytesSentData[1] - obsBytesSentData[0]) / settings.obs.bitrateInterval;
+	const bytes = (obsBytesSentData[1] - obsBytesSentData[0]) / global.settings.obs.bitrateInterval;
 
-	const historyLength = (settings.obs.bitrateInterval * settings.obs.droppedFramesHistoryLength);
+	const historyLength = (global.settings.obs.bitrateInterval * global.settings.obs.droppedFramesHistoryLength);
 	const historyMinutes = Math.floor(historyLength / 60);
 	const droppedFramesTimeframe = historyMinutes > 2 ? `${historyMinutes} minutes` : `${historyLength} seconds`;
 	const droppedFrames = obsDroppedFramesHistory[obsDroppedFramesHistory.length - 1] - obsDroppedFramesHistory[0];
@@ -346,19 +339,19 @@ commandList.addTrigger("cancelraffle", async(channel, args, msg, user) => {
 // --- !category ---
 commandList.addTrigger("category", async(channel, args, msg, user) => {
 	if(!args.length) {
-		let channelInfo = await apiClient.channels.getChannelInfoById(broadcasterUser.id);
+		let channelInfo = await global.apiClient.channels.getChannelInfoById(global.broadcasterUser.id);
 		await reply(channel, msg, `Category is currently ${channelInfo.gameName}`);
 		return;
 	}
 
 	let wantedGameName = args.join(" ");
-	let gameInfo = await apiClient.games.getGameByName(wantedGameName);
+	let gameInfo = await global.apiClient.games.getGameByName(wantedGameName);
 	if(gameInfo == null) {
 		await reply(channel, msg, `⚠️ Could not find any categories for "${wantedGameName}"`);
 		return;
 	}
 
-	await apiClient.channels.updateChannelInfo(broadcasterUser.id, {
+	await global.apiClient.channels.updateChannelInfo(global.broadcasterUser.id, {
 		gameId: gameInfo.id
 	});
 
@@ -481,7 +474,7 @@ commandList.addTrigger("give", async(channel, args, msg, user) => {
 		return;
 	}
 
-	const userCheck = await apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
+	const userCheck = await global.apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
 
 	if(!userCheck) {
 		await reply(channel, msg, "⚠️ Could not find any users matching that username");
@@ -537,8 +530,8 @@ commandList.addTrigger("low", async(channel, args, msg, user) => {
 
 // --- !man ---
 commandList.addTrigger("man", async(channel, args, msg, user) => {
-	counter.increment("man", 1);
-	await say(channel, `MANHORSE x${counter.get("man").toLocaleString()}`);
+	global.counter.increment("man", 1);
+	await say(channel, `MANHORSE x${global.counter.get("man").toLocaleString()}`);
 }, {
 	whitelist: ["broadcaster", "mod", "vip"],
 	cooldown: 10
@@ -581,9 +574,9 @@ commandList.addTrigger("note", async(channel, args, msg, user) => {
 		return;
 	}
 
-	const moreUserInfo = await apiClient.users.getUserById(user.userId);
+	const moreUserInfo = await global.apiClient.users.getUserById(user.userId);
 	if(moreUserInfo == null) {
-		await reply(channel, msg, `⚠️ Could not fetch your user information (erm @${broadcasterUser.name})`);
+		await reply(channel, msg, `⚠️ Could not fetch your user information (erm @${global.broadcasterUser.name})`);
 		return;
 	}
 
@@ -723,7 +716,7 @@ commandList.addTrigger("rafjoin", async(channel, args, msg, user) => {
 		return;
 	}
 
-	await remoteSound.play("rafjoin", 0.6, [0.75, 1.1]);
+	await global.remoteSound.play("rafjoin", 0.6, [0.75, 1.1]);
 }, {
 	userCooldown: 10
 });
@@ -801,8 +794,8 @@ commandList.addTrigger("ruler", async(channel, args, msg, user) => {
 
 // --- !smack ---
 commandList.addTrigger("smack", async(channel, args, msg, user) => {
-	counter.increment("smack", 1);
-	await say(channel, `Parrot has hit himself ${counter.get("smack").toLocaleString()} times jermaSlap`);
+	global.counter.increment("smack", 1);
+	await say(channel, `Parrot has hit himself ${global.counter.get("smack").toLocaleString()} times jermaSlap`);
 }, {
 	whitelist: ["broadcaster", "mod", "vip"],
 	aliases: ["slap", "hit", "selfown"],
@@ -812,7 +805,7 @@ commandList.addTrigger("smack", async(channel, args, msg, user) => {
 // --- !snooze ---
 commandList.addTrigger("snooze", async(channel, args, msg, user) => {
 	try {
-		await apiClient.channels.snoozeNextAd(broadcasterUser.id);
+		await global.apiClient.channels.snoozeNextAd(global.broadcasterUser.id);
 	} catch(err) {
 		console.error(err);
 		await reply(channel, msg, "⚠️ Failed to snooze ads");
@@ -835,7 +828,7 @@ commandList.addTrigger("so", async(channel, args, msg, user) => {
 	}
 
 	try {
-		await apiClient.chat.shoutoutUser(broadcasterUser.id, targetUser.userId);
+		await global.apiClient.chat.shoutoutUser(global.broadcasterUser.id, targetUser.userId);
 	} catch(err) {
 		await reply(channel, msg, `⚠️ Could not shout out ${targetUser.userDisplayName}`);
 	}
@@ -898,6 +891,7 @@ commandList.addTrigger("steam", async(channel, args, msg, user) => {
 // --- !streamonline ---
 commandList.addTrigger("streamonline", async(channel, args, msg, user) => {
 	triggerTwitchStreamOnlineEvents();
+	await reply(channel, msg, 'sorry for crashing... PLEAD');
 }, {
 	whitelist: ["broadcaster"]
 });
@@ -982,8 +976,8 @@ const deathRemarks = ["This is so sad.", "Devastating.", "My condolences.", "Wha
 					 "Can we get 100 likes?", "Alexa, play Despacito.", "lik dis if u cri evrytim", "Tears are being shed."];
 
 commandList.addTrigger("vnyandeath", async(channel, args, msg, user) => {
-	counter.increment("death", 1);
-	await say(channel, `Parrot has died ${counter.get("death").toLocaleString()} times. ${deathRemarks[Math.floor(Math.random() * deathRemarks.length)]}`);
+	global.counter.increment("death", 1);
+	await say(channel, `Parrot has died ${global.counter.get("death").toLocaleString()} times. ${deathRemarks[Math.floor(Math.random() * deathRemarks.length)]}`);
 }, {
 	whitelist: ["broadcaster", "mod"],
 	cooldown: 10
@@ -1009,8 +1003,8 @@ commandList.addTrigger("weather", async(channel, args, msg, user) => {
 
 	let url = new URL('/v1/current.json', 'https://api.weatherapi.com/');
 	let params = new URLSearchParams({
-		key: settings.auth.weatherAPI.key,
-		q: settings.weather.location,
+		key: global.settings.auth.weatherAPI.key,
+		q: global.settings.weather.location,
 		aqi: "no"
 	});
 	url.search = params.toString();
@@ -1043,14 +1037,14 @@ for(const soundCommandName in soundCommands) {
 
 	if(params.regex) {
 		commandList.addRegex(soundCommandName, async(channel, args, msg, user) => {
-			await remoteSound.play(params.filename, ("volume" in params ? params.volume : 1), ("pitch" in params ? params.pitch : [1, 1]));
+			await global.remoteSound.play(params.filename, ("volume" in params ? params.volume : 1), ("pitch" in params ? params.pitch : [1, 1]));
 		}, {
 			caseInsensitive: "caseInsensitive" in params ? params.caseInsensitive : true,
 			userCooldown: "cooldown" in params ? params.cooldown : 5,
 		});
 	} else {
 		commandList.addTrigger(soundCommandName, async(channel, args, msg, user) => {
-			await remoteSound.play(("filename" in params ? params.filename : soundCommandName), ("volume" in params ? params.volume : 1), ("pitch" in params ? params.pitch : [1, 1]));
+			await global.remoteSound.play(("filename" in params ? params.filename : soundCommandName), ("volume" in params ? params.volume : 1), ("pitch" in params ? params.pitch : [1, 1]));
 		}, {
 			userCooldown: "cooldown" in params ? params.cooldown : 5
 		});
@@ -1174,8 +1168,7 @@ const chatClient = new ChatClient({
 
 global.botUserName = "";
 
-var initialCategory = null;
-global.initialCategory = initialCategory;
+global.initialCategory = null;
 var seenUsers = [];
 
 async function say(channel, text) {
@@ -1293,7 +1286,7 @@ function onUserFirstSeenForSession(channel, user, isFirst) {
 	const userData = users.getUser(user.userId);
 
 	const ttsName = userData.getPersistentData("ttsName");
-	tts(settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(user)} has entered the chat${isFirst ? " for the first time." : "."}`);
+	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(user)} has entered the chat${isFirst ? " for the first time." : "."}`);
 }
 
 var previousMessageOwner = null;
@@ -1329,7 +1322,7 @@ async function onStandardMessage(channel, msgObject, message) {
 				const host = [hostParts[hostParts.length - 2], hostParts[hostParts.length - 1]].join(".");
 				if(whitelistedDomains.indexOf(host) === -1) {
 					reply(channel, msgObject, 'This internet domain is not whitelisted, sorry!');
-					apiClient.moderation.deleteChatMessages(broadcasterUser.id, msgObject.id);
+					global.apiClient.moderation.deleteChatMessages(global.broadcasterUser.id, msgObject.id);
 				}
 			}
 		}
@@ -1359,7 +1352,7 @@ async function onStandardMessage(channel, msgObject, message) {
 
 			if(isSwapValid) {
 				wasGemSwap = true;
-				exec(`${settings.bot.bejeweledSwapperLocation} ${parts.join(" ")}`, { windowsHide: true });
+				exec(`${global.settings.bot.bejeweledSwapperLocation} ${parts.join(" ")}`, { windowsHide: true });
 			}
 		}
 	}
@@ -1370,15 +1363,15 @@ async function onStandardMessage(channel, msgObject, message) {
 
 		if(previousMessageOwner != user.userName) {
 			const ttsName = userData.getPersistentData("ttsName");
-			await tts(settings.tts.voices.names, ttsName ? ttsName : ensureEnglishName(user));
+			await tts(global.settings.tts.voices.names, ttsName ? ttsName : ensureEnglishName(user));
 		}
 		
 		previousMessageOwner = user.userName;
 		clearTimeout(clearPreviousMessageOwnerTimeout);
-		clearPreviousMessageOwnerTimeout = setTimeout(clearPreviousMessageOwner, settings.tts.clearPreviousOwnerTimeout * 1000);
+		clearPreviousMessageOwnerTimeout = setTimeout(clearPreviousMessageOwner, global.settings.tts.clearPreviousOwnerTimeout * 1000);
 
 		const voice = userData.getPersistentData("ttsVoice");
-		await tts(voice == null ? settings.tts.voices.messages : voice, filtered);
+		await tts(voice == null ? global.settings.tts.voices.messages : voice, filtered);
 	}
 
 	if(Math.floor(Math.random() * 1000) == 69) {
@@ -1405,35 +1398,33 @@ chatClient.onJoin(async (channel, user) => {
 	log("COMMANDS", `There are ${commandList.length} registered commands, ${commandList.uniqueLength} of which are unique`, false, ['whiteBright']);
 	log("COMMANDS", `There are ${commandList.regexLength} registered regex matchers, with ${commandList.uniqueRegexLength} unique functions`, false, ['whiteBright']);
 
-	broadcasterUser = await apiClient.users.getUserByName(channel);
-	if(broadcasterUser != null) {
+	global.broadcasterUser = await global.apiClient.users.getUserByName(channel);
+	if(global.broadcasterUser != null) {
 		log("SYSTEM", `Got broadcaster information for ${channel}`);
-		global.broadcasterUser = broadcasterUser;
 		startEventSub();
 
-		let channelInfo = await apiClient.channels.getChannelInfoById(broadcasterUser.id);
-		initialCategory = channelInfo.gameName;
+		let channelInfo = await global.apiClient.channels.getChannelInfoById(global.broadcasterUser.id);
+		global.initialCategory = channelInfo.gameName;
 		previousCategory = channelInfo.gameName;
 		previousTitle = channelInfo.title;
-		log("SYSTEM", `Initial category is ${initialCategory}`);
+		log("SYSTEM", `Initial category is ${global.initialCategory}`);
 
-		let allRedeems = await apiClient.channelPoints.getCustomRewards(broadcasterUser.id);
+		let allRedeems = await global.apiClient.channelPoints.getCustomRewards(global.broadcasterUser.id);
 		for(const redeem of allRedeems) {
-			redeemList.add(redeem);
+			global.redeemList.add(redeem);
 		}
-		log("SYSTEM", `Found ${redeemList.length} channel point redeems`);
-
-		for(const redeemName in initialRedeemList) {
+		log("SYSTEM", `Found ${global.redeemList.length} channel point redeems`);
+		for(const redeemName in global.initialRedeemList) {
 			const safeRedeemName = redeemName.substr(0, 45);
 
-			if(redeemList.getByName(safeRedeemName) != null) {
+			if(global.redeemList.getByName(safeRedeemName) != null) {
 				continue;
 			}
 
 			global.log("SYSTEM", `Defined channel point redeem "${safeRedeemName}" does not exist, creating it`, false, ['gray']);
 
-			const initialData = initialRedeemList[safeRedeemName];
-			const redeem = await apiClient.channelPoints.createCustomReward(broadcasterUser.id, {
+			const initialData = global.initialRedeemList[safeRedeemName];
+			const redeem = await global.apiClient.channelPoints.createCustomReward(global.broadcasterUser.id, {
 				autoFulfill: "autoFulfill" in initialData ? initialData.autoFulfill : true,
 				backgroundColor: "color" in initialData ? `#${initialData.color}` : "#000000",
 				cost: "cost" in initialData ? initialData.cost : 6969,
@@ -1446,34 +1437,34 @@ chatClient.onJoin(async (channel, user) => {
 				userInputRequired: "userInputRequired" in initialData ? initialData.userInputRequired : false
 			});
 
-			redeemList.add(redeem);
+			global.redeemList.add(redeem);
 
 			await delay(250);
 		}
 
 		for(const redeemName of vnyanOnlyRedeems) {
-			await redeemList.getByName(redeemName).enable(initialCategory != "Resonite");
+			await global.redeemList.getByName(redeemName).enable(global.initialCategory != "Resonite");
 		}
 
-		await redeemList.getByName("Flip a Coin").setCooldown(30); // can't do this on the twitch dashboard, so we do it here
+		await global.redeemList.getByName("Flip a Coin").setCooldown(30); // can't do this on the twitch dashboard, so we do it here
 		await rulerOfTheRedeem.enable(true);
 
 		initSpinRequestsSocket();
 
-		await say(broadcasterUser.name, `${helloEmotes[Math.floor(Math.random() * helloEmotes.length)]} ${helloMessages[Math.floor(Math.random() * helloMessages.length)]}`);
+		await say(global.broadcasterUser.name, `${helloEmotes[Math.floor(Math.random() * helloEmotes.length)]} ${helloMessages[Math.floor(Math.random() * helloMessages.length)]}`);
 	}
 });
 
 chatClient.onRaid(async (channel, user, raidInfo, msg) => {
-	let raiderInfo = await apiClient.users.getUserByName(user);
-	let channelInfo = await apiClient.channels.getChannelInfoById(raiderInfo.id);
+	let raiderInfo = await global.apiClient.users.getUserByName(user);
+	let channelInfo = await global.apiClient.channels.getChannelInfoById(raiderInfo.id);
 	
-	tts(settings.tts.voices.system, `${user} raided the stream with ${raidInfo.viewerCount} ${raidInfo.viewerCount != 1 ? "viewers": "viewer"}! They were streaming ${channelInfo.gameName}.`);
+	tts(global.settings.tts.voices.system, `${user} raided the stream with ${raidInfo.viewerCount} ${raidInfo.viewerCount != 1 ? "viewers": "viewer"}! They were streaming ${channelInfo.gameName}.`);
 
 	let hypeString = hypeEmoteString(2);
 	say(channel, `${hypeString} Thank you @${raiderInfo.displayName} for the raid of ${raidInfo.viewerCount}! Also, hello raiders! SmileWave`);
 	
-	await apiClient.chat.shoutoutUser(broadcasterUser.id, raiderInfo.id);
+	await global.apiClient.chat.shoutoutUser(global.broadcasterUser.id, raiderInfo.id);
 
 	await updateLeaderboardValues(raiderInfo.userId, "Items Thrown", raidInfo.viewerCount);
 	
@@ -1488,7 +1479,7 @@ chatClient.onSub((channel, user, subInfo, msg) => {
 		onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
 	}
 
-	tts(settings.tts.voices.system, `${user} subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
+	tts(global.settings.tts.voices.system, `${user} subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
 	say(channel, hypeEmoteString());
 })
 chatClient.onResub((channel, user, subInfo, msg) => {
@@ -1497,7 +1488,7 @@ chatClient.onResub((channel, user, subInfo, msg) => {
 		onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
 	}
 
-	tts(settings.tts.voices.system, `${user} re-subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
+	tts(global.settings.tts.voices.system, `${user} re-subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
 	say(channel, hypeEmoteString());
 })
 
@@ -1507,7 +1498,7 @@ const giftCounts = new Map();
 chatClient.onCommunitySub((channel, gifterName, giftInfo) => {
 	const previousGiftCount = giftCounts.get(gifterName) ?? 0;
 	giftCounts.set(gifterName, previousGiftCount + giftInfo.count);
-	tts(settings.tts.voices.system, `${gifterName} gifted ${giftInfo.count != 1 ? `${giftInfo.count} subs` : 'a sub'}`);
+	tts(global.settings.tts.voices.system, `${gifterName} gifted ${giftInfo.count != 1 ? `${giftInfo.count} subs` : 'a sub'}`);
 	say(channel, hypeEmoteString());
 });
 
@@ -1518,7 +1509,7 @@ chatClient.onSubGift((channel, recipientName, subInfo) => {
 	if (previousGiftCount > 0) {
 		giftCounts.set(gifterName, previousGiftCount - 1);
 	} else {
-		tts(settings.tts.voices.system, `${gifterName} gifted a sub to ${recipientName}`);
+		tts(global.settings.tts.voices.system, `${gifterName} gifted a sub to ${recipientName}`);
 		say(channel, hypeEmoteString());
 	}
 });
@@ -1540,7 +1531,7 @@ const rulerOfTheRedeem = new RulerOfTheRedeem();
 async function updateLeaderboardValues(userId, key, value, defaultValue = 0) {
 	key = key.replaceAll(" ", "_");
 
-	let url = new URL(settings.bot.leaderboard.update.path, settings.bot.leaderboard.update.root);
+	let url = new URL(global.settings.bot.leaderboard.update.path, global.settings.bot.leaderboard.update.root);
 	let params = new URLSearchParams({
 		id: userId,
 		which: key.replaceAll(" ", "_"),
@@ -1559,7 +1550,7 @@ async function updateLeaderboardValues(userId, key, value, defaultValue = 0) {
 global.updateLeaderboardValues = updateLeaderboardValues;
 
 async function getLeaderboardValue(userId, key) {
-	let url = new URL(settings.bot.leaderboard.obtain.path, settings.bot.leaderboard.obtain.root);
+	let url = new URL(global.settings.bot.leaderboard.obtain.path, global.settings.bot.leaderboard.obtain.root);
 	let params = new URLSearchParams({
 		id: userId,
 		which: key.replaceAll(" ", "_"),
@@ -1599,11 +1590,11 @@ const redeemFunctions = {
 			const user = users.getUser(event.userId);
 			user.setPersistentData("ttsVoice", name);
 
-			await say(broadcasterUser.name, `@${event.userDisplayName} 🆗 Your TTS voice is now ${name}`);
-			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "FULFILLED");
+			await say(global.broadcasterUser.name, `@${event.userDisplayName} 🆗 Your TTS voice is now ${name}`);
+			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "FULFILLED");
 		} else {
-			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ This is an invalid voice name, please see https://theblackparrot.me/tts for available choices and voice examples.`);
-			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED"); // it's cancelled!! not canceled!!! grrr
+			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ This is an invalid voice name, please see https://theblackparrot.me/tts for available choices and voice examples.`);
+			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED"); // it's cancelled!! not canceled!!! grrr
 		}
 	},
 
@@ -1614,19 +1605,19 @@ const redeemFunctions = {
 		const user = users.getUser(event.userId);
 		user.setPersistentData("ttsName", name);
 
-		await say(broadcasterUser.name, `@${event.userDisplayName} 🆗 I will call you this now, thanks for letting me know!`);
+		await say(global.broadcasterUser.name, `@${event.userDisplayName} 🆗 I will call you this now, thanks for letting me know!`);
 	},
 
 	"Swap Avatars": async function(event) {
 		const which = event.input[0].toLowerCase();
 
 		if(!which in avatarRedeemMap) {
-			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ This is not a valid character name. You can find the character choices in the redeem's description.`);
-			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ This is not a valid character name. You can find the character choices in the redeem's description.`);
+			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
 			return;
 		}
 
-		const url = new URL('/', settings.vnyan.httpURL);
+		const url = new URL('/', global.settings.vnyan.httpURL);
 
 		await axios.post(url, {
 			action: "SwapAvatars",
@@ -1634,15 +1625,15 @@ const redeemFunctions = {
 				avatar: which
 			}
 		}).catch((err) => {});
-		await say(broadcasterUser.name, `@${event.userDisplayName} 🆗 Swapped to ${avatarRedeemMap[which]}`);
-		await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "FULFILLED");
+		await say(global.broadcasterUser.name, `@${event.userDisplayName} 🆗 Swapped to ${avatarRedeemMap[which]}`);
+		await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "FULFILLED");
 	},
 
 	"first": async function(event) {
 		const redeems = [
-			redeemList.getByName("first"),
-			redeemList.getByName("second"),
-			redeemList.getByName("third"),
+			global.redeemList.getByName("first"),
+			global.redeemList.getByName("second"),
+			global.redeemList.getByName("third"),
 		];
 
 		let message;
@@ -1653,7 +1644,7 @@ const redeemFunctions = {
 			case "third": message = "congrat you got here too okayipullup"; wantedIdx = 3; break;
 		} // should disable all redeems on "third", as idx 3 doesn't exist
 
-		await say(broadcasterUser.name, `@${event.userDisplayName} ${message}`);
+		await say(global.broadcasterUser.name, `@${event.userDisplayName} ${message}`);
 
 		for(let idx = 0; idx < redeems.length; idx++) {
 			await redeems[idx].enable(idx == wantedIdx)
@@ -1678,7 +1669,7 @@ const redeemFunctions = {
 
 	"Ruler of the Redeem": async function(event) {
 		const correct = await rulerOfTheRedeem.attempt(event);
-		await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], correct ? "FULFILLED" : "CANCELED");
+		await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], correct ? "FULFILLED" : "CANCELED");
 	},
 	"Force Refresh Ruler of the Redeem": async function(event) {
 		await rulerOfTheRedeem.forceRefresh();
@@ -1691,44 +1682,44 @@ const redeemFunctions = {
 		await updateLeaderboardValues(event.userId, "Gamba Credits", 100);
 		
 		const newAmount = await getLeaderboardValue(event.userId, "Gamba Credits");
-		await say(broadcasterUser.name, `@${event.userDisplayName} You now have ${newAmount.toLocaleString()} Gamba Credits`);
+		await say(global.broadcasterUser.name, `@${event.userDisplayName} You now have ${newAmount.toLocaleString()} Gamba Credits`);
 	},
 	"Flip a Coin": async function(event) {
 		const args = event.input.split(" ");
 		if(!args.length) {
-			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ Please input a wager as the first word/argument, and then "h" or "t" as the second word/argument (or anything starting with those letters, e.g. "200 h").`);
-			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ Please input a wager as the first word/argument, and then "h" or "t" as the second word/argument (or anything starting with those letters, e.g. "200 h").`);
+			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
 			return;
 		}
 
 		const wager = +(args[0].replaceAll(",", "").split(".")[0]);
 		if(isNaN(wager)) {
-			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ This wager is not a valid whole number.`);
-			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ This wager is not a valid whole number.`);
+			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
 			return;
 		}
 		if(wager <= 0) {
-			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ You must wager a positive value above 0.`);
-			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ You must wager a positive value above 0.`);
+			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
 			return;
 		}
 
 		const userHas = await getLeaderboardValue(event.userId, "Gamba Credits");
 		if(wager > userHas) {
-			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ You can only wager a maximum of ${userHas.toLocaleString()} credits.`);
-			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ You can only wager a maximum of ${userHas.toLocaleString()} credits.`);
+			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
 			return;
 		}
 
 		const minWager = Math.floor(userHas * 0.005);
 		if(wager < minWager) {
-			await say(broadcasterUser.name, `@${event.userDisplayName} ⚠️ You must wager at least 0.5% of your total credits, (which would be ${minWager.toLocaleString()} credits) PayUp`);
-			await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ You must wager at least 0.5% of your total credits, (which would be ${minWager.toLocaleString()} credits) PayUp`);
+			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
 			return;
 		}
 
-		await apiClient.channelPoints.updateRedemptionStatusByIds(broadcasterUser.id, event.rewardId, [event.id], "FULFILLED");
-		await remoteSound.play("insertcoin");
+		await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "FULFILLED");
+		await global.remoteSound.play("insertcoin");
 
 		let whichSide = "";
 
@@ -1739,19 +1730,19 @@ const redeemFunctions = {
 			whichSide = (Math.floor(Math.random() * 2) % 2) ? "h" : "t";
 		}
 
-		await say(broadcasterUser.name, `@${event.userDisplayName} flips a coin... CoinTime hopefully it lands on ${whichSide === "h" ? "Heads" : "Tails"}! NAILS`);
+		await say(global.broadcasterUser.name, `@${event.userDisplayName} flips a coin... CoinTime hopefully it lands on ${whichSide === "h" ? "Heads" : "Tails"}! NAILS`);
 		await delay(5000 + (Math.random() * 7000));
 
 		const result = Math.random() >= coinFlipOdds ? "t" : "h";
 
 		if(result === whichSide) {
-			await say(broadcasterUser.name, `@${event.userDisplayName} ...it lands on ${result === "h" ? "Heads" : "Tails"}! You win ${(wager * 2).toLocaleString()} Gamba Credits. OOOO`);
+			await say(global.broadcasterUser.name, `@${event.userDisplayName} ...it lands on ${result === "h" ? "Heads" : "Tails"}! You win ${(wager * 2).toLocaleString()} Gamba Credits. OOOO`);
 			await updateLeaderboardValues(event.userId, "Gamba Credits", wager);
-			await remoteSound.play("win", 0.7);
+			await global.remoteSound.play("win", 0.7);
 		} else {
-			await say(broadcasterUser.name, `@${event.userDisplayName} ...it lands on ${result === "h" ? "Heads" : "Tails"}! Oh no! You lost ${wager.toLocaleString()} Gamba Credits. Better luck next time! LETSGOGAMBLING`);
+			await say(global.broadcasterUser.name, `@${event.userDisplayName} ...it lands on ${result === "h" ? "Heads" : "Tails"}! Oh no! You lost ${wager.toLocaleString()} Gamba Credits. Better luck next time! LETSGOGAMBLING`);
 			await updateLeaderboardValues(event.userId, "Gamba Credits", wager * -1);
-			await remoteSound.play("awdangit", 0.7, [0.9, 1.1]);
+			await global.remoteSound.play("awdangit", 0.7, [0.9, 1.1]);
 		}
 
 		coinFlipOdds += ((2 + Math.floor(Math.random() * 5)) / 100) * (result === "h" ? -1 : 1);
@@ -1762,7 +1753,7 @@ const redeemFunctions = {
 	},
 	"gib coin hint pls?": async function(event) {
 		const readableOdds = Math.floor(coinFlipOdds * 100);
-		await say(broadcasterUser.name, `Current Coin Flip odds: ${readableOdds}% heads, ${100 - readableOdds}% tails EZ`);
+		await say(global.broadcasterUser.name, `Current Coin Flip odds: ${readableOdds}% heads, ${100 - readableOdds}% tails EZ`);
 	}
 };
 redeemFunctions["second"] = redeemFunctions["first"];
@@ -1778,7 +1769,7 @@ const thanksParts = [
 function onBitsCheered(bits, message) {
 	log("EVENTSUB", `${message.chatterName} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`, false, ['whiteBright']);
 
-	tts(settings.tts.voices.system, `${message.chatterName} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`);
+	tts(global.settings.tts.voices.system, `${message.chatterName} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`);
 
 	if(bits >= 100) {
 		say(message.broadcasterName, hypeEmoteString());
@@ -1788,7 +1779,7 @@ function onBitsCheered(bits, message) {
 async function onChannelRewardRedemption(event) {
 	// https://twurple.js.org/reference/eventsub-base/classes/EventSubChannelRedemptionAddEvent.html
 
-	const redeem = redeemList.getByID(event.rewardId);
+	const redeem = global.redeemList.getByID(event.rewardId);
 
 	log("EVENTSUB", `Reward redeemed: ${redeem == null ? "<unknown>" : redeem.name} (${event.rewardId})`, false, ['whiteBright']);
 
@@ -1806,29 +1797,29 @@ function onChannelFollowed(follow) {
 var haveAdsRunBefore = false;
 async function onAdsStarted(event) {
 	if(!haveAdsRunBefore) {
-		await say(broadcasterUser.name, 'Ads are running during setup to disable pre-rolls for the next little bit. You\'re not missing out on anything! Get your snacks, get your drinks, take your meds! Okayge');
+		await say(global.broadcasterUser.name, 'Ads are running during setup to disable pre-rolls for the next little bit. You\'re not missing out on anything! Get your snacks, get your drinks, take your meds! Okayge');
 	} else {
-		await say(broadcasterUser.name, "Rave4 AD BREAK! Rave4 Stand up, stretch, grab some refreshments, use the restroom, take your meds, do what you need to do! The stream will be back in a few minutes, you'll miss nothing! I promise! kermitNod");
+		await say(global.broadcasterUser.name, "Rave4 AD BREAK! Rave4 Stand up, stretch, grab some refreshments, use the restroom, take your meds, do what you need to do! The stream will be back in a few minutes, you'll miss nothing! I promise! kermitNod");
 	}
 
 	haveAdsRunBefore = true;
-	tts(settings.tts.voices.system, "Ad break started", 1);
+	tts(global.settings.tts.voices.system, "Ad break started", 1);
 
 	await creditRaffle.start();
 }
 
 async function onAdsEnded(event) {
-	await say(broadcasterUser.name, "Ad break has ended, welcome back! WooperRise");
-	tts(settings.tts.voices.system, "Ad break finished", 1);
+	await say(global.broadcasterUser.name, "Ad break has ended, welcome back! WooperRise");
+	tts(global.settings.tts.voices.system, "Ad break finished", 1);
 
 	await creditRaffle.end();
 }
 
 var hasSetFirstRedeem = false;
 async function onTwitchStreamOnline(event) {
-	const channelInfo = await apiClient.channels.getChannelInfoById(event.broadcasterId);
+	const channelInfo = await global.apiClient.channels.getChannelInfoById(event.broadcasterId);
 
-	say(broadcasterUser.name, `SmileArrive Parrot is now live with ${channelInfo.gameName}! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive`);
+	say(global.broadcasterUser.name, `SmileArrive Parrot is now live with ${channelInfo.gameName}! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive`);
 
 	if(!hasSetFirstRedeem) {
 		await postToWebhook("streamLive", {
@@ -1840,14 +1831,14 @@ async function onTwitchStreamOnline(event) {
 	hasSetFirstRedeem = true;
 }
 function triggerTwitchStreamOnlineEvents() {
-	if(initialCategory == "Spin Rhythm XD") {
+	if(global.initialCategory == "Spin Rhythm XD") {
 		swapCategoryInterval = setInterval(swapCategoryInSRXD, 45 * 60 * 1000);
 	};
 
 	adTimer();
 }
 async function onTwitchStreamOffline(event) {
-	say(broadcasterUser.name, 'The stream is now offline! If this was an interruption, wait a few minutes and reload your app or refresh your page. Otherwise, see you later! SmileWave');
+	say(global.broadcasterUser.name, 'The stream is now offline! If this was an interruption, wait a few minutes and reload your app or refresh your page. Otherwise, see you later! SmileWave');
 
 	clearTimeout(adTimerTimeout);
 
@@ -1855,19 +1846,19 @@ async function onTwitchStreamOffline(event) {
 	rulerOfTheRedeem.updateTime();
 }
 async function onChannelShoutedOut(event) {
-	const channelInfo = await apiClient.channels.getChannelInfoById(event.shoutedOutBroadcasterId);
-	await say(broadcasterUser.name, `👉👉 Check out https://twitch.tv/${event.shoutedOutBroadcasterName} ! 👈👈 They were last seen streaming ${channelInfo.gameName}!`)
+	const channelInfo = await global.apiClient.channels.getChannelInfoById(event.shoutedOutBroadcasterId);
+	await say(global.broadcasterUser.name, `👉👉 Check out https://twitch.tv/${event.shoutedOutBroadcasterName} ! 👈👈 They were last seen streaming ${channelInfo.gameName}!`)
 }
 async function onOutgoingRaid(event) {
-	let gameInfo = await apiClient.games.getGameByName(initialCategory);
+	let gameInfo = await global.apiClient.games.getGameByName(global.initialCategory);
 
 	if(gameInfo != null) {
-		await apiClient.channels.updateChannelInfo(broadcasterUser.id, {
+		await global.apiClient.channels.updateChannelInfo(global.broadcasterUser.id, {
 			gameId: gameInfo.id
 		});
 	}
 
-	await say(broadcasterUser.name, `We have sent the stream over to https://twitch.tv/${event.raidedBroadcasterName} ! See you next time! SmileWave`);
+	await say(global.broadcasterUser.name, `We have sent the stream over to https://twitch.tv/${event.raidedBroadcasterName} ! See you next time! SmileWave`);
 }
 
 var previousCategory = null;
@@ -1889,53 +1880,53 @@ async function onChannelMetadataUpdate(event) {
 	previousCategory = event.categoryName;
 
 	for(const message of messages) {
-		say(broadcasterUser.name, `ObamaPhone ${message}`);
+		say(global.broadcasterUser.name, `ObamaPhone ${message}`);
 	}
 }
 
 const eventSubListener = new EventSubWsListener({
-	apiClient: apiClient
+	apiClient: global.apiClient
 });
 
 function startEventSub() {
-	eventSubListener.onChannelChatMessage(broadcasterUser.id, broadcasterUser.id, (message) => {
+	eventSubListener.onChannelChatMessage(global.broadcasterUser.id, global.broadcasterUser.id, (message) => {
 		if(message.isCheer) { try { onBitsCheered(message.bits, message); } catch(err) { console.error(err); } }
 	});
 
-	eventSubListener.onChannelFollow(broadcasterUser.id, broadcasterUser.id, (follow) => {
+	eventSubListener.onChannelFollow(global.broadcasterUser.id, global.broadcasterUser.id, (follow) => {
 		try { onChannelFollowed(follow); } catch(err) { console.error(err); }
 	});
 
-	eventSubListener.onChannelAdBreakBegin(broadcasterUser.id, (event) => {
+	eventSubListener.onChannelAdBreakBegin(global.broadcasterUser.id, (event) => {
 		try { onAdsStarted(event); } catch(err) { console.error(err); }
 
 		setTimeout(() => { onAdsEnded(event) }, event.durationSeconds * 1000);
 	});
 
-	eventSubListener.onStreamOnline(broadcasterUser.id, (event) => {
+	eventSubListener.onStreamOnline(global.broadcasterUser.id, (event) => {
 		try { onTwitchStreamOnline(event) } catch(err) { console.error(err); }
 	});
-	eventSubListener.onStreamOffline(broadcasterUser.id, (event) => {
+	eventSubListener.onStreamOffline(global.broadcasterUser.id, (event) => {
 		try { onTwitchStreamOffline(event) } catch(err) { console.error(err); }
 	});
 
-	eventSubListener.onChannelRewardUpdate(broadcasterUser.id, (redeem) => {
-		redeemList.getByID(redeem.id).update(redeem, false);
+	eventSubListener.onChannelRewardUpdate(global.broadcasterUser.id, (redeem) => {
+		global.redeemList.getByID(redeem.id).update(redeem, false);
 	});
 
-	eventSubListener.onChannelRedemptionAdd(broadcasterUser.id, (event) => {
+	eventSubListener.onChannelRedemptionAdd(global.broadcasterUser.id, (event) => {
 		try { onChannelRewardRedemption(event); } catch(err) { console.error(err); }
 	});
 
-	eventSubListener.onChannelShoutoutCreate(broadcasterUser.id, broadcasterUser.id, (event) => {
+	eventSubListener.onChannelShoutoutCreate(global.broadcasterUser.id, global.broadcasterUser.id, (event) => {
 		try { onChannelShoutedOut(event); } catch(err) { console.error(err); }
 	});
 
-	eventSubListener.onChannelRaidFrom(broadcasterUser.id, (event) => {
+	eventSubListener.onChannelRaidFrom(global.broadcasterUser.id, (event) => {
 		try { onOutgoingRaid(event); } catch(err) { console.error(err); }
 	});
 
-	eventSubListener.onChannelUpdate(broadcasterUser.id, (event) => {
+	eventSubListener.onChannelUpdate(global.broadcasterUser.id, (event) => {
 		try { onChannelMetadataUpdate(event); } catch(err) { console.error(err); }
 	});
 
@@ -1950,13 +1941,13 @@ var adTimerTimeout;
 async function adTimer() {
 	clearTimeout(adTimerTimeout);
 
-	while(broadcasterUser == null) {
+	while(global.broadcasterUser == null) {
 		await delay(1000);
 	}
 
-	adTimerTimeout = setTimeout(adTimer, settings.twitch.adTimerRefreshInterval * 1000);
+	adTimerTimeout = setTimeout(adTimer, global.settings.twitch.adTimerRefreshInterval * 1000);
 
-	const adSchedule = await apiClient.channels.getAdSchedule(broadcasterUser.id);
+	const adSchedule = await global.apiClient.channels.getAdSchedule(global.broadcasterUser.id);
 	if(adSchedule == null) {
 		// no ads or stream is not live
 		return;
@@ -1982,8 +1973,8 @@ function onAdTimerRefreshed(nextAdTimestamp) {
 	const minutesLeft = Math.ceil(timeLeft / 60);
 
 	if(timeLeft <= 300 && previousMinutesLeft != minutesLeft && haveAdsRunBefore) {
-		say(broadcasterUser.name, `SNIFFA NEXT BREAK IN ${minutesLeft} ${minutesLeft != 1 ? "MINUTES" : "MINUTE"} SNIFFA`);
-		tts(settings.tts.voices.system, `Scheduled ad break starts in ${minutesLeft} ${minutesLeft != 1 ? "minutes" : "minute"}`, 1);
+		say(global.broadcasterUser.name, `SNIFFA NEXT BREAK IN ${minutesLeft} ${minutesLeft != 1 ? "MINUTES" : "MINUTE"} SNIFFA`);
+		tts(global.settings.tts.voices.system, `Scheduled ad break starts in ${minutesLeft} ${minutesLeft != 1 ? "minutes" : "minute"}`, 1);
 		sound.play("sounds/retro-01.ogg", { volume: 0.6 });
 	}
 
@@ -1995,11 +1986,11 @@ function onAdTimerRefreshed(nextAdTimestamp) {
 var obsConnectionTimeout;
 
 async function initOBS() {
-	const address = `ws://${settings.obs.address}`;
+	const address = `ws://${global.settings.obs.address}`;
 
 	try {
-		if(settings.obs.password != "") {
-			await obs.connect(address, settings.obs.password);
+		if(global.settings.obs.password != "") {
+			await obs.connect(address, global.settings.obs.password);
 		} else {
 			await obs.connect(address);
 		}
@@ -2009,23 +2000,23 @@ async function initOBS() {
 }
 
 async function onOBSConnectionOpened() {
-	const address = `ws://${settings.obs.address}`;
+	const address = `ws://${global.settings.obs.address}`;
 
 	clearTimeout(obsConnectionTimeout);
 	global.log("OBS", `Established connection to OBS at ${address}`, false, ['greenBright']);
 
-	obsBitrateInterval = setInterval(getInfoToDetermineOBSStatus, settings.obs.bitrateInterval * 1000);
+	obsBitrateInterval = setInterval(getInfoToDetermineOBSStatus, global.settings.obs.bitrateInterval * 1000);
 
 	const sceneObject = await obs.call('GetCurrentProgramScene');
 	currentOBSSceneName = sceneObject.sceneName;
 }
 
 function onOBSConnectionClosed() {
-	const address = `ws://${settings.obs.address}`;
+	const address = `ws://${global.settings.obs.address}`;
 
 	clearTimeout(obsConnectionTimeout);
 	global.log("OBS", `Connection to OBS at ${address} closed`, false, ['redBright']);
-	obsConnectionTimeout = setTimeout(initOBS, settings.obs.reconnectDelay * 1000);
+	obsConnectionTimeout = setTimeout(initOBS, global.settings.obs.reconnectDelay * 1000);
 
 	clearInterval(obsBitrateInterval);
 }
@@ -2043,8 +2034,8 @@ async function onOBSSceneChanged(sceneObject) {
 
 	allowBejeweled = (currentOBSSceneName === "Ad Wall");
 
-	if(initialCategory == "Spin Rhythm XD") {
-		for(const redeem of redeemList.getTaggedRedeems("vnyan")) {
+	if(global.initialCategory == "Spin Rhythm XD") {
+		for(const redeem of global.redeemList.getTaggedRedeems("vnyan")) {
 			if(redeem.name == "Throw stuff at me") {
 				await redeem.pause(isIntermission | !isMenu);
 			} else {
@@ -2053,8 +2044,8 @@ async function onOBSSceneChanged(sceneObject) {
 		}
 	}
 
-	await redeemList.getByName("Flip a Coin").enable(isIntermission);
-	await redeemList.getByName("gib coin hint pls?").enable(isIntermission);
+	await global.redeemList.getByName("Flip a Coin").enable(isIntermission);
+	await global.redeemList.getByName("gib coin hint pls?").enable(isIntermission);
 }
 async function onOBSSceneTransitionStarted(transitionObject) {
 	const sceneObject = await obs.call('GetCurrentProgramScene');
@@ -2082,17 +2073,17 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 		inputVolumeDb: isVRChat ? -4 : 0
 	});
 
-	if(initialCategory == "Spin Rhythm XD") {
+	if(global.initialCategory == "Spin Rhythm XD") {
 		await obs.call('SetInputMute', {
 			inputName: "TTS",
 			inputMuted: isGameplay
 		});
 	}
 
-	if(initialCategory != "Resonite") {
-		await axios.post(`http://${settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
+	if(global.initialCategory != "Resonite") {
+		await axios.post(`http://${global.settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
 	} else {
-		await axios.post(`http://${settings.foobar.address}/api/player`, { volume: (isVRChat ? -36.5 : -32.5) }).catch((err) => {});
+		await axios.post(`http://${global.settings.foobar.address}/api/player`, { volume: (isVRChat ? -36.5 : -32.5) }).catch((err) => {});
 	}
 }
 
@@ -2108,7 +2099,7 @@ async function onStreamStarted() {
 	global.log("OBS", "Stream started", false, ['green']);
 
 	clearInterval(rotatingMessageInterval);
-	rotatingMessageInterval = setInterval(doRotatingMessage, settings.bot.rotatingMessageInterval * 1000);
+	rotatingMessageInterval = setInterval(doRotatingMessage, global.settings.bot.rotatingMessageInterval * 1000);
 
 	obsDroppedFramesHistory = [];
 
@@ -2133,15 +2124,15 @@ async function onStreamStarted() {
 			inputVolumeDb: 0
 		});
 
-		await redeemList.getByName("first").enable(!hasSetFirstRedeem);
-		await redeemList.getByName("second").enable(false);
-		await redeemList.getByName("third").enable(false);
+		await global.redeemList.getByName("first").enable(!hasSetFirstRedeem);
+		await global.redeemList.getByName("second").enable(false);
+		await global.redeemList.getByName("third").enable(false);
 
-		await redeemList.getByName("Flip a Coin").enable(true);
-		await redeemList.getByName("gib coin hint pls?").enable(true);
+		await global.redeemList.getByName("Flip a Coin").enable(true);
+		await global.redeemList.getByName("gib coin hint pls?").enable(true);
 	}
 
-	await axios.post(`http://${settings.foobar.address}/api/player`, { volume: -32.5 }).catch((err) => {});
+	await axios.post(`http://${global.settings.foobar.address}/api/player`, { volume: -32.5 }).catch((err) => {});
 }
 async function onStreamStopped() {
 	clearInterval(rotatingMessageInterval);
@@ -2167,24 +2158,24 @@ function doRotatingMessage() {
 		currentRotatingMessageIdx = 0;
 	}
 
-	say(broadcasterUser.name, `🤖 ${rotatingMessageLines[currentRotatingMessageIdx]}`);
+	say(global.broadcasterUser.name, `🤖 ${rotatingMessageLines[currentRotatingMessageIdx]}`);
 }
 
 var swapCategoryInterval;
 async function swapCategoryInSRXD() {
-	if(initialCategory != "Spin Rhythm XD") {
+	if(global.initialCategory != "Spin Rhythm XD") {
 		return;
 	}
 
-	let channelInfo = await apiClient.channels.getChannelInfoById(broadcasterUser.id);
+	let channelInfo = await global.apiClient.channels.getChannelInfoById(global.broadcasterUser.id);
 	let wantedGameName = channelInfo.gameName == "Spin Rhythm XD" ? "Games + Demos" : "Spin Rhythm XD";
 
-	let gameInfo = await apiClient.games.getGameByName(wantedGameName);
+	let gameInfo = await global.apiClient.games.getGameByName(wantedGameName);
 	if(gameInfo == null) {
 		return;
 	}
 
-	await apiClient.channels.updateChannelInfo(broadcasterUser.id, {
+	await global.apiClient.channels.updateChannelInfo(global.broadcasterUser.id, {
 		gameId: gameInfo.id
 	});
 }
@@ -2209,7 +2200,7 @@ async function getInfoToDetermineOBSStatus() {
 		obsDroppedFrames = data.outputSkippedFrames;
 
 		obsDroppedFramesHistory.push(data.outputSkippedFrames);
-		if(obsDroppedFramesHistory.length > settings.obs.droppedFramesHistoryLength) {
+		if(obsDroppedFramesHistory.length > global.settings.obs.droppedFramesHistoryLength) {
 			obsDroppedFramesHistory.pop(0);
 		}
 	}
@@ -2218,7 +2209,7 @@ async function getInfoToDetermineOBSStatus() {
 // ====== WEBHOOKS ======
 
 async function postToWebhook(which, data) {
-	await axios.post(settings.webhooks[which], data).catch((err) => { console.error(err); });
+	await axios.post(global.settings.webhooks[which], data).catch((err) => { console.error(err); });
 	global.log("WEBHOOK", `Posted to the ${which} webhook`);
 }
 
@@ -2228,7 +2219,7 @@ const byeEmotes = ["Sleepo", "sleepofdog", "VirtualLeave"];
 const byeMessages = ["alright bye", "i'm out bye", "bye bye", "ok bye", "cya later", "(i leave the room)", "goodbye chat"];
 
 process.on('SIGINT', async function() {
-	await say(broadcasterUser.name, `${byeMessages[Math.floor(Math.random() * byeMessages.length)]} ${byeEmotes[Math.floor(Math.random() * byeEmotes.length)]}`);
+	await say(global.broadcasterUser.name, `${byeMessages[Math.floor(Math.random() * byeMessages.length)]} ${byeEmotes[Math.floor(Math.random() * byeEmotes.length)]}`);
 	await foobar2000.saveQueue();
 	process.exit();
 });
