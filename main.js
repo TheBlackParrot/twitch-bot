@@ -7,6 +7,7 @@ import { OBSWebSocket } from 'obs-websocket-js';
 const obs = new OBSWebSocket();
 import { Player } from "cli-sound";
 const sound = new Player();
+import getCurrentLine from 'get-current-line';
 
 import { RefreshingAuthProvider } from '@twurple/auth';
 import { ApiClient } from '@twurple/api';
@@ -254,6 +255,8 @@ async function getLeaderboardValueFromUserTarget(channel, args, msg, user, key) 
 	};
 }
 
+const whereDoCommandsStart = getCurrentLine().line;
+
 // --- !ad ---
 commandList.addTrigger("ad", async(channel, args, msg, user) => {
 	if(args.length) {
@@ -359,6 +362,14 @@ commandList.addTrigger("category", async(channel, args, msg, user) => {
 }, {
 	aliases: ["game"],
 	whitelist: ["broadcaster", "mod"],
+	cooldown: 15
+});
+
+// --- !commands ---
+commandList.addTrigger("commands", async(channel, args, msg, user) => {
+	await reply(channel, msg, `A list of commands can be found at: https://github.com/TheBlackParrot/twitch-bot/blob/main/main.js#L${whereDoCommandsStart}`);
+}, {
+	aliases: ["command", "cmds", "cmd", "listcommands", "listcmds"],
 	cooldown: 15
 });
 
