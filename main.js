@@ -1151,12 +1151,12 @@ commandList.addRegex(`^(do|play|try)\\s.*\\s(song|pls|please|plz|plx)`, async(ch
 });
 
 // choppy audio response
-commandList.addRegex(`(audio|music)\\s.*\\s(choppy|crackly|chopping|crackling)`, async(channel, args, msg, user) => {
+commandList.addRegex(`(audio|music)\\s.*\\s(choppy|crackly|chopping|crackling|crunchy)`, async(channel, args, msg, user) => {
 	await reply(channel, msg, "It's a Windows audio bug. It will fix itself shortly, give it a minute!");
 }, {
 	aliases: [
-		`(choppy|crackly|chopping|crackling)\\s(audio|music)`,
-		`(audio|music)\\s(choppy|crackly|chopping|crackling)`
+		`(choppy|crackly|chopping|crackling|crunchy|crunching)\\s(audio|music)`,
+		`(audio|music)\\s(choppy|crackly|chopping|crackling|crunching)`
 	],
 	cooldown: 30
 });
