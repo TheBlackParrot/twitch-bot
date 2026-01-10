@@ -2138,18 +2138,26 @@ async function onStreamStarted() {
 			inputVolumeDb: 0
 		});
 
+		setTimeout(async function() {
+			await axios.post(`http://${global.settings.foobar.address}/api/player`, { position: 0, volume: -32.5 }).catch((err) => {});
+			await axios.post(`http://${global.settings.foobar.address}/api/player/play`).catch((err) => {});
+		}, 10000);
+
 		await global.redeemList.getByName("first").enable(!hasSetFirstRedeem);
 		await global.redeemList.getByName("second").enable(false);
 		await global.redeemList.getByName("third").enable(false);
 
 		await global.redeemList.getByName("Flip a Coin").enable(true);
 		await global.redeemList.getByName("gib coin hint pls?").enable(true);
+	} else if(currentOBSSceneName.indexOf("SRXD") == -1) {
+		await axios.post(`http://${global.settings.foobar.address}/api/player/play`).catch((err) => {});
 	}
-
-	await axios.post(`http://${global.settings.foobar.address}/api/player`, { volume: -32.5 }).catch((err) => {});
 }
 async function onStreamStopped() {
 	clearInterval(rotatingMessageInterval);
+	
+	await axios.post(`http://${global.settings.foobar.address}/api/player/pause`).catch((err) => {});
+
 	global.log("OBS", "Stream stopped", false, ['yellow']);
 }
 
