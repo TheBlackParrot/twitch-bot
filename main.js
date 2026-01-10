@@ -1203,7 +1203,8 @@ function hypeEmoteString(amount = 5) {
 }
 
 function ensureEnglishName(user) {
-	return user.displayName.replace(/[0-9a-z\-\_]/gi, '').length ? user.userName : user.displayName;
+	const displayName = "displayName" in user ? user.displayName : user.userDisplayName;
+	return displayName.replace(/[0-9a-z\-\_]/gi, '').length ? user.userName : displayName;
 }
 
 function getReadableTimeLeft(seconds) {
@@ -1777,13 +1778,15 @@ const thanksParts = [
 	["hello", "hey", "hi"]
 ];
 
-function onBitsCheered(bits, message) {
-	log("EVENTSUB", `${message.chatterName} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`, false, ['whiteBright']);
+function onBitsCheered(bits, event) {
+	const englishName = ensureEnglishName(event);
 
-	tts(global.settings.tts.voices.system, `${message.chatterName} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`);
+	log("EVENTSUB", `${event.userName} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`, false, ['whiteBright']);
+
+	tts(global.settings.tts.voices.system, `${englishName} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`);
 
 	if(bits >= 100) {
-		say(message.broadcasterName, hypeEmoteString());
+		say(event.broadcasterName, hypeEmoteString());
 	}
 }
 
@@ -1900,8 +1903,8 @@ const eventSubListener = new EventSubWsListener({
 });
 
 function startEventSub() {
-	eventSubListener.onChannelChatMessage(global.broadcasterUser.id, global.broadcasterUser.id, (message) => {
-		if(message.isCheer) { try { onBitsCheered(message.bits, message); } catch(err) { console.error(err); } }
+	eventSubListener.onChannelBitsUse(global.broadcasterUser.id, (event) => {
+		try { onBitsCheered(event.bits, event); } catch(err) { console.error(err); }
 	});
 
 	eventSubListener.onChannelFollow(global.broadcasterUser.id, global.broadcasterUser.id, (follow) => {
