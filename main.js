@@ -1318,6 +1318,11 @@ async function onStandardMessage(channel, msgObject, message) {
 			}
 		}
 
+		if(part.match(/^cheer[1-9]/gi)) {
+			// i'm lazy
+			return false;
+		}
+
 		// doing link checking here since we're looping through the entire message anyways, doesn't apply to those with a role
 		if(part.indexOf(".") !== -1 && (part.startsWith('http:') || part.startsWith('https:')) && !(user.isMod || user.isVip || user.isBroadcaster)) {
 			var url = null;
