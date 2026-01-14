@@ -1589,6 +1589,14 @@ const avatarRedeemMap = {
 };
 var coinFlipOdds = 0.5;
 
+async function updateRedemptionStatus(rewardId, redemptionId, accept) {
+	try {
+		await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, rewardId, [redemptionId], (accept ? "FULFILLED" : "CANCELED"));
+	} catch(err) {
+		console.error(err);
+	}
+}
+
 const redeemFunctions = {
 	// https://twurple.js.org/reference/eventsub-base/classes/EventSubChannelRedemptionAddEvent.html
 
@@ -1603,10 +1611,10 @@ const redeemFunctions = {
 			user.setPersistentData("ttsVoice", name);
 
 			await say(global.broadcasterUser.name, `@${event.userDisplayName} 🆗 Your TTS voice is now ${name}`);
-			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "FULFILLED");
+			await updateRedemptionStatus(event.rewardId, event.id, true);
 		} else {
 			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ This is an invalid voice name, please see https://theblackparrot.me/tts for available choices and voice examples.`);
-			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED"); // it's cancelled!! not canceled!!! grrr
+			await updateRedemptionStatus(event.rewardId, event.id, false);
 		}
 	},
 
@@ -1625,7 +1633,7 @@ const redeemFunctions = {
 
 		if(!which in avatarRedeemMap) {
 			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ This is not a valid character name. You can find the character choices in the redeem's description.`);
-			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			await updateRedemptionStatus(event.rewardId, event.id, false);
 			return;
 		}
 
@@ -1638,7 +1646,7 @@ const redeemFunctions = {
 			}
 		}).catch((err) => {});
 		await say(global.broadcasterUser.name, `@${event.userDisplayName} 🆗 Swapped to ${avatarRedeemMap[which]}`);
-		await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "FULFILLED");
+		await updateRedemptionStatus(event.rewardId, event.id, true);
 	},
 
 	"first": async function(event) {
@@ -1681,7 +1689,7 @@ const redeemFunctions = {
 
 	"Ruler of the Redeem": async function(event) {
 		const correct = await rulerOfTheRedeem.attempt(event);
-		await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], correct ? "FULFILLED" : "CANCELED");
+		await updateRedemptionStatus(event.rewardId, event.id, correct);
 	},
 	"Force Refresh Ruler of the Redeem": async function(event) {
 		await rulerOfTheRedeem.forceRefresh();
@@ -1700,37 +1708,37 @@ const redeemFunctions = {
 		const args = event.input.split(" ");
 		if(!args.length) {
 			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ Please input a wager as the first word/argument, and then "h" or "t" as the second word/argument (or anything starting with those letters, e.g. "200 h").`);
-			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			await updateRedemptionStatus(event.rewardId, event.id, false);
 			return;
 		}
 
 		const wager = +(args[0].replaceAll(",", "").split(".")[0]);
 		if(isNaN(wager)) {
 			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ This wager is not a valid whole number.`);
-			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			await updateRedemptionStatus(event.rewardId, event.id, false);
 			return;
 		}
 		if(wager <= 0) {
 			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ You must wager a positive value above 0.`);
-			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			await updateRedemptionStatus(event.rewardId, event.id, false);
 			return;
 		}
 
 		const userHas = await getLeaderboardValue(event.userId, "Gamba Credits");
 		if(wager > userHas) {
 			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ You can only wager a maximum of ${userHas.toLocaleString()} credits.`);
-			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			await updateRedemptionStatus(event.rewardId, event.id, false);
 			return;
 		}
 
 		const minWager = Math.floor(userHas * 0.005);
 		if(wager < minWager) {
 			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ You must wager at least 0.5% of your total credits, (which would be ${minWager.toLocaleString()} credits) PayUp`);
-			await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "CANCELED");
+			await updateRedemptionStatus(event.rewardId, event.id, false);
 			return;
 		}
 
-		await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, event.rewardId, [event.id], "FULFILLED");
+		await updateRedemptionStatus(event.rewardId, event.id, true);
 		await global.remoteSound.play("insertcoin");
 
 		let whichSide = "";
