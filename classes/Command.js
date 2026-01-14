@@ -155,7 +155,12 @@ export class BaseCommand {
 		}
 
 		this.lastTriggered = Date.now();
-		await this._trigger(channel, args, msg, user);
+		
+		try {
+			await this._trigger(channel, args, msg, user);
+		} catch(err) {
+			console.log(err);
+		}
 	}
 }
 
