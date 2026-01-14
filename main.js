@@ -1089,7 +1089,11 @@ commandList.addRegex(`why\\s.*\\s(change|swap)\\s.*(category|categories|game|gam
 }, {
 	allowedCategories: ["Spin Rhythm XD"],
 	cooldown: 30,
-	aliases: [`why\\s(change|swap)\\s.*(category|categories|game|games)`]
+	aliases: [
+		`why\\s(change|swap)\\s.*(category|categories|game|games)`,
+		`why\\s.*\\scategory\\sgames`,
+		`why\\s.*\\scategory\\s(currently|set\\sto)\\sgames`
+	]
 });
 
 // i don't like being called this
@@ -1145,7 +1149,7 @@ commandList.addRegex(`^(do|play|try)\\s.*\\s(song|pls|please|plz|plx)`, async(ch
 }, {
 	aliases: [
 		`^can\\syou\\s(do|play|try)\\s.*`,
-		`how\\s.*\\s(request|add)`
+		`how\\s.*\\s(request|add)\\s`
 	],
 	cooldown: 30
 });
