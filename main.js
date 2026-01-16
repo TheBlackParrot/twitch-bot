@@ -1073,9 +1073,9 @@ const crazyStrings = [
 	"And rats make me crazy."
 ];
 
-const frfrStrings = ["yeah", "oh yeah", "so true", "sooo true", "omg", "mhm", "i agree", "agreed", "yep",
+const frfrStrings = ["yeah", "oh yeah", "so true", "sooo true", "omg", "mhm", "i agree", "agreed", "yep", "*nods*",
 					"yes", "definitely", "oh yes", "frfr", "for real", "for real for real", "couldn't agree more",
-					"i concur", "uh-huh", "i can agree with that", "for sure", "true"];
+					"i concur", "uh-huh", "i can agree with that", "for sure", "true", "very true", "you're so right"];
 const frfrEmotes = ["mhmyep", "NODDERS", "catYep", "kermitNod", "pikaSquish", "Periodt", "Mhmmm", "TRUE"];
 
 // matches any instance of "crazy"
@@ -1127,7 +1127,8 @@ commandList.addRegex(`(wat|what)\\s.*\\s(use)\\s.*\\s(show|render)\\s.*\\s(avata
 
 // automatically agrees with any instance of people flattering me
 commandList.addRegex(`^(parrot|null|tox|septi)\\s.*(cute|adorable|pretty|handsome|beautiful)`, async(channel, args, msg, user) => {
-	await say(channel, `${frfrStrings[Math.floor(Math.random() * frfrStrings.length)]} ${frfrStrings[Math.floor(Math.random() * frfrStrings.length)]} ${frfrEmotes[Math.floor(Math.random() * frfrEmotes.length)]}`);
+	const exclaim = (Math.floor(Math.random() * 12) == 10 ? "!" : "");
+	await say(channel, `${frfrStrings[Math.floor(Math.random() * frfrStrings.length)]}${exclaim} ${frfrStrings[Math.floor(Math.random() * frfrStrings.length)]}${exclaim} ${frfrEmotes[Math.floor(Math.random() * frfrEmotes.length)]}`);
 }, {
 	aliases: [
 		`^(parrot|null|tox|septi)s\\s.*(cute|adorable|pretty|handsome|beautiful)`,
@@ -1485,7 +1486,11 @@ chatClient.onRaid(async (channel, user, raidInfo, msg) => {
 	let hypeString = hypeEmoteString(2);
 	say(channel, `${hypeString} Thank you @${raiderInfo.displayName} for the raid of ${raidInfo.viewerCount}! Also, hello raiders! SmileWave`);
 	
-	await global.apiClient.chat.shoutoutUser(global.broadcasterUser.id, raiderInfo.id);
+	try {
+		await global.apiClient.chat.shoutoutUser(global.broadcasterUser.id, raiderInfo.id);
+	} catch(err) {
+		global.log("RAID", `Could not give a shoutout to ${user}`, false, ['yellowBright']);
+	}
 
 	await updateLeaderboardValues(raiderInfo.userId, "Items Thrown", raidInfo.viewerCount);
 	
