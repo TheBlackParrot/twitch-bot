@@ -8,6 +8,21 @@ const obs = new OBSWebSocket();
 import { Player } from "cli-sound";
 const sound = new Player();
 import getCurrentLine from 'get-current-line';
+import unit from 'unitmath';
+const convertUnit = unit.config({
+	formatter: (new Intl.NumberFormat("en-US", { style: "decimal" })).format,
+	definitions: {
+		units: {
+			c: { value: '1 K', offset: 273.15 },
+			f: { value: '1 R', offset: 459.67 },
+			AU: { value: '149597870691 m', aliases: ['UA'] },
+			ly: { value: '63241.077088 AU', aliases: ['lightyear', 'lightyears'] },
+			pc: { value: '3.2615637769 ly', prefixGroup: 'SHORT' },
+			parsec: { value: '3.2615637769 ly', prefixGroup: 'LONG', aliases: ['parsecs'] },
+			fortnight: { value: '2 weeks', aliases: ['fortnite', 'fortnights', 'fortnites'] }
+		}
+	}
+});
 
 import { RefreshingAuthProvider } from '@twurple/auth';
 import { ApiClient } from '@twurple/api';
@@ -371,6 +386,36 @@ commandList.addTrigger("commands", async(channel, args, msg, user) => {
 }, {
 	aliases: ["command", "cmds", "cmd", "listcommands", "listcmds"],
 	cooldown: 15
+});
+
+// --- !convert ---
+commandList.addTrigger("convert", async(channel, args, msg, user) => {
+	if(args.length < 2) {
+		await reply(channel, msg, "⚠️ You must specify an amount of a base unit, and a unit to convert it to");
+		return;
+	}
+
+	let base;
+	try {
+		base = convertUnit(args[0]);
+	} catch(err) {
+		await reply(channel, msg, `⚠️ ${err.message} (initial amount)`);
+		return;
+	}
+
+	let converted;
+	try {
+		converted = base.to(args[1]);
+	} catch(err) {
+		await reply(channel, msg, `⚠️ ${err.message} (conversion)`);
+		return;
+	}
+
+	const opts = { precision: 4 };
+	await reply(channel, msg, `${base.toString(opts)} = ${converted.toString(opts)}`);
+}, {
+	aliases: ["conv", "conversion"],
+	userCooldown: 5
 });
 
 // --- !credits ---

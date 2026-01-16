@@ -9,6 +9,7 @@
     "eventsource": "^4.1.0",
     "get-current-line": "^7.4.0",
     "obs-websocket-js": "^5.0.7",
+    "unitmath": "^1.1.1",
     "ws": "^8.18.3"
   },
   "type": "module"
