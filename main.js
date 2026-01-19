@@ -67,7 +67,8 @@ import { RulerOfTheRedeem } from "./classes/RulerOfTheRedeem.js";
 import { Counter } from "./classes/Counter.js";
 import { SoundServer } from "./classes/SoundServer.js";
 import { CreditRaffle } from "./classes/CreditRaffle.js";
-import { Foobar2000 } from "./classes/Foobar2000.js";
+//import { Foobar2000 } from "./classes/Foobar2000.js";
+import { Foobar2000Volume } from "./classes/Foobar2000Volume.js";
 
 fs.mkdir("./logs").catch((err) => {
 	// ignored 
@@ -102,7 +103,8 @@ global.broadcasterUser = null;
 global.counter = new Counter();
 global.remoteSound = new SoundServer();
 const creditRaffle = new CreditRaffle();
-const foobar2000 = new Foobar2000("safe");
+//const foobar2000 = new Foobar2000("safe");
+const foobar2000volume = new Foobar2000Volume();
 
 global.apiClient = new ApiClient({
 	authProvider
@@ -464,6 +466,7 @@ commandList.addTrigger("endraffle", async(channel, args, msg, user) => {
 	respondWithCooldownMessage: true
 });
 
+/*
 // --- !f2kr ---
 commandList.addTrigger("f2kr", async(channel, args, msg, user) => {
 	if(!args.length) {
@@ -487,6 +490,7 @@ commandList.addTrigger("f2kr", async(channel, args, msg, user) => {
 	userCooldown: 10,
 	respondWithCooldownMessage: true
 });
+*/
 
 // --- !flip ---
 commandList.addTrigger("flip", async(channel, args, msg, user) => {
@@ -496,6 +500,7 @@ commandList.addTrigger("flip", async(channel, args, msg, user) => {
 	userCooldown: 5
 });
 
+/*
 // --- !foobar ---
 commandList.addTrigger("foobar", async(channel, args, msg, user) => {
 	const track = foobar2000.getCurrentTrack();
@@ -508,6 +513,7 @@ commandList.addTrigger("foobar", async(channel, args, msg, user) => {
 	aliases: ["foobar2k", "fb2k"],
 	cooldown: 10
 });
+*/
 
 // --- !github ---
 commandList.addTrigger("github", async(channel, args, msg, user) => {
@@ -568,7 +574,7 @@ commandList.addTrigger("link", async(channel, args, msg, user) => {
 			}
 		}
 	} else {
-		await commandList.get("foobar").trigger(channel, args, msg, user);
+		await commandList.get("radiosong").trigger(channel, args, msg, user);
 	}
 }, {
 	aliases: ["song", "chart"],
@@ -668,6 +674,7 @@ commandList.addTrigger("overlays", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+/*
 // --- !prevfoobar ---
 commandList.addTrigger("prevfoobar", async(channel, args, msg, user) => {
 	if(foobar2000.history.length < 2) {
@@ -685,6 +692,7 @@ commandList.addTrigger("prevfoobar", async(channel, args, msg, user) => {
 	aliases: ["prevfoobar2k", "prevfb2k"],
 	cooldown: 10
 });
+*/
 
 // --- !prevlink ---
 commandList.addTrigger("prevlink", async(channel, args, msg, user) => {
@@ -701,10 +709,46 @@ commandList.addTrigger("prevlink", async(channel, args, msg, user) => {
 			}
 		}
 	} else {
-		await commandList.get("prevfoobar").trigger(channel, args, msg, user);
+		await commandList.get("prevradiosong").trigger(channel, args, msg, user);
+		//await commandList.get("prevfoobar").trigger(channel, args, msg, user);
 	}
 }, {
 	aliases: ["prevsong", "prevchart", "prev", "previous"],
+	cooldown: 10
+});
+
+// --- !prevradiosong ---
+commandList.addTrigger("prevradiosong", async(channel, args, msg, user) => {
+	let response = await axios.get("https://radio.theblackparrot.me/api/nowplaying_static/safe.json").catch((err) => {});
+	if(!("data" in response)) {
+		await reply(channel, msg, "⚠️ Could not query the AzuraCast instance for song history data.");
+		return;
+	}
+
+	let metadata;
+	try {
+		metadata = response.data.song_history[0].song;
+	} catch(err) {
+		// do nothing
+	}
+
+	if(metadata) {
+		let spotifyURL;
+		if("custom_fields" in metadata) {
+			if("comment" in metadata.custom_fields) {
+				if(metadata.custom_fields.comment.length == 22 && metadata.custom_fields.comment.split(" ").length == 1) {
+					// spotify code
+					spotifyURL = `https://open.spotify.com/track/${metadata.custom_fields.comment}`;
+				}
+			}
+		}
+
+		await reply(channel, msg, `Previous song: "${metadata.title}" by ${metadata.artist} (from "${metadata.album}")${spotifyURL ? ` -- ${spotifyURL}` : ""}`);
+	} else {
+		await reply(channel, msg, `⚠️ AzuraCast instance returned no song history data.`);
+	}
+}, {
+	aliases: ["prevsongradio", "prevradio", "radioprev", "previoussongradio", "previousradiosong", "previousradio", "prevrad", "radprev", "prevplayed", "previouslyplayed"],
 	cooldown: 10
 });
 
@@ -717,11 +761,57 @@ commandList.addTrigger("pronouns", async(channel, args, msg, user) => {
 
 // --- !r ---
 commandList.addTrigger("r", async(channel, args, msg, user) => {
-	await reply(channel, msg, 'To request maps, in your Internet browser of choice, navigate to https://spinsha.re and search for the map you want to see me play. Copy the numeric ID at the end of the link or the link itself with "!srxd" before it (e.g. "!srxd 12345"). You can also just paste the link! Or try using search terms!');
-	await reply(channel, msg, 'Base game and DLC maps can also be requested using their identifiers seen in-game. For a list of these maps, see this link: https://github.com/TheBlackParrot/SpinRequests/wiki');
+	if(initialCategory == "Spin Rhythm XD") {
+		await reply(channel, msg, 'To request maps, in your Internet browser of choice, navigate to https://spinsha.re and search for the map you want to see me play. Copy the numeric ID at the end of the link or the link itself with "!srxd" before it (e.g. "!srxd 12345"). You can also just paste the link! Or try using search terms!');
+		await reply(channel, msg, 'Base game and DLC maps can also be requested using their identifiers seen in-game. For a list of these maps, see this link: https://github.com/TheBlackParrot/SpinRequests/wiki');
+	} else {
+		await reply(channel, msg, 'To request songs, head to https://radio.theblackparrot.me/public/safe and press the "REQUEST SONG" button!');
+	}
 }, {
 	aliases: ["rhelp", "requests", "srxdhelp", "helpsrxd", "reqs", "howto"],
 	cooldown: 15
+});
+
+// --- !radio ---
+commandList.addTrigger("radio", async(channel, args, msg, user) => {
+	await reply(channel, msg, "The music playing on stream runs 24/7 now! Listen in: https://radio.theblackparrot.me/public/safe (all music: https://radio.theblackparrot.me/public/all) (requests always open!)");
+}, {
+	cooldown: 10
+});
+
+// --- !radiosong ---
+commandList.addTrigger("radiosong", async(channel, args, msg, user) => {
+	let response = await axios.get("https://radio.theblackparrot.me/api/nowplaying_static/safe.json").catch((err) => {});
+	if(!("data" in response)) {
+		await reply(channel, msg, "⚠️ Could not query the AzuraCast instance for now playing data.");
+		return;
+	}
+
+	let metadata;
+	try {
+		metadata = response.data.now_playing.song;
+	} catch(err) {
+		// do nothing
+	}
+
+	if(metadata) {
+		let spotifyURL;
+		if("custom_fields" in metadata) {
+			if("comment" in metadata.custom_fields) {
+				if(metadata.custom_fields.comment.length == 22 && metadata.custom_fields.comment.split(" ").length == 1) {
+					// spotify code
+					spotifyURL = `https://open.spotify.com/track/${metadata.custom_fields.comment}`;
+				}
+			}
+		}
+
+		await reply(channel, msg, `Current song: "${metadata.title}" by ${metadata.artist} (from "${metadata.album}")${spotifyURL ? ` -- ${spotifyURL}` : ""}`);
+	} else {
+		await reply(channel, msg, `⚠️ AzuraCast instance returned no now playing data.`);
+	}
+}, {
+	aliases: ["songradio", "radiocurrent", "currentradio", "curradio", "radiocur", "linkradio", "radiolink", "radlink", "linkrad", "nowplaying"],
+	cooldown: 10
 });
 
 // --- !random ---
@@ -2162,9 +2252,10 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 	}
 
 	if(global.initialCategory != "Resonite") {
-		await axios.post(`http://${global.settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
+		//await axios.post(`http://${global.settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
+		foobar2000volume.targetVolume = isIntermission ? -30 : -100;
 	} else {
-		await axios.post(`http://${global.settings.foobar.address}/api/player`, { volume: (isVRChat ? -36.5 : -32.5) }).catch((err) => {});
+		foobar2000volume.targetVolume = isVRChat ? -34 : -30;
 	}
 }
 
@@ -2206,7 +2297,8 @@ async function onStreamStarted() {
 		});
 
 		setTimeout(async function() {
-			await axios.post(`http://${global.settings.foobar.address}/api/player`, { position: 0, volume: -32.5 }).catch((err) => {});
+			foobar2000volume.targetVolume = -30;
+			await axios.post(`http://${global.settings.foobar.address}/api/player`, { position: 0 }).catch((err) => {});
 			await axios.post(`http://${global.settings.foobar.address}/api/player/play`).catch((err) => {});
 		}, 10000);
 
@@ -2309,6 +2401,6 @@ const byeMessages = ["alright bye", "i'm out bye", "bye bye", "ok bye", "cya lat
 
 process.on('SIGINT', async function() {
 	await say(global.broadcasterUser.name, `${byeMessages[Math.floor(Math.random() * byeMessages.length)]} ${byeEmotes[Math.floor(Math.random() * byeEmotes.length)]}`);
-	await foobar2000.saveQueue();
+	//await foobar2000.saveQueue();
 	process.exit();
 });
