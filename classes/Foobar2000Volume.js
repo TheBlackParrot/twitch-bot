@@ -47,7 +47,6 @@ export class Foobar2000Volume {
 			this.currentVolume = -100;
 		}
 
-		console.log(this.currentVolume);
 		await axios.post(`http://${global.settings.foobar.address}/api/player`, { volume: this.currentVolume }).catch((err) => {});
 		this.loopTimeout = setTimeout(this.update.bind(this), 100);
 	}
