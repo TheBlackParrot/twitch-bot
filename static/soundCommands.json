@@ -157,5 +157,11 @@
 		"regex": true,
 		"caseInsensitive": false,
 		"filename": "clap"
+	},
+
+	"splat": {
+		"volume": 0.7,
+		"pitch": [0.8, 1.2],
+		"cooldown": 0
 	}
 }
