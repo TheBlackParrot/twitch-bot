@@ -154,6 +154,23 @@ function formatFoobarTagResponse(data, tag) {
 	}
 }
 
+async function callOBS(command, data = null) {
+	let out;
+	
+	try {
+		if(data) {
+			out = await obs.call(command, data);
+		} else {
+			out = await obs.call(command);
+		}
+	} catch(err) {
+		global.log("OBS", `Could not call command ${command}:`, false, ['redBright']);
+		console.error(err);
+	}
+
+	return out;
+}
+
 // ====== AUTH ======
 
 async function refreshHandler(userId, newTokenData) {
@@ -290,7 +307,7 @@ commandList.addTrigger("ad", async(channel, args, msg, user) => {
 		}
 	}
 
-	await obs.call('SetCurrentProgramScene', {
+	await callOBS('SetCurrentProgramScene', {
 		sceneName: "Ad Wall"
 	});
 }, {
@@ -1092,7 +1109,7 @@ commandList.addTrigger("toggleswapping", async(channel, args, msg, user) => {
 
 // --- !uptime ---
 commandList.addTrigger("uptime", async(channel, args, msg, user) => {
-	const response = await obs.call('GetStreamStatus');
+	const response = await callOBS('GetStreamStatus');
 
 	if(response.outputActive) {
 		const allSeconds = Math.ceil(response.outputDuration / 1000);
@@ -2183,7 +2200,7 @@ async function onOBSConnectionOpened() {
 
 	obsBitrateInterval = setInterval(getInfoToDetermineOBSStatus, global.settings.obs.bitrateInterval * 1000);
 
-	const sceneObject = await obs.call('GetCurrentProgramScene');
+	const sceneObject = await callOBS('GetCurrentProgramScene');
 	currentOBSSceneName = sceneObject.sceneName;
 }
 
@@ -2224,7 +2241,7 @@ async function onOBSSceneChanged(sceneObject) {
 	await global.redeemList.getByName("gib coin hint pls?").enable(isIntermission);
 }
 async function onOBSSceneTransitionStarted(transitionObject) {
-	const sceneObject = await obs.call('GetCurrentProgramScene');
+	const sceneObject = await callOBS('GetCurrentProgramScene');
 	
 	const name = sceneObject.sceneName;
 	global.log("OBS", `Scene transition to scene ${name} started`, false, ['gray']);
@@ -2234,23 +2251,23 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 	const isMenu = (name === "SRXD Menu");
 	const isGameplay = (name === "SRXD Gameplay");
 
-	await obs.call('SetInputMute', {
+	await callOBS('SetInputMute', {
 		inputName: 'Microphone',
 		inputMuted: isIntermission
 	});
 
-	await obs.call('SetInputMute', {
+	await callOBS('SetInputMute', {
 		inputName: 'Resonite Audio',
 		inputMuted: isIntermission
 	});
 
-	await obs.call('SetInputVolume', {
+	await callOBS('SetInputVolume', {
 		inputName: "Spotify Audio",
 		inputVolumeDb: isVRChat ? -4 : 0
 	});
 
 	if(global.initialCategory == "Spin Rhythm XD") {
-		await obs.call('SetInputMute', {
+		await callOBS('SetInputMute', {
 			inputName: "TTS",
 			inputMuted: isGameplay
 		});
@@ -2281,22 +2298,22 @@ async function onStreamStarted() {
 	obsDroppedFramesHistory = [];
 
 	if(currentOBSSceneName == "Starting Soon") {
-		await obs.call('SetInputMute', {
+		await callOBS('SetInputMute', {
 			inputName: 'Microphone',
 			inputMuted: true
 		});
 
-		await obs.call('SetInputMute', {
+		await callOBS('SetInputMute', {
 			inputName: 'Resonite Audio',
 			inputMuted: true
 		});
 
-		await obs.call('SetInputMute', {
+		await callOBS('SetInputMute', {
 			inputName: "TTS",
 			inputMuted: false
 		});
 
-		await obs.call('SetInputVolume', {
+		await callOBS('SetInputVolume', {
 			inputName: "Spotify Audio",
 			inputVolumeDb: 0
 		});
@@ -2377,7 +2394,7 @@ var obsDroppedFrames = 0;
 var obsDroppedFramesHistory = [];
 
 async function getInfoToDetermineOBSStatus() {
-	const data = await obs.call('GetStreamStatus');
+	const data = await callOBS('GetStreamStatus');
 	
 	obsBytesSentData[0] = obsBytesSentData[1];
 	obsBytesSentData[1] = data.outputBytes;
