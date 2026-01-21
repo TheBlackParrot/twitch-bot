@@ -1923,6 +1923,11 @@ const redeemFunctions = {
 	"gib coin hint pls?": async function(event) {
 		const readableOdds = Math.floor(coinFlipOdds * 100);
 		await say(global.broadcasterUser.name, `Current Coin Flip odds: ${readableOdds}% heads, ${100 - readableOdds}% tails EZ`);
+	},
+
+	"Hydrate": async function(event) {
+		await say(global.broadcasterUser.name, "🥤 Remember to get something to drink! This goes for everyone! Sip sip! 🥤");
+		await updateRedemptionStatus(event.rewardId, event.id, false);
 	}
 };
 redeemFunctions["second"] = redeemFunctions["first"];
