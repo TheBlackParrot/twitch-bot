@@ -2301,10 +2301,15 @@ async function onStreamStarted() {
 			inputVolumeDb: 0
 		});
 
+		await axios.post(`http://${global.settings.foobar.address}/api/player`, { volume: -100 }).catch((err) => {});
+		foobar2000volume.targetVolume = -100;
+		foobar2000volume.currentVolume = -100;
+		await axios.post(`http://${global.settings.foobar.address}/api/player/play`).catch((err) => {});
+
 		setTimeout(async function() {
 			foobar2000volume.targetVolume = -30;
-			await axios.post(`http://${global.settings.foobar.address}/api/player`, { position: 0 }).catch((err) => {});
-			await axios.post(`http://${global.settings.foobar.address}/api/player/play`).catch((err) => {});
+			//await axios.post(`http://${global.settings.foobar.address}/api/player`, { position: 0 }).catch((err) => {});
+			//await axios.post(`http://${global.settings.foobar.address}/api/player/play`).catch((err) => {});
 		}, 10000);
 
 		await global.redeemList.getByName("first").enable(!hasSetFirstRedeem);
