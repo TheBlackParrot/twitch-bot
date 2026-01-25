@@ -2275,9 +2275,9 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 
 	if(global.initialCategory != "Resonite") {
 		//await axios.post(`http://${global.settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
-		foobar2000volume.targetVolume = isIntermission ? -30 : -100;
+		foobar2000volume.targetVolume = isIntermission ? -32 : -100;
 	} else {
-		foobar2000volume.targetVolume = isVRChat ? -34 : -30;
+		foobar2000volume.targetVolume = isVRChat ? -36 : -32;
 	}
 }
 
@@ -2324,7 +2324,7 @@ async function onStreamStarted() {
 		await axios.post(`http://${global.settings.foobar.address}/api/player/play`).catch((err) => {});
 
 		setTimeout(async function() {
-			foobar2000volume.targetVolume = -30;
+			foobar2000volume.targetVolume = -32;
 			//await axios.post(`http://${global.settings.foobar.address}/api/player`, { position: 0 }).catch((err) => {});
 			//await axios.post(`http://${global.settings.foobar.address}/api/player/play`).catch((err) => {});
 		}, 10000);
