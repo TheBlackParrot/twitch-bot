@@ -1511,8 +1511,13 @@ async function onStandardMessage(channel, msgObject, message) {
 
 	let wasGemSwap = false;
 	if(allowBejeweled) {
-		const parts = filtered.toLowerCase().split(" ");
-		if(filtered.length == 5 && parts.length == 2) {
+		let parts = filtered.toLowerCase().split(" ");
+		if(parts.length == 1 && filtered.length == 4) {
+			parts[0] = filtered.substr(0, 2);
+			parts[1] = filtered.substr(2, 2);
+		}
+
+		if(parts.length == 2) {
 			let isSwapValid = true;
 
 			for(const position of parts) {
