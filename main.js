@@ -1099,6 +1099,24 @@ commandList.addTrigger("tipping", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+// --- !title ---
+commandList.addTrigger("title", async(channel, args, msg, user) => {
+	if(!args.length) {
+		let channelInfo = await global.apiClient.channels.getChannelInfoById(global.broadcasterUser.id);
+		await reply(channel, msg, `Stream title is currently "${channelInfo.title}"`);
+		return;
+	}
+
+	await global.apiClient.channels.updateChannelInfo(global.broadcasterUser.id, {
+		title: args.join(" ")
+	});
+
+	await reply(channel, msg, `Updated stream title`);
+}, {
+	whitelist: ["broadcaster", "mod"],
+	cooldown: 10
+});
+
 // --- !toggleswapping ---
 commandList.addTrigger("toggleswapping", async(channel, args, msg, user) => {
 	allowBejeweled = !allowBejeweled;
