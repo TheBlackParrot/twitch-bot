@@ -2059,17 +2059,22 @@ async function onOutgoingRaid(event) {
 	await say(global.broadcasterUser.name, `We have sent the stream over to https://twitch.tv/${event.raidedBroadcasterName} ! See you next time! SmileWave`);
 }
 
+var previousCategory = null;
+var previousTitle = null;
 async function onTitleChanged(event) {
 	global.log("EVENTSUB", `Stream title changed to ${event.streamTitle}`, false, ['gray']);
 	await say(global.broadcasterUser.name, `Stream title changed to "${event.streamTitle}" ObamaPhone`);
 }
 async function onCategoryChanged(event) {
 	global.log("EVENTSUB", `Category changed to ${event.categoryName}`, false, ['gray']);
+
+	if(event.categoryName != "Games + Demos") {
+		global.initialCategory = event.categoryName;
+	}
+
 	await say(global.broadcasterUser.name, `Category changed to "${event.categoryName}" ObamaPhone`);
 }
 
-var previousCategory = null;
-var previousTitle = null;
 async function onChannelMetadataUpdate(event) {
 	if(event.streamTitle != previousTitle) {
 		try {
