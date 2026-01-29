@@ -2059,27 +2059,36 @@ async function onOutgoingRaid(event) {
 	await say(global.broadcasterUser.name, `We have sent the stream over to https://twitch.tv/${event.raidedBroadcasterName} ! See you next time! SmileWave`);
 }
 
+async function onTitleChanged(event) {
+	global.log("EVENTSUB", `Stream title changed to ${event.streamTitle}`, false, ['gray']);
+	await say(global.broadcasterUser.name, `Stream title changed to "${event.streamTitle}" ObamaPhone`);
+}
+async function onCategoryChanged(event) {
+	global.log("EVENTSUB", `Category changed to ${event.categoryName}`, false, ['gray']);
+	await say(global.broadcasterUser.name, `Category changed to "${event.categoryName}" ObamaPhone`);
+}
+
 var previousCategory = null;
 var previousTitle = null;
 async function onChannelMetadataUpdate(event) {
-	let messages = [];
-
 	if(event.streamTitle != previousTitle) {
-		global.log("EVENTSUB", `Stream title changed to ${event.streamTitle}`, false, ['gray']);
-		messages.push(`Stream title changed to "${event.streamTitle}"`);
+		try {
+			await onTitleChanged(event);
+		} catch(err) {
+			console.error(err);
+		}
 	}
 
 	if(event.categoryName != previousCategory) {
-		global.log("EVENTSUB", `Category changed to ${event.categoryName}`, false, ['gray']);
-		messages.push(`Category changed to "${event.categoryName}"`);
+		try {
+			await onCategoryChanged(event);
+		} catch(err) {
+			console.error(err);
+		}
 	}
 
 	previousTitle = event.streamTitle;
 	previousCategory = event.categoryName;
-
-	for(const message of messages) {
-		say(global.broadcasterUser.name, `ObamaPhone ${message}`);
-	}
 }
 
 const eventSubListener = new EventSubWsListener({
