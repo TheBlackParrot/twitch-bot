@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
 function linearInterpolate(a, b, val) {
 	return a + (b - a) * val;
 };
@@ -18,6 +20,12 @@ export class Foobar2000Volume {
 		const rootResponse = await axios.get(`http://${global.settings.foobar.address}/api/player`).catch((err) => {
 			console.error(err);
 		});
+
+		if(!rootResponse) {
+			global.log("FB2KVOL", "No response from foobar2000, trying again in 30 seconds...", false, ['redBright']);
+			await delay(30000);
+			return this.initValues();
+		}
 
 		this.currentVolume = rootResponse.data.player.volume.value;
 		this.targetVolume = rootResponse.data.player.volume.value;
