@@ -1382,7 +1382,9 @@ function hypeEmoteString(amount = 5) {
 
 function ensureEnglishName(user) {
 	const displayName = "displayName" in user ? user.displayName : user.userDisplayName;
-	return displayName.replace(/[0-9a-z\-\_]/gi, '').length ? user.userName : displayName;
+	const userName = "name" in user ? user.name : user.userName;
+
+	return displayName.replace(/[0-9a-z\-\_]/gi, '').length ? userName : displayName;
 }
 
 function getReadableTimeLeft(seconds) {
@@ -1682,10 +1684,13 @@ chatClient.onRaid(async (channel, user, raidInfo, msg) => {
 	let raiderInfo = await global.apiClient.users.getUserByName(user);
 	let channelInfo = await global.apiClient.channels.getChannelInfoById(raiderInfo.id);
 	
-	tts(global.settings.tts.voices.system, `${user} raided the stream with ${raidInfo.viewerCount} ${raidInfo.viewerCount != 1 ? "viewers": "viewer"}! They were streaming ${channelInfo.gameName}.`);
+	const userData = users.getUser(raiderInfo.id);
+	const ttsName = userData.getPersistentData("ttsName");
+
+	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(raiderInfo)} raided the stream with ${raidInfo.viewerCount} ${raidInfo.viewerCount != 1 ? "viewers": "viewer"}! They were streaming ${channelInfo.gameName}.`);
 
 	let hypeString = hypeEmoteString(2);
-	say(channel, `${hypeString} Thank you @${raiderInfo.displayName} for the raid of ${raidInfo.viewerCount}! Also, hello raiders! SmileWave`);
+	say(channel, `${hypeString} Thank you @${ensureEnglishName(raiderInfo)} for the raid of ${raidInfo.viewerCount}! Also, hello raiders! SmileWave`);
 
 	shoutoutQueue.push({
 		id: raiderInfo.id,
@@ -1708,7 +1713,11 @@ chatClient.onSub((channel, user, subInfo, msg) => {
 		onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
 	}
 
-	tts(global.settings.tts.voices.system, `${user} subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
+	const userData = users.getUser(subInfo.userId);
+	const ttsName = userData.getPersistentData("ttsName");
+
+	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
+
 	say(channel, hypeEmoteString());
 })
 chatClient.onResub((channel, user, subInfo, msg) => {
@@ -1717,28 +1726,43 @@ chatClient.onResub((channel, user, subInfo, msg) => {
 		onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
 	}
 
-	tts(global.settings.tts.voices.system, `${user} re-subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
+	const userData = users.getUser(subInfo.userId);
+	const ttsName = userData.getPersistentData("ttsName");
+
+	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} re-subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
+
 	say(channel, hypeEmoteString());
 })
 
 // undefined is a possible key because of anonymous gifts
 const giftCounts = new Map();
 
-chatClient.onCommunitySub((channel, gifterName, giftInfo) => {
-	const previousGiftCount = giftCounts.get(gifterName) ?? 0;
-	giftCounts.set(gifterName, previousGiftCount + giftInfo.count);
-	tts(global.settings.tts.voices.system, `${gifterName} gifted ${giftInfo.count != 1 ? `${giftInfo.count} subs` : 'a sub'}`);
+chatClient.onCommunitySub((channel, user, subInfo, msg) => {
+	const previousGiftCount = giftCounts.get(user) ?? 0;
+	giftCounts.set(user, previousGiftCount + subInfo.count);
+
+	const userData = users.getUser(subInfo.gifterUserId);
+	const ttsName = userData.getPersistentData("ttsName");
+	
+	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} gifted ${subInfo.count != 1 ? `${subInfo.count} subs` : 'a sub'}`);
+
 	say(channel, hypeEmoteString());
 });
 
-chatClient.onSubGift((channel, recipientName, subInfo) => {
+chatClient.onSubGift((channel, user, subInfo, msg) => {
 	const gifterName = subInfo.gifter;
 	const previousGiftCount = giftCounts.get(gifterName) ?? 0;
 
 	if (previousGiftCount > 0) {
 		giftCounts.set(gifterName, previousGiftCount - 1);
 	} else {
-		tts(global.settings.tts.voices.system, `${gifterName} gifted a sub to ${recipientName}`);
+		const userData = users.getUser(subInfo.gifterUserId);
+		const ttsName = userData.getPersistentData("ttsName");
+
+		const receipientData = users.getUser(subInfo.userId);
+		const receipientTTSName = receipientData.getPersistentData("ttsName");
+
+		tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} gifted a sub to ${receipientTTSName ? receipientTTSName : ensureEnglishName({name: user, displayName: subInfo.displayName})}`);
 		say(channel, hypeEmoteString());
 	}
 });
@@ -2009,11 +2033,12 @@ const thanksParts = [
 ];
 
 function onBitsCheered(bits, event) {
-	const englishName = ensureEnglishName(event);
-
 	log("EVENTSUB", `${event.userName} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`, false, ['whiteBright']);
 
-	tts(global.settings.tts.voices.system, `${englishName} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`);
+	const userData = users.getUser(event.userId);
+	const ttsName = userData.getPersistentData("ttsName");
+
+	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(event)} cheered ${bits} ${bits != 1 ? "bits" : "bit"}`);
 
 	if(bits >= 100) {
 		say(event.broadcasterName, hypeEmoteString());
