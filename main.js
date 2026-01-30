@@ -313,6 +313,7 @@ commandList.addTrigger("accountage", async(channel, args, msg, user) => {
 
 	await reply(channel, msg, `${ensureEnglishName(targetUser)} created their account on ${dateString} (which was ${durationString} ago)`);
 }, {
+	aliases: ["userage", "createdat", "registeredat", "registered"],
 	userCooldown: 30,
 	respondWithCooldownMessage: true
 });
@@ -561,6 +562,7 @@ commandList.addTrigger("followage", async(channel, args, msg, user) => {
 
 	await reply(channel, msg, `${ensureEnglishName(targetUser)} followed the channel on ${dateString} (which was ${durationString} ago)`);
 }, {
+	aliases: ["whenfollow", "follow", "followsince", "following", "followingsince"],
 	userCooldown: 30,
 	respondWithCooldownMessage: true
 });
