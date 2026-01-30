@@ -1,4 +1,8 @@
 {
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1",
     "@twurple/api": "^8.0.3",
