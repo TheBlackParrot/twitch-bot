@@ -990,10 +990,13 @@ commandList.addTrigger("so", async(channel, args, msg, user) => {
 		return;
 	}
 
-	try {
-		await global.apiClient.chat.shoutoutUser(global.broadcasterUser.id, targetUser.userId);
-	} catch(err) {
-		await reply(channel, msg, `⚠️ Could not shout out ${targetUser.userDisplayName}`);
+	shoutoutQueue.push({
+		id: targetUser.userId,
+		name: targetUser.userDisplayName
+	});
+
+	if(Date.now() > nextShoutoutAvailable) {
+		await processShoutoutQueue();
 	}
 }, {
 	whitelist: ["broadcaster", "mod"],
@@ -1652,6 +1655,29 @@ chatClient.onJoin(async (channel, user) => {
 	}
 });
 
+var shoutoutQueue = [];
+var nextShoutoutAvailable = 0;
+async function processShoutoutQueue() {
+	if(!shoutoutQueue.length) {
+		global.log("SHOUTOUTS", `Shoutout queue is empty`, false, ['gray']);
+		return;
+	}
+
+	const next = shoutoutQueue.shift();
+
+	try {
+		await global.apiClient.chat.shoutoutUser(global.broadcasterUser.id, next.id);
+	} catch(err) {
+		if(Date.now() > nextShoutoutAvailable) {
+			nextShoutoutAvailable = Date.now() + 120000;
+			setTimeout(processShoutoutQueue, 120000);
+		}
+
+		global.log("RAID", `Could not give a shoutout to ${next.name}, next available shoutout is in ${Math.ceil((nextShoutoutAvailable - Date.now()) / 1000)} seconds`);
+		await say(global.broadcasterUser.name, `⚠️ Could not shoutout ${next.name} at the current moment, it has been queued.`);
+	}
+}
+
 chatClient.onRaid(async (channel, user, raidInfo, msg) => {
 	let raiderInfo = await global.apiClient.users.getUserByName(user);
 	let channelInfo = await global.apiClient.channels.getChannelInfoById(raiderInfo.id);
@@ -1660,16 +1686,18 @@ chatClient.onRaid(async (channel, user, raidInfo, msg) => {
 
 	let hypeString = hypeEmoteString(2);
 	say(channel, `${hypeString} Thank you @${raiderInfo.displayName} for the raid of ${raidInfo.viewerCount}! Also, hello raiders! SmileWave`);
-	
-	try {
-		await global.apiClient.chat.shoutoutUser(global.broadcasterUser.id, raiderInfo.id);
-	} catch(err) {
-		global.log("RAID", `Could not give a shoutout to ${user}`, false, ['yellowBright']);
+
+	shoutoutQueue.push({
+		id: raiderInfo.id,
+		name: user
+	});
+
+	if(Date.now() > nextShoutoutAvailable) {
+		await processShoutoutQueue();
+		say(channel, '⚠️⚠️⚠️ THIS STREAM CONTAINS LOTS OF FLASHING AND POTENTIALLY STROBING LIGHTS. If you are sensitive to flashing lights I would advise switching the stream to audio-only mode or closing the stream. Viewer discretion is advised. ⚠️⚠️⚠️');
 	}
 
 	await updateLeaderboardValues(raiderInfo.userId, "Items Thrown", raidInfo.viewerCount);
-	
-	say(channel, '⚠️⚠️⚠️ THIS STREAM CONTAINS LOTS OF FLASHING AND POTENTIALLY STROBING LIGHTS. If you are sensitive to flashing lights I would advise switching the stream to audio-only mode or closing the stream. Viewer discretion is advised. ⚠️⚠️⚠️');
 });
 chatClient.onRaidCancel((channel, msg) => { 
 	say(channel, "wait nevermind...");
