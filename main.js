@@ -289,7 +289,33 @@ async function getLeaderboardValueFromUserTarget(channel, args, msg, user, key) 
 	};
 }
 
+function formatTimeSinceDate(date) {
+	const temporalFormatter = new Intl.DurationFormat("en-US", { style: "long" });
+	const now = new Date().toTemporalInstant();
+	const relativity = now.toZonedDateTimeISO("UTC");
+	const duration = Temporal.Instant.from(date.toISOString()).until(now, { smallestUnit: "seconds" });
+	const roundedDuration = duration.round({ largestUnit: "years", smallestUnit: "hours", relativeTo: relativity });
+
+	return roundedDuration.toLocaleString("en-US");
+}
+
 const whereDoCommandsStart = getCurrentLine().line;
+
+// --- !accountage ---
+commandList.addTrigger("accountage", async(channel, args, msg, user) => {
+	let targetUser = await getTargetedUser(channel, args[0], msg, false);
+	if(targetUser == null) {
+		targetUser = await global.apiClient.users.getUserById(user.userId);
+	}
+
+	const durationString = formatTimeSinceDate(targetUser.creationDate);
+	const dateString = targetUser.creationDate.toDateString().split(" ").slice(1).join(" ");
+
+	await reply(channel, msg, `${ensureEnglishName(targetUser)} created their account on ${dateString} (which was ${durationString} ago)`);
+}, {
+	userCooldown: 30,
+	respondWithCooldownMessage: true
+});
 
 // --- !ad ---
 commandList.addTrigger("ad", async(channel, args, msg, user) => {
@@ -530,14 +556,10 @@ commandList.addTrigger("followage", async(channel, args, msg, user) => {
 		return;
 	}
 
-	const temporalFormatter = new Intl.DurationFormat("en-US", { style: "long" });
-	const now = new Date().toTemporalInstant();
-	const duration = Temporal.Instant.from(followData.followDate.toISOString()).until(now, { smallestUnit: "seconds" });
-	const roundedDuration = duration.round({ largestUnit: "years", smallestUnit: "hours", relativeTo: now.toZonedDateTimeISO("UTC")});
-	const durationString = temporalFormatter.format(duration);
+	const durationString = formatTimeSinceDate(followData.followDate);
 	const dateString = followData.followDate.toDateString().split(" ").slice(1).join(" ");
 
-	await reply(channel, msg, `${ensureEnglishName(targetUser)} followed the channel on ${dateString} (which was ${roundedDuration.toLocaleString("en-US")} ago)`);
+	await reply(channel, msg, `${ensureEnglishName(targetUser)} followed the channel on ${dateString} (which was ${durationString} ago)`);
 }, {
 	userCooldown: 30,
 	respondWithCooldownMessage: true
