@@ -23,6 +23,8 @@ const convertUnit = unit.config({
 		}
 	}
 });
+import { Temporal, toTemporalInstant } from '@js-temporal/polyfill';
+Date.prototype.toTemporalInstant = toTemporalInstant;
 
 import { RefreshingAuthProvider } from '@twurple/auth';
 import { ApiClient } from '@twurple/api';
@@ -243,26 +245,24 @@ async function querySRXD(endpoint, args, opts) {
 
 // ====== TRIGGER COMMANDS ======
 
-async function getTargetedUser(channel, target, msg) {
+async function getTargetedUser(channel, target, msg, sendMessage = true) {
 	if(!target || target.length === 0) {
-		await reply(channel, msg, "⚠️ Command requires a targeted user");
+		if(sendMessage) {
+			await reply(channel, msg, "⚠️ Command requires a targeted user");
+		}
 		return null;
 	}
 
 	const userCheck = await global.apiClient.users.getUserByName(target.replace("@", "").toLowerCase());
 
 	if(!userCheck) {
-		await reply(channel, msg, "⚠️ Could not find any users matching that username");
+		if(sendMessage) {
+			await reply(channel, msg, "⚠️ Could not find any users matching that username");
+		}
 		return null;
 	}
 
-	const wantedId = userCheck.id;
-	const wantedName = userCheck.displayName;
-
-	return {
-		userId: wantedId,
-		userDisplayName: wantedName
-	};
+	return userCheck;
 }
 
 async function getLeaderboardValueFromUserTarget(channel, args, msg, user, key) {
@@ -515,6 +515,32 @@ commandList.addTrigger("flip", async(channel, args, msg, user) => {
 }, {
 	aliases: ["coin", "coinflip", "flipcoin"],
 	userCooldown: 5
+});
+
+// --- !followage ---
+commandList.addTrigger("followage", async(channel, args, msg, user) => {
+	let targetUser = await getTargetedUser(channel, args[0], msg, false);
+	if(targetUser == null) {
+		targetUser = await global.apiClient.users.getUserById(user.userId);
+	}
+
+	const followData = await global.broadcasterUser.getChannelFollower(targetUser.id);
+	if(!followData) {
+		await reply(channel, msg, `⚠️ User does not follow the channel`);
+		return;
+	}
+
+	const temporalFormatter = new Intl.DurationFormat("en-US", { style: "long" });
+	const now = new Date().toTemporalInstant();
+	const duration = Temporal.Instant.from(followData.followDate.toISOString()).until(now, { smallestUnit: "seconds" });
+	const roundedDuration = duration.round({ largestUnit: "years", smallestUnit: "hours", relativeTo: now.toZonedDateTimeISO("UTC")});
+	const durationString = temporalFormatter.format(duration);
+	const dateString = followData.followDate.toDateString().split(" ").slice(1).join(" ");
+
+	await reply(channel, msg, `${ensureEnglishName(targetUser)} followed the channel on ${dateString} (which was ${roundedDuration.toLocaleString("en-US")} ago)`);
+}, {
+	userCooldown: 30,
+	respondWithCooldownMessage: true
 });
 
 /*

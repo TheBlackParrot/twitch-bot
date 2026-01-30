@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@js-temporal/polyfill": "^0.5.1",
     "@twurple/api": "^8.0.3",
     "@twurple/auth": "^8.0.3",
     "@twurple/easy-bot": "^8.0.3",
