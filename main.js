@@ -1752,7 +1752,7 @@ chatClient.onRaid(async (channel, user, raidInfo, msg) => {
 		say(channel, '⚠️⚠️⚠️ THIS STREAM CONTAINS LOTS OF FLASHING AND POTENTIALLY STROBING LIGHTS. If you are sensitive to flashing lights I would advise switching the stream to audio-only mode or closing the stream. Viewer discretion is advised. ⚠️⚠️⚠️');
 	}
 
-	await updateLeaderboardValues(raiderInfo.userId, "Items Thrown", raidInfo.viewerCount);
+	await updateLeaderboardValues(raiderInfo.id, "Items Thrown", raidInfo.viewerCount);
 });
 chatClient.onRaidCancel((channel, msg) => { 
 	say(channel, "wait nevermind...");
