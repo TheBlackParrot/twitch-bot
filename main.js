@@ -1316,7 +1316,8 @@ commandList.addRegex(`why\\s.*\\s(change|swap)\\s.*(category|categories|game|gam
 		`why\\s(change|swap)\\s.*(category|categories|game|games)`,
 		`why\\s.*\\scategory\\sgames`,
 		`why\\s.*\\scategory\\s(currently|set\\sto)\\sgames`
-	]
+	],
+	blacklist: ["broadcaster", "mod", "vip"]
 });
 
 // i don't like being called this
@@ -1330,14 +1331,16 @@ commandList.addRegex("blacky", async(channel, args, msg, user) => {
 commandList.addRegex(`[0-9]\\sads`, async(channel, args, msg, user) => {
 	await reply(channel, msg, 'Instead of complaining, take care of yourself a little bit! Get a snack, hydrate, use the restroom, take your meds, do tiny things you need to do! You won\'t miss anything, nothing\'s going on for the next few minutes! DonoWall');
 }, {
-	userCooldown: 30
+	userCooldown: 30,
+	blacklist: ["broadcaster", "mod", "vip"]
 });
 
 // matches people asking about the overlays
 commandList.addRegex(`(where|can i)\\s.*\\s(get|find)\\s.*\\s(overlay|overlays)`, async(channel, args, msg, user) => {
 	commandList.get("overlays").trigger(channel, args, msg, user);
 }, {
-	cooldown: 30
+	cooldown: 30,
+	blacklist: ["broadcaster", "mod", "vip"]
 });
 
 // matches people asking about vnyan
@@ -1345,7 +1348,8 @@ commandList.addRegex(`(wat|what)\\s.*\\s(use)\\s.*\\s(show|render)\\s.*\\s(avata
 	commandList.get("vnyan").trigger(channel, args, msg, user);
 }, {
 	aliases: [`how\\s(do|do\syou|you)\\s.*\\s(show|render)\\s.*\\s(avatar|oc|character|fursona|yourself|urself|model)`],
-	cooldown: 30
+	cooldown: 30,
+	blacklist: ["broadcaster", "mod", "vip"]
 });
 
 // automatically agrees with any instance of people flattering me
@@ -1364,7 +1368,8 @@ commandList.addRegex(`^(parrot|null|tox|septi)\\s.*(cute|adorable|pretty|handsom
 commandList.addRegex(`^(are|r)\\s(you|u)\\s.*(fur|fury|furry|furrie|furre)`, async(channel, args, msg, user) => {
 	await reply(channel, msg, 'no of course not, what makes you think such a thing? FlatEricHuh');
 }, {
-	cooldown: 30
+	cooldown: 30,
+	blacklist: ["broadcaster", "mod", "vip"]
 });
 
 // tells people how to request maps
@@ -1375,7 +1380,8 @@ commandList.addRegex(`^(do|play|try)\\s.*\\s(song|pls|please|plz|plx)`, async(ch
 		`^can\\syou\\s(do|play|try)\\s.*`,
 		`how\\s.*\\s(request|add)\\s`
 	],
-	cooldown: 30
+	cooldown: 30,
+	blacklist: ["broadcaster", "mod", "vip"]
 });
 
 // choppy audio response

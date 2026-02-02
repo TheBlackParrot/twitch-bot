@@ -96,6 +96,7 @@ export class BaseCommand {
 		this.cooldown = "cooldown" in opts ? opts.cooldown * 1000 : 0;
 		this.userCooldown = "userCooldown" in opts ? opts.userCooldown * 1000 : 0;
 		this.whitelist = "whitelist" in opts ? opts.whitelist : [];
+		this.blacklist = "blacklist" in opts ? opts.blacklist : [];
 		this.respondWithCooldownMessage = "respondWithCooldownMessage" in opts ? opts.respondWithCooldownMessage : false;
 		this.allowedCategories = "allowedCategories" in opts ? opts.allowedCategories : [];
 	}
@@ -144,6 +145,35 @@ export class BaseCommand {
 			}
 
 			if(!allowed) {
+				return;
+			}
+		}
+
+		for(const role of this.blacklist) {
+			let blacklisted = false;
+			
+			switch(role) {
+				case "streamer":
+				case "broadcaster":
+					blacklisted = user.isBroadcaster;
+					break;
+
+				case "moderator":
+				case "mod":
+					blacklisted = user.isMod;
+					break;
+
+				case "vip":
+					blacklisted = user.isVip;
+					break;
+
+				case "subscriber":
+				case "sub":
+					blacklisted = user.isSubscriber;
+					break;
+			}
+
+			if(blacklisted) {
 				return;
 			}
 		}
