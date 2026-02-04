@@ -124,6 +124,11 @@ export class BaseCommand {
 						allowed = user.isBroadcaster;
 						break;
 
+					case "leadmod":
+					case "leadmoderator":
+						allowed = user.isLeadMod;
+						break;
+
 					case "moderator":
 					case "mod":
 						allowed = user.isMod;
@@ -156,6 +161,11 @@ export class BaseCommand {
 				case "streamer":
 				case "broadcaster":
 					blacklisted = user.isBroadcaster;
+					break;
+					
+				case "leadmod":
+				case "leadmoderator":
+					blacklisted = user.isLeadMod;
 					break;
 
 				case "moderator":
