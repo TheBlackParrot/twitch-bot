@@ -338,9 +338,9 @@ commandList.addTrigger("ad", async(channel, args, msg, user) => {
 		sceneName: "Ad Wall"
 	});
 }, {
-	whitelist: ["broadcaster", "mod"],
+	whitelist: ["broadcaster", "leadmod"],
 	aliases: ["runad", "runads", "startads", "startad"],
-	cooldown: 900,
+	cooldown: 600,
 	respondWithCooldownMessage: true
 });
 
