@@ -1178,6 +1178,14 @@ commandList.addTrigger("toggleswapping", async(channel, args, msg, user) => {
 	whitelist: ["broadcaster", "mod"]
 });
 
+// --- !tts ---
+commandList.addTrigger("tts", async(channel, args, msg, user) => {
+	await reply(channel, msg, 'Audio samples of available TTS voices: https://theblackparrot.me/tts');
+}, {
+	aliases: ["voices", "ttsvoices", "ttssamples", "ttsdemo"],
+	cooldown: 10
+});
+
 // --- !uptime ---
 commandList.addTrigger("uptime", async(channel, args, msg, user) => {
 	const response = await callOBS('GetStreamStatus');
