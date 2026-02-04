@@ -2230,6 +2230,7 @@ const eventSubListener = new EventSubWsListener({
 	apiClient: global.apiClient
 });
 
+var streamIsOnline = false;
 function startEventSub() {
 	eventSubListener.onChannelBitsUse(global.broadcasterUser.id, (event) => {
 		try { onBitsCheered(event.bits, event); } catch(err) { console.error(err); }
@@ -2246,9 +2247,19 @@ function startEventSub() {
 	});
 
 	eventSubListener.onStreamOnline(global.broadcasterUser.id, (event) => {
+		if(streamIsOnline) {
+			return;
+		}
+
+		streamIsOnline = true;
 		try { onTwitchStreamOnline(event) } catch(err) { console.error(err); }
 	});
 	eventSubListener.onStreamOffline(global.broadcasterUser.id, (event) => {
+		if(!streamIsOnline) {
+			return;
+		}
+
+		streamIsOnline = false;
 		try { onTwitchStreamOffline(event) } catch(err) { console.error(err); }
 	});
 
