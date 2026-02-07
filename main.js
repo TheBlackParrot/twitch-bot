@@ -854,7 +854,7 @@ commandList.addTrigger("r", async(channel, args, msg, user) => {
 
 // --- !radio ---
 commandList.addTrigger("radio", async(channel, args, msg, user) => {
-	await reply(channel, msg, "The music playing on stream runs 24/7 now! Listen in: https://radio.theblackparrot.me/public/safe (all music: https://radio.theblackparrot.me/public/all) (requests always open!)");
+	await reply(channel, msg, "The music playing on stream runs 24/7 now! Listen in: https://radio.theblackparrot.me/public/safe ( all music: https://radio.theblackparrot.me/public/all ) (requests always open!)");
 }, {
 	cooldown: 10
 });
