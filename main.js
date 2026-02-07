@@ -126,7 +126,9 @@ async function tts(voice, string, rate = 0) {
 		rate: rate
 	};
 
-	await axios.post(url, data).catch((err) => {});
+	await axios.post(url, data).catch((err) => {
+		console.error(err);
+	});
 }
 
 function formatFoobarTagResponse(data, tag) {
