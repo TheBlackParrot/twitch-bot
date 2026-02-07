@@ -17,9 +17,7 @@ export class Foobar2000Volume {
 	}
 
 	async initValues() {
-		const rootResponse = await axios.get(`http://${global.settings.foobar.address}/api/player`).catch((err) => {
-			console.error(err);
-		});
+		const rootResponse = await axios.get(`http://${global.settings.foobar.address}/api/player`).catch((err) => {});
 
 		if(!rootResponse) {
 			global.log("FB2KVOL", "No response from foobar2000, trying again in 30 seconds...", false, ['redBright']);
