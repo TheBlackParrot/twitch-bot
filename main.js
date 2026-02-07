@@ -1676,10 +1676,6 @@ function clearPreviousMessageOwner() {
 	previousMessageOwner = null;
 }
 
-const vnyanOnlyRedeems = [
-	'blep', 'Throw stuff at me', 'Drop a thing on my head', 'Throw a lot of stuff at me', 'yay!', 'Throw a bunch of hearts',
-	'Give me a treat', 'E', '*metal pipe*', 'amogus', 'Drop a hat', 'balls'
-];
 const helloEmotes = ["ARISE", "FridayAwake", "PatArrive", "ARRIVE", "revUpThoseFryers"];
 const helloMessages = ["hello chat!", "hi chat!", "omg hai :3", "i am awake", "hi there!", "hello there!", "(i enter the room)", "(i walk in)"];
 
@@ -1734,8 +1730,8 @@ chatClient.onJoin(async (channel, user) => {
 			await delay(250);
 		}
 
-		for(const redeemName of vnyanOnlyRedeems) {
-			await global.redeemList.getByName(redeemName).enable(global.initialCategory != "Resonite");
+		for(const redeem of global.redeemList.getTaggedRedeems("vnyan")) {
+			await redeem.enable(global.initialCategory != "Resonite");
 		}
 
 		await global.redeemList.getByName("Flip a Coin").setCooldown(30); // can't do this on the twitch dashboard, so we do it here

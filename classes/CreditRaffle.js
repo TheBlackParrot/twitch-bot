@@ -86,12 +86,12 @@ export class CreditRaffle {
 		return true;
 	}
 
-	addCredits(amount) {
+	async addCredits(amount) {
 		global.counter.increment("RaffleCredits", Math.floor(amount));
 		await global.say(global.broadcasterUser.name, `The Gamba Credit raffle is now at ${global.counter.get("RaffleCredits")} credits.`);
 	}
 
-	setCredits(amount) {
+	async setCredits(amount) {
 		global.counter.set("RaffleCredits", Math.floor(amount));
 		await global.say(global.broadcasterUser.name, `The Gamba Credit raffle is now at ${global.counter.get("RaffleCredits")} credits.`);
 	}
