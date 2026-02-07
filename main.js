@@ -61,7 +61,7 @@ function log(type, data, showTrace = false, style = []) {
 global.log = log;
 
 import { UserList } from "./classes/User.js";
-import { CommandList } from "./classes/Command.js";
+import { CommandList, RegexCommand } from "./classes/Command.js";
 import { WebSocketListener } from "./classes/WebSocketListener.js";
 import { EmoteList, SevenTV, BetterTTV, FrankerFaceZ } from "./classes/Emote.js";
 import { ChannelRedeemList } from "./classes/ChannelRedeem.js";
@@ -1497,7 +1497,7 @@ async function messageHandler(channel, userString, text, msg) {
 	}
 
 	if(command != null) {
-		const isRegex = typeof(command.name) === "undefined";
+		const isRegex = command instanceof RegexCommand;
 		
 		const triggerName = isRegex ? `(regex: ${command.regexStrings[0]})` : command.name;
 
