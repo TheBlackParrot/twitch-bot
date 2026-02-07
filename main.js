@@ -1529,8 +1529,8 @@ async function messageHandler(channel, userString, text, msg) {
 		
 		const triggerName = isRegex ? `(regex: ${command.regexStrings[0]})` : command.name;
 
-		if(user.canUseCommand(command)) {
-			if(command.canUse) {
+		if(user.canUseCommand(command) || msg.userInfo.isBroadcaster) {
+			if(command.canUse || msg.userInfo.isBroadcaster) {
 				log("COMMANDS", `Running command ${triggerName} for ${msg.userInfo.userName}`);
 
 				try {
