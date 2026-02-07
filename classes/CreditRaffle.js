@@ -85,4 +85,14 @@ export class CreditRaffle {
 		this.entries[user.userId] = user;
 		return true;
 	}
+
+	addCredits(amount) {
+		global.counter.increment("RaffleCredits", Math.floor(amount));
+		await global.say(global.broadcasterUser.name, `The Gamba Credit raffle is now at ${global.counter.get("RaffleCredits")} credits.`);
+	}
+
+	setCredits(amount) {
+		global.counter.set("RaffleCredits", Math.floor(amount));
+		await global.say(global.broadcasterUser.name, `The Gamba Credit raffle is now at ${global.counter.get("RaffleCredits")} credits.`);
+	}
 }

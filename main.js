@@ -344,6 +344,19 @@ commandList.addTrigger("ad", async(channel, args, msg, user) => {
 	respondWithCooldownMessage: true
 });
 
+// --- !addraffle ---
+commandList.addTrigger("addraffle", async(channel, args, msg, user) => {
+	if(args.length != 1) {
+		return;
+	}
+
+	creditRaffle.addCredits(args[0]);
+}, {
+	aliases: ["raffleadd", "raffleinc", "incraffle"],
+	whitelist: ["broadcaster", "mod"],
+	cooldown: 5
+});
+
 // --- !addrotr ---
 commandList.addTrigger("addrotr", async(channel, args, msg, user) => {
 	if(args.length != 2) {
@@ -1002,6 +1015,19 @@ commandList.addTrigger("ruler", async(channel, args, msg, user) => {
 	const crownHolder = rulerOfTheRedeem.crownHolder;
 	await reply(channel, msg, `${crownHolder.name == null ? "No one" : crownHolder.name} currently holds the crown`);
 }, {
+	cooldown: 5
+});
+
+// --- !setraffle ---
+commandList.addTrigger("setraffle", async(channel, args, msg, user) => {
+	if(args.length != 1) {
+		return;
+	}
+
+	creditRaffle.setCredits(args[0]);
+}, {
+	aliases: ["raffleset"],
+	whitelist: ["broadcaster", "mod"],
 	cooldown: 5
 });
 
