@@ -12,7 +12,7 @@
 	},
 
 	"groovershutdown": {
-		"volume": 0.5
+		"volume": 0.35
 	},
 
 	"^HUH": {
@@ -21,7 +21,8 @@
 		"regex": true,
 		"caseInsensitive": false,
 		"filename": "HUH",
-		"cooldown": 0
+		"cooldown": 0,
+		"ignoreIfStartingMention": true
 	},
 
 	"mood": {
@@ -156,7 +157,8 @@
 		"pitch": [0.9, 1.1],
 		"regex": true,
 		"caseInsensitive": false,
-		"filename": "clap"
+		"filename": "clap",
+		"ignoreIfStartingMention": true
 	},
 
 	"splat": {

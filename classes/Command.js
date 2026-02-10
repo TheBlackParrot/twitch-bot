@@ -99,6 +99,7 @@ export class BaseCommand {
 		this.blacklist = "blacklist" in opts ? opts.blacklist : [];
 		this.respondWithCooldownMessage = "respondWithCooldownMessage" in opts ? opts.respondWithCooldownMessage : false;
 		this.allowedCategories = "allowedCategories" in opts ? opts.allowedCategories : [];
+		this.ignoreIfStartingMention = "ignoreIfStartingMention" in opts ? opts.ignoreIfStartingMention : false;
 	}
 
 	get canUse() {
@@ -190,6 +191,12 @@ export class BaseCommand {
 
 		if(this.allowedCategories.length) {
 			if(global.initialCategory == null || this.allowedCategories.indexOf(global.initialCategory) == -1) {
+				return;
+			}
+		}
+
+		if(this.ignoreIfStartingMention) {
+			if(msg.isReply || msg.messageText[0] == "@") {
 				return;
 			}
 		}

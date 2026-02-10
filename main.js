@@ -1312,6 +1312,7 @@ for(const soundCommandName in soundCommands) {
 		}, {
 			caseInsensitive: "caseInsensitive" in params ? params.caseInsensitive : true,
 			userCooldown: "cooldown" in params ? params.cooldown : 5,
+			ignoreIfStartingMention: "ignoreIfStartingMention" in params ? params.ignoreIfStartingMention : false
 		});
 	} else {
 		commandList.addTrigger(soundCommandName, async(channel, args, msg, user) => {
@@ -1497,6 +1498,8 @@ async function messageHandler(channel, userString, text, msg) {
 	}
 
 	global.log("", `${userString}: ${text}`, false, ['gray']);
+
+	msg.messageText = text; // twurple PLEASE
 
 	if(seenUsers.indexOf(msg.userInfo.userName) === -1) {
 		seenUsers.push(msg.userInfo.userName);
