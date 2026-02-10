@@ -1767,6 +1767,8 @@ async function processShoutoutQueue() {
 			setTimeout(processShoutoutQueue, 120000);
 		}
 
+		shoutoutQueue.unshift(next); // welp
+
 		global.log("RAID", `Could not give a shoutout to ${next.name}, next available shoutout is in ${Math.ceil((nextShoutoutAvailable - Date.now()) / 1000)} seconds`);
 		await say(global.broadcasterUser.name, `⚠️ Could not shoutout ${next.name} at the current moment, it has been queued.`);
 	}
