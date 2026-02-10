@@ -278,8 +278,9 @@ export class FrankerFaceZ {
 
 export class SevenTV {
 	constructor() {
-		this.preInitialize();
 		this.emoteSetIDs = [];
+		this.sessionID = null;
+		this.preInitialize();
 	}
 
 	async preInitialize() {
@@ -354,7 +355,34 @@ export class SevenTV {
 		global.log("7TV", `Added ${global.emotes.lengthFromService("7TV")} emotes`, false, ['whiteBright']);
 
 		this.listener = new WebSocketListener('wss://events.7tv.io/v3', this.onMessage.bind(this), { restartDelay: 60 });
-		this.subscribe("emote_set.*", global.broadcasterUser.id, this.emoteSetIDs[0]);
+
+		if(this.sessionID == null) {
+			global.log("7TV", "Session ID was null, sending subscriptions", false, ['gray']);
+			this.subscribe("emote_set.*", global.broadcasterUser.id, this.emoteSetIDs[0]);
+		} else {
+			global.log("7TV", "Session ID was not null, resuming with previously set session ID", false, ['gray']);
+			this.resume();
+		}
+	}
+
+	resume = async function() {
+		const id = this.sessionID;
+
+		let msg = {
+			op: 34,
+			d: {
+				session_id: id
+			}
+		};
+
+		while(this.listener.readyState != 1) {
+			global.log("7TV", "Waiting for socket to be ready before resuming previous session...", false, ['gray']);
+			await delay(1000);
+		}
+
+		global.log("7TV", `Resumed subscriptions`);
+
+		this.listener.send(JSON.stringify(msg));
 	}
 
 	subscribe = async function(type, roomID, objectID) {
@@ -419,6 +447,16 @@ export class SevenTV {
 
 						global.log("7TV", `Deleting emote ${emoteData.id} ("${emoteData.name}")`, false, ['whiteBright']);
 						global.emotes.delete(emoteData.id);
+					}
+				}
+				break;
+
+			case 1: // hello data
+				if(this.sessionID == null) {
+					if("d" in data) {
+						if("session_id" in data.d) {
+							this.sessionID = data.d.session_id;
+						}
 					}
 				}
 				break;
