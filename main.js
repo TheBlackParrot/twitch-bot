@@ -1203,6 +1203,7 @@ commandList.addTrigger("toggleswapping", async(channel, args, msg, user) => {
 	allowBejeweled = !allowBejeweled;
 	await reply(channel, msg, `Gem swapping is now ${allowBejeweled ? "enabled SkeletonPls" : "disabled SkeletonPause"}`);
 }, {
+	aliases: ["togglegemswapping"],
 	whitelist: ["broadcaster", "mod"]
 });
 
@@ -1639,7 +1640,7 @@ async function onStandardMessage(channel, msgObject, message) {
 				const row = position.charCodeAt(0);
 				const column = position.charCodeAt(1);
 
-				if(row < 97 && row > 104 && column < 49 && column > 56) {
+				if(row < 97 || row > 104 || column < 49 || column > 56) {
 					isSwapValid = false;
 				}
 			}
