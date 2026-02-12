@@ -499,7 +499,7 @@ commandList.addTrigger("csp", async(channel, args, msg, user) => {
 
 // --- !discord ---
 commandList.addTrigger("discord", async(channel, args, msg, user) => {
-	await reply(channel, msg, 'https://discord.gg/gCDJYbzxar');
+	await reply(channel, msg, `https://discord.gg/gCDJYbzxar ( there's also a stoat! https://stt.gg/p3zNGsgf )`);
 }, {
 	cooldown: 10
 });
@@ -1128,6 +1128,13 @@ commandList.addTrigger("startraffle", async(channel, args, msg, user) => {
 // --- !steam ---
 commandList.addTrigger("steam", async(channel, args, msg, user) => {
 	await reply(channel, msg, 'https://steamcommunity.com/id/TheBlackParrot');
+}, {
+	cooldown: 10
+});
+
+// --- !stoat ---
+commandList.addTrigger("discord", async(channel, args, msg, user) => {
+	await reply(channel, msg, `https://stt.gg/p3zNGsgf ( there's also a discord! https://discord.gg/gCDJYbzxar )`);
 }, {
 	cooldown: 10
 });
