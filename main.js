@@ -2198,6 +2198,9 @@ async function onTwitchStreamOnline(event) {
 		await postToWebhook("streamLive", {
 			content: `https://twitch.tv/theblackparrot\n\n# ${event.broadcasterDisplayName} is now live with *${channelInfo.gameName}*!\n> ${channelInfo.title}`
 		});
+		await postToWebhook("streamLive_Stoat", {
+			content: `https://twitch.tv/theblackparrot\n\n# ${event.broadcasterDisplayName} is now live with *${channelInfo.gameName}*!\n> ${channelInfo.title}`
+		});
 
 		triggerTwitchStreamOnlineEvents();
 	}
