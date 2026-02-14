@@ -1440,6 +1440,11 @@ commandList.addRegex(`(audio|music)\\s.*\\s(choppy|crackly|chopping|crackling|cr
 	cooldown: 30
 });
 
+// funny ghost friend
+commandList.addRegex(`^(oOOo)`, async(channel, args, msg, user) => {
+	global.remoteSound.broadcast("ghost");
+});
+
 // ====== CHAT STUFF ======
 
 const uniEmotes = ["boobsPolite", "boobsFlower", "BigBoobsStare", "bigboobs"];

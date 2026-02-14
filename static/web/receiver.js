@@ -63,6 +63,12 @@ function randomFloat(min = 0, max = 1) {
 var soundCache = {};
 async function handleMessage(event) {
 	const data = JSON.parse(event.data);
+
+	if(data.event == "ghost") {
+		sendFunnyGhost();
+		return;
+	}
+
 	const audioData = data.data;
 
 	if(data.event == "data") {

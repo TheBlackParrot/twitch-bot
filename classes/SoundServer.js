@@ -96,7 +96,7 @@ export class SoundServer {
 		await this.broadcastAudioData(which);
 	}
 
-	broadcast(event, data) {
+	broadcast(event, data = {}) {
 		for(const client of this.clients) {
 			if(client.readyState === WebSocket.OPEN) {
 				client.send(JSON.stringify({ event: event, data: data }));
