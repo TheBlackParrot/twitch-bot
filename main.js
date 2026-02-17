@@ -1104,13 +1104,6 @@ commandList.addTrigger("specs", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
-// --- !spotify ---
-commandList.addTrigger("spotify", async(channel, args, msg, user) => {
-	await reply(channel, msg, 'https://open.spotify.com/playlist/0vWRNK92hhY94uluS2QfGx || copyright-safer version: https://open.spotify.com/playlist/5kORwNmoeKMOa4XJiAmf6X');
-}, {
-	cooldown: 10
-});
-
 // --- !startraffle ---
 commandList.addTrigger("startraffle", async(channel, args, msg, user) => {
 	if(creditRaffle.active) {
@@ -1260,13 +1253,6 @@ commandList.addTrigger("vnyandeath", async(channel, args, msg, user) => {
 	whitelist: ["broadcaster", "mod"],
 	cooldown: 10
 });
-
-// --- !vrc ---
-/*commandList.addTrigger("vrc", async(channel, args, msg, user) => {
-	await reply(channel, msg, 'https://vrc.group/TBP.1829 (IGN: TheBlackParrot) (If I\'m comfortable with you, I\'ll give you a role upon joining the group and you can join the stream instances whenever)');
-}, {
-	cooldown: 10
-});*/
 
 // --- !weather ---
 commandList.addTrigger("weather", async(channel, args, msg, user) => {
@@ -1667,8 +1653,7 @@ async function onStandardMessage(channel, msgObject, message) {
 		}
 	}
 
-	if(!(message.startsWith('@') || message.startsWith('!')) && !wasGemSwap && !(currentOBSSceneName == "Resonite" || currentOBSSceneName == "VRChat")) {
-
+	if(!(message.startsWith('@') || message.startsWith('!')) && !wasGemSwap && currentOBSSceneName != "Resonite") {
 		const userData = users.getUser(user.userId);
 
 		if(previousMessageOwner != user.userName) {
@@ -2433,7 +2418,7 @@ async function onOBSSceneChanged(sceneObject) {
 
 	global.log("OBS", `Scene changed to ${currentOBSSceneName}`, false, ['gray']);
 
-	const isVRChat = (currentOBSSceneName === "VRChat" || currentOBSSceneName === "Resonite");
+	const isResonite = (currentOBSSceneName === "Resonite");
 	const isIntermission = (currentOBSSceneName === "Ad Wall" || currentOBSSceneName === "Starting Soon");
 	const isMenu = (currentOBSSceneName === "SRXD Menu");
 	const isGameplay = (currentOBSSceneName === "SRXD Gameplay");
@@ -2459,7 +2444,7 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 	const name = sceneObject.sceneName;
 	global.log("OBS", `Scene transition to scene ${name} started`, false, ['gray']);
 	
-	const isVRChat = (name === "VRChat" || name === "Resonite");
+	const isResonite = (name === "Resonite");
 	const isIntermission = (name === "Ad Wall" || name === "Starting Soon");
 	const isMenu = (name === "SRXD Menu");
 	const isGameplay = (name === "SRXD Gameplay");
@@ -2475,8 +2460,8 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 	});
 
 	await callOBS('SetInputVolume', {
-		inputName: "Spotify Audio",
-		inputVolumeDb: isVRChat ? -4 : 0
+		inputName: "Music",
+		inputVolumeDb: isResonite ? -4 : 0
 	});
 
 	if(global.initialCategory == "Spin Rhythm XD") {
@@ -2490,7 +2475,7 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 		//await axios.post(`http://${global.settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
 		foobar2000volume.targetVolume = isIntermission ? -32 : -100;
 	} else {
-		foobar2000volume.targetVolume = isVRChat ? -36 : -32;
+		foobar2000volume.targetVolume = isResonite ? -36 : -32;
 	}
 }
 
@@ -2527,7 +2512,7 @@ async function onStreamStarted() {
 		});
 
 		await callOBS('SetInputVolume', {
-			inputName: "Spotify Audio",
+			inputName: "Music",
 			inputVolumeDb: 0
 		});
 
