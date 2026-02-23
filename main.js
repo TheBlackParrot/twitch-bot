@@ -192,7 +192,7 @@ var spinRequestsSocket;
 
 function initSpinRequestsSocket() {
 	if(global.initialCategory == "Spin Rhythm XD") {
-		spinRequestsSocket = new WebSocketListener('ws://127.0.0.1:6970/', handleSpinRequestsMessage);
+		spinRequestsSocket = new WebSocketListener('ws://127.0.0.1:6970/', { "onMessage": handleSpinRequestsMessage });
 	}
 }
 

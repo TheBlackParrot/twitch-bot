@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 
 export class WebSocketListener {
-	constructor(url, trigger = null, opts = {}) {
+	constructor(url, triggers = { "onMessage": null }, opts = {}) {
 		this.url = url;
 
 		this.logData = "logData" in opts ? opts.logData : false;
@@ -10,7 +10,7 @@ export class WebSocketListener {
 		this.restartDelay = "restartDelay" in opts ? opts.restartDelay : 15;
 
 		this.restartTimeout = null;
-		this.trigger = trigger;
+		this.triggers = triggers;
 
 		this.initializeWebsocket();
 	}
@@ -18,6 +18,12 @@ export class WebSocketListener {
 	onOpen = function() {
 		clearTimeout(this.restartTimeout);
 		global.log("SOCKET", `Established connection to ${this.url}`, false, ['greenBright']);
+
+		if("onOpen" in this.triggers) {
+			if(this.triggers.onOpen) {
+				this.triggers.onOpen();
+			}
+		}
 	}
 
 	onClose = function() {
@@ -29,6 +35,12 @@ export class WebSocketListener {
 		} else {
 			global.log("SOCKET", `Not restarting connection to ${this.url}`, false, ['yellow']);
 		}
+
+		if("onClose" in this.triggers) {
+			if(this.triggers.onClose) {
+				this.triggers.onClose();
+			}
+		}
 	}
 
 	onError = function(error) {
@@ -37,11 +49,13 @@ export class WebSocketListener {
 	onMessage = function(data) {
 		if(this.logData) {
 			global.log("SOCKET", `Data from ${this.url}:`);
-			global.log("SOCKET", data);
+			global.log("SOCKET", data.toString());
 		}
 
-		if(this.trigger) {
-			this.trigger(data);
+		if("onMessage" in this.triggers) {
+			if(this.triggers.onMessage) {
+				this.triggers.onMessage(data);
+			}
 		}
 	}
 

@@ -209,7 +209,7 @@ export class BetterTTV {
 
 		global.log("BTTV", `Added ${global.emotes.lengthFromService("BTTV")} emotes`, false, ['whiteBright']);
 
-		this.listener = new WebSocketListener('wss://sockets.betterttv.net/ws', this.onMessage.bind(this), { restartDelay: 60 });
+		this.listener = new WebSocketListener('wss://sockets.betterttv.net/ws', { "onMessage": this.onMessage.bind(this) }, { restartDelay: 60 });
 		await this.join();
 	}
 }
@@ -354,15 +354,12 @@ export class SevenTV {
 
 		global.log("7TV", `Added ${global.emotes.lengthFromService("7TV")} emotes`, false, ['whiteBright']);
 
-		this.listener = new WebSocketListener('wss://events.7tv.io/v3', this.onMessage.bind(this), { restartDelay: 60 });
-
-		if(this.sessionID == null) {
-			global.log("7TV", "Session ID was null, sending subscriptions", false, ['gray']);
-			this.subscribe("emote_set.*", global.broadcasterUser.id, this.emoteSetIDs[0]);
-		} else {
-			global.log("7TV", "Session ID was not null, resuming with previously set session ID", false, ['gray']);
-			this.resume();
-		}
+		this.listener = new WebSocketListener('wss://events.7tv.io/v3', { 
+			"onMessage": this.onMessage.bind(this),
+			"onOpen": this.onOpen.bind(this)
+		}, { 
+			restartDelay: 60
+		});
 	}
 
 	resume = async function() {
@@ -380,9 +377,9 @@ export class SevenTV {
 			await delay(1000);
 		}
 
-		global.log("7TV", `Resumed subscriptions`);
-
 		this.listener.send(JSON.stringify(msg));
+
+		global.log("7TV", `Resumed subscriptions`);
 	}
 
 	subscribe = async function(type, roomID, objectID) {
@@ -464,6 +461,16 @@ export class SevenTV {
 			case 4: // gtfo data
 				this.listener.socket.close();
 				break;
+		}
+	}
+
+	onOpen = async function() {
+		if(this.sessionID == null) {
+			global.log("7TV", "Session ID was null, sending subscriptions", false, ['gray']);
+			this.subscribe("emote_set.*", global.broadcasterUser.id, this.emoteSetIDs[0]);
+		} else {
+			global.log("7TV", "Session ID was not null, resuming with previously set session ID", false, ['gray']);
+			this.resume();
 		}
 	}
 }
