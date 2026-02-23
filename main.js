@@ -1811,6 +1811,9 @@ chatClient.onSub((channel, user, subInfo, msg) => {
 	const ttsName = userData.getPersistentData("ttsName");
 
 	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
+	if(subInfo.message) {
+		onStandardMessage(channel, msg, subInfo.message);
+	}
 
 	say(channel, hypeEmoteString());
 })
@@ -1824,6 +1827,9 @@ chatClient.onResub((channel, user, subInfo, msg) => {
 	const ttsName = userData.getPersistentData("ttsName");
 
 	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} re-subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
+	if(subInfo.message) {
+		onStandardMessage(channel, msg, subInfo.message);
+	}
 
 	say(channel, hypeEmoteString());
 })
