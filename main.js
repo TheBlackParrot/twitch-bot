@@ -245,6 +245,64 @@ async function querySRXD(endpoint, args, opts) {
 	return await axios.get(url, { validateStatus: () => { return true } }).catch((err) => {});
 }
 
+var spinStatusSocket;
+
+function initSpinStatusSocket() {
+	if(global.initialCategory == "Spin Rhythm XD") {
+		spinStatusSocket = new WebSocketListener(`ws://${global.settings.srxd.spinStatusSocket.address}:${global.settings.srxd.spinStatusSocket.port}`, { "onMessage": handleSpinStatusMessage });
+	}
+}
+
+var srxdState = {
+	scene: "",
+	health: 0
+};
+var waitHoldOnSRXD;
+
+const spinStatusFunctions = {
+	"Scene": async function(data) {
+		if(data === "Playing") {
+			clearTimeout(waitHoldOnSRXD);
+			await callOBS("SetCurrentProgramScene", {sceneName: "SRXD Gameplay"});
+		} else {
+			waitHoldOnSRXD = setTimeout(async function() {
+				await callOBS("SetCurrentProgramScene", {sceneName: "SRXD Menu"});
+			}, 100);
+		}
+	},
+
+	"Paused": function(data) {
+		vnyanSocket.send(data ? "Paused" : "Resumed");
+	},
+
+	"Score": function(data) {
+		if(data.Combo > 0 && data.Combo % global.settings.srxd.expressJoyOnCombo == 0) {
+			vnyanSocket.send("Joy");
+		}
+
+		srxdState.health = data.Health;
+	},
+
+	"NoteTiming": function(data) {
+		if(data === "Failed" && srxdState.health > 0) {
+			vnyanSocket.send("Angry");
+			vnyanSocket.send("Miss 1");
+		}
+	}
+}
+
+function handleSpinStatusMessage(data) {
+	if(global.broadcasterUser == null) {
+		return;
+	}
+
+	data = JSON.parse(data.toString('utf8'));
+	
+	if(data.EventType in spinStatusFunctions) {
+		spinStatusFunctions[data.EventType](data.Data);
+	}
+}
+
 // ====== TRIGGER COMMANDS ======
 
 async function getTargetedUser(channel, target, msg, sendMessage = true) {
@@ -1740,7 +1798,9 @@ chatClient.onJoin(async (channel, user) => {
 		await global.redeemList.getByName("Flip a Coin").setCooldown(30); // can't do this on the twitch dashboard, so we do it here
 		await rulerOfTheRedeem.enable(true);
 
+		initVNyanSocket();
 		initSpinRequestsSocket();
+		initSpinStatusSocket();
 
 		await say(global.broadcasterUser.name, `${helloEmotes[Math.floor(Math.random() * helloEmotes.length)]} ${helloMessages[Math.floor(Math.random() * helloMessages.length)]}`);
 	}
@@ -2615,6 +2675,16 @@ async function getInfoToDetermineOBSStatus() {
 		if(obsDroppedFramesHistory.length > global.settings.obs.droppedFramesHistoryLength) {
 			obsDroppedFramesHistory.pop(0);
 		}
+	}
+}
+
+// ====== VNYAN ======
+
+var vnyanSocket;
+
+function initVNyanSocket() {
+	if(global.initialCategory != "Resonite") {
+		vnyanSocket = new WebSocketListener(`ws://${global.settings.vnyan.socket.address}:${global.settings.vnyan.socket.port}/vnyan`);
 	}
 }
 

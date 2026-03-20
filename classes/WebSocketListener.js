@@ -60,6 +60,8 @@ export class WebSocketListener {
 	}
 
 	send = function(data) {
+		const url = this.url;
+		global.log("SOCKET", `${url} <-- ${data}`, false, ['grey']);
 		this.socket.send(data);
 	}
 
