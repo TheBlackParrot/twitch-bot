@@ -26,17 +26,33 @@
 	},
 
 	"foobar": {
-		"address": "127.0.0.1:8880"
+		"address": "127.0.0.1:8880",
+		"exportLocation": "./data/foobarLibrary.json"
 	},
 
 	"obs": {
 		"address": "127.0.0.1:4455",
 		"password": "rururururrrur",
-		"reconnectDelay": 10
+		"reconnectDelay": 10,
+		"bitrateInterval": 3,
+		"droppedFramesHistoryLength": 100
+	},
+
+	"sounds": {
+		"directory": "./data/sounds",
+		"server": {
+			"address": "127.0.0.1",
+			"port": "6900"
+		}
 	},
 
 	"srxd": {
-		"spinRequestsURL": "http://127.0.0.1:6969/"
+		"spinRequestsURL": "http://127.0.0.1:6969/",
+		"spinStatusSocket": {
+			"address": "127.0.0.1",
+			"port": 6971
+		},
+		"expressJoyOnCombo": 200
 	},
 
 	"tts": {
@@ -45,11 +61,21 @@
 			"names": "David",
 			"messages": "Zira",
 			"system": "Mark"
-		}
+		},
+		"clearPreviousOwnerTimeout": 20
 	},
 
 	"twitch": {
-		"adTimerRefreshInterval": 15
+		"adTimerRefreshInterval": 15,
+		"scheduledAdBreakLength": 180
+	},
+
+	"vnyan": {
+		"httpURL": "http://localhost:8069/",
+		"socket": {
+			"address": "127.0.0.1",
+			"port": 4570
+		}
 	},
 
 	"weather": {
@@ -58,6 +84,7 @@
 
 	"webhooks": {
 		"streamLive": "https://discord.com/api/webhooks/0000000000000000000/ipipppipiipipip",
+		"streamLive_Stoat": "https://stoat.chat/api/webhooks/00000000000000000000000000/pipipiiipipipipippipipi",
 		"noteChannel": "https://discord.com/api/webhooks/0000000000000000000/ipipppipiipipip"
 	}
 }
