@@ -1242,7 +1242,11 @@ commandList.addTrigger("tipping", async(channel, args, msg, user) => {
 commandList.addTrigger("title", async(channel, args, msg, user) => {
 	if(!args.length) {
 		let channelInfo = await global.apiClient.channels.getChannelInfoById(global.broadcasterUser.id);
-		await reply(channel, msg, `Stream title is currently "${channelInfo.title}"`);
+		await reply(channel, msg, channelInfo.title);
+		return;
+	}
+
+	if(!user.isMod) {
 		return;
 	}
 
@@ -1252,7 +1256,6 @@ commandList.addTrigger("title", async(channel, args, msg, user) => {
 
 	await reply(channel, msg, `Updated stream title`);
 }, {
-	whitelist: ["broadcaster", "mod"],
 	cooldown: 10
 });
 
