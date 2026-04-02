@@ -1688,8 +1688,8 @@ async function onStandardMessage(channel, msgObject, message) {
 	if(allowBejeweled) {
 		let parts = filtered.toLowerCase().split(" ");
 		if(parts.length == 1 && filtered.length == 4) {
-			parts[0] = filtered.substr(0, 2);
-			parts[1] = filtered.substr(2, 2);
+			parts[0] = filtered.toLowerCase().substr(0, 2);
+			parts[1] = filtered.toLowerCase().substr(2, 2);
 		}
 
 		if(parts.length == 2) {
