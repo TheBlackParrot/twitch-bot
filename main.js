@@ -717,7 +717,7 @@ commandList.addTrigger("link", async(channel, args, msg, user) => {
 		await commandList.get("radiosong").trigger(channel, args, msg, user);
 	}
 }, {
-	aliases: ["song", "chart"],
+	aliases: ["song", "chart", "np"],
 	cooldown: 10
 });
 
