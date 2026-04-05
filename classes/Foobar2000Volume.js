@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { EventSource } from 'eventsource';
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -10,10 +11,13 @@ export class Foobar2000Volume {
 	constructor() {
 		this.currentVolume = 0;
 		this.targetVolume = 0;
+		this.playing = false;
+		this.muted = false;
 
 		this.loopTimeout;
 
 		this.initValues();
+		this.initEventSource();
 	}
 
 	async initValues() {
@@ -55,5 +59,45 @@ export class Foobar2000Volume {
 
 		await axios.post(`http://${global.settings.foobar.address}/api/player`, { volume: this.currentVolume }).catch((err) => {});
 		this.loopTimeout = setTimeout(this.update.bind(this), 100);
+	}
+
+	initEventSource() {
+		this.events = new EventSource(`http://${global.settings.foobar.address}/api/query/updates?player=true`);
+		this.events.addEventListener('message', this.onEventMessage.bind(this));
+	}
+
+	onEventMessage(message) {
+		const data = JSON.parse(message.data);
+		if(!Object.keys(data).length) {
+			return;
+		}
+
+		const player = data.player;
+		const volume = player.volume;
+
+		const playing = (player.playbackState === "playing" ? true : false);
+		const muted = (volume.value == -100 || volume.isMuted);
+
+		if(muted != this.muted) {
+			this.onMuted(muted);
+		}
+		if(playing != this.playing) {
+			this.onPlaying(playing);
+		}
+	}
+
+	async onMuted(state) {
+		this.muted = state;
+		await this.onAudibleStateChanged();
+	}
+
+	async onPlaying(state) {
+		this.playing = state;
+		await this.onAudibleStateChanged();
+	}
+
+	async onAudibleStateChanged() {
+		const state = this.playing && !this.muted;
+		await global.setOBSMusicBarState(state);
 	}
 }

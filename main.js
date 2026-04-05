@@ -60,6 +60,18 @@ function log(type, data, showTrace = false, style = []) {
 }
 global.log = log;
 
+global.setOBSMusicBarState = async function (state) {
+	try {
+		await callOBS('SetSourceFilterEnabled', {
+			sourceName: 'Bottom Bar (Music Active)',
+			filterName: (state ? "Show Music Bar" : "Hide Music Bar"),
+			filterEnabled: true
+		});
+	} catch(err) {
+		// ignored
+	}
+}
+
 import { UserList } from "./classes/User.js";
 import { CommandList, RegexCommand } from "./classes/Command.js";
 import { WebSocketListener } from "./classes/WebSocketListener.js";
@@ -160,6 +172,11 @@ function formatFoobarTagResponse(data, tag) {
 
 async function callOBS(command, data = null) {
 	let out;
+
+	if(!obsIsConnected) {
+		global.log("OBS", `Could not call command ${command}, not connected to OBS yet!`, false, ['yellowBright']);
+		return;
+	}
 	
 	try {
 		if(data) {
@@ -2444,6 +2461,7 @@ function onAdTimerRefreshed(nextAdTimestamp) {
 // ====== OBS ======
 
 var obsConnectionTimeout;
+var obsIsConnected = false;
 
 async function initOBS() {
 	const address = `ws://${global.settings.obs.address}`;
@@ -2465,6 +2483,8 @@ async function onOBSConnectionOpened() {
 	clearTimeout(obsConnectionTimeout);
 	global.log("OBS", `Established connection to OBS at ${address}`, false, ['greenBright']);
 
+	obsIsConnected = true;
+
 	obsBitrateInterval = setInterval(getInfoToDetermineOBSStatus, global.settings.obs.bitrateInterval * 1000);
 
 	const sceneObject = await callOBS('GetCurrentProgramScene');
@@ -2473,6 +2493,8 @@ async function onOBSConnectionOpened() {
 
 function onOBSConnectionClosed() {
 	const address = `ws://${global.settings.obs.address}`;
+
+	obsIsConnected = false;
 
 	clearTimeout(obsConnectionTimeout);
 	global.log("OBS", `Connection to OBS at ${address} closed`, false, ['redBright']);
