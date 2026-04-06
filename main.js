@@ -2489,6 +2489,8 @@ async function onOBSConnectionOpened() {
 
 	const sceneObject = await callOBS('GetCurrentProgramScene');
 	currentOBSSceneName = sceneObject.sceneName;
+
+	await foobar2000volume.onAudibleStateChanged();
 }
 
 function onOBSConnectionClosed() {

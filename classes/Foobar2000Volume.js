@@ -64,6 +64,7 @@ export class Foobar2000Volume {
 	initEventSource() {
 		this.events = new EventSource(`http://${global.settings.foobar.address}/api/query/updates?player=true`);
 		this.events.addEventListener('message', this.onEventMessage.bind(this));
+		this.onAudibleStateChanged();
 	}
 
 	onEventMessage(message) {
