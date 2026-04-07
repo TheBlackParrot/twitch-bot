@@ -2050,9 +2050,9 @@ const redeemFunctions = {
 	},
 
 	"Swap Avatars": async function(event) {
-		const which = event.input[0].toLowerCase();
+		const which = event.input.trim()[0].toLowerCase();
 
-		if(!which in avatarRedeemMap) {
+		if(!(which in avatarRedeemMap)) {
 			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ This is not a valid character name. You can find the character choices in the redeem's description.`);
 			await updateRedemptionStatus(event.rewardId, event.id, false);
 			return;
