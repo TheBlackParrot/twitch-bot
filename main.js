@@ -1727,6 +1727,25 @@ async function onStandardMessage(channel, msgObject, message) {
 			if(isSwapValid) {
 				wasGemSwap = true;
 				exec(`${global.settings.bot.bejeweledSwapperLocation} ${parts.join(" ")}`, { windowsHide: true });
+			} else {
+				// check if it's backwards
+
+				isSwapValid = true;
+
+				for(const position of parts) {
+					const row = position.charCodeAt(1);
+					const column = position.charCodeAt(0);
+
+					if(row < 97 || row > 104 || column < 49 || column > 56) {
+						isSwapValid = false;
+					}
+				}
+
+				if(isSwapValid) {
+					wasGemSwap = true;
+					const reversed = parts.join("").split("").reverse().join("");
+					exec(`${global.settings.bot.bejeweledSwapperLocation} ${reversed.substr(0, 2)} ${reversed.substr(2, 2)}`, { windowsHide: true });
+				}
 			}
 		}
 	}
