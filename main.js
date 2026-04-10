@@ -278,9 +278,12 @@ var waitHoldOnSRXD;
 
 const spinStatusFunctions = {
 	"Scene": async function(data) {
+		clearTimeout(waitHoldOnSRXD);
+		
 		if(data === "Playing") {
-			clearTimeout(waitHoldOnSRXD);
-			await callOBS("SetCurrentProgramScene", {sceneName: "SRXD Gameplay"});
+			waitHoldOnSRXD = setTimeout(async function() {
+				await callOBS("SetCurrentProgramScene", {sceneName: "SRXD Gameplay"});
+			}, 100);
 		} else {
 			waitHoldOnSRXD = setTimeout(async function() {
 				await callOBS("SetCurrentProgramScene", {sceneName: "SRXD Menu"});
