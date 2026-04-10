@@ -2165,6 +2165,11 @@ const redeemFunctions = {
 		}
 
 		const userHas = await getLeaderboardValue(event.userId, "Gamba Credits");
+		if(userHas <= 0) {
+			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ You have no credits! Use the Credit Exchange redeem to exchange channel points for credits.`);
+			await updateRedemptionStatus(event.rewardId, event.id, false);
+			return;
+		}
 		if(wager > userHas) {
 			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ You can only wager a maximum of ${userHas.toLocaleString()} credits.`);
 			await updateRedemptionStatus(event.rewardId, event.id, false);
