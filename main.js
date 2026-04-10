@@ -279,7 +279,7 @@ var waitHoldOnSRXD;
 const spinStatusFunctions = {
 	"Scene": async function(data) {
 		clearTimeout(waitHoldOnSRXD);
-		
+
 		if(data === "Playing") {
 			waitHoldOnSRXD = setTimeout(async function() {
 				await callOBS("SetCurrentProgramScene", {sceneName: "SRXD Gameplay"});
@@ -1795,8 +1795,8 @@ chatClient.onJoin(async (channel, user) => {
 		startEventSub();
 
 		let channelInfo = await global.apiClient.channels.getChannelInfoById(global.broadcasterUser.id);
-		global.initialCategory = channelInfo.gameName;
-		previousCategory = channelInfo.gameName;
+		global.initialCategory = (channelInfo.gameName === "Games + Demos" ? "Spin Rhythm XD" : channelInfo.gameName);
+		previousCategory = global.initialCategory;
 		previousTitle = channelInfo.title;
 		log("SYSTEM", `Initial category is ${global.initialCategory}`);
 
