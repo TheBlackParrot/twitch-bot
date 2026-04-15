@@ -519,6 +519,14 @@ commandList.addTrigger("category", async(channel, args, msg, user) => {
 	cooldown: 15
 });
 
+// --- !close ---
+commandList.addTrigger("close", async(channel, args, msg, user) => {
+	await querySRXD('queue', 'close');
+}, {
+	whitelist: ["broadcaster", "mod", "vip"],
+	cooldown: 3
+});
+
 // --- !commands ---
 commandList.addTrigger("commands", async(channel, args, msg, user) => {
 	await reply(channel, msg, `A list of commands can be found at: https://github.com/TheBlackParrot/twitch-bot/blob/main/main.js#L${whereDoCommandsStart}`);
@@ -822,6 +830,14 @@ commandList.addTrigger("note", async(channel, args, msg, user) => {
 	});
 
 	await reply(channel, msg, "NOTED");
+}, {
+	whitelist: ["broadcaster", "mod", "vip"],
+	cooldown: 3
+});
+
+// --- !open ---
+commandList.addTrigger("open", async(channel, args, msg, user) => {
+	await querySRXD('queue', 'open');
 }, {
 	whitelist: ["broadcaster", "mod", "vip"],
 	cooldown: 3
