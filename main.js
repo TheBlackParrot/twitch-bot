@@ -139,7 +139,7 @@ async function tts(voice, string, rate = 0) {
 	};
 
 	await axios.post(url, data).catch((err) => {
-		console.error(err);
+		//console.error(err);
 	});
 }
 
@@ -320,6 +320,36 @@ function handleSpinStatusMessage(data) {
 	
 	if(data.EventType in spinStatusFunctions) {
 		spinStatusFunctions[data.EventType](data.Data);
+	}
+}
+
+// ====== BEJEWELED ======
+
+var bejeweledLiveSocket;
+
+function initBejeweledLiveSocket() {
+	bejeweledLiveSocket = new WebSocketListener('ws://127.0.0.1:6677/', { "onMessage": handleBejeweledLiveMessage });
+}
+
+const pointLeftEmotes = ["POINT", "EYYY"];
+const pointRightEmotes = ["POINTING", "SoyPoint", "GetALoadOfThisGuy"];
+
+const bejeweledLiveFunctions = {
+	"hypercubeCreated": async function() {
+		const side = Math.floor(Math.random() * 2);
+		await global.say(global.broadcasterUser.name, (side ? `${pointLeftEmotes[Math.floor(Math.random() * pointLeftEmotes.length)]} COOB` : `COOB ${pointRightEmotes[Math.floor(Math.random() * pointRightEmotes.length)]}`));
+	}
+}
+
+function handleBejeweledLiveMessage(data) {
+	if(global.broadcasterUser == null) {
+		return;
+	}
+
+	data = JSON.parse(data.toString('utf8'));
+	
+	if(data.event in bejeweledLiveFunctions) {
+		bejeweledLiveFunctions[data.event](data.data);
 	}
 }
 
@@ -1745,7 +1775,8 @@ async function onStandardMessage(channel, msgObject, message) {
 
 			if(isSwapValid) {
 				wasGemSwap = true;
-				exec(`${global.settings.bot.bejeweledSwapperLocation} ${parts.join(" ")}`, { windowsHide: true });
+				//exec(`${global.settings.bot.bejeweledSwapperLocation} ${parts.join(" ")}`, { windowsHide: true });
+				bejeweledLiveSocket.send(parts.join(" "));
 			} else {
 				// check if it's backwards
 
@@ -1763,7 +1794,8 @@ async function onStandardMessage(channel, msgObject, message) {
 				if(isSwapValid) {
 					wasGemSwap = true;
 					const reversed = parts.join("").split("").reverse().join("");
-					exec(`${global.settings.bot.bejeweledSwapperLocation} ${reversed.substr(0, 2)} ${reversed.substr(2, 2)}`, { windowsHide: true });
+					//exec(`${global.settings.bot.bejeweledSwapperLocation} ${reversed.substr(0, 2)} ${reversed.substr(2, 2)}`, { windowsHide: true });
+					bejeweledLiveSocket.send(`${reversed.substr(0, 2)} ${reversed.substr(2, 2)}`);
 				}
 			}
 		}
@@ -1850,15 +1882,19 @@ chatClient.onJoin(async (channel, user) => {
 		}
 
 		for(const redeem of global.redeemList.getTaggedRedeems("vnyan")) {
-			await redeem.enable(global.initialCategory != "Resonite");
+			await redeem.enable(global.initialCategory != "Resonite" && global.initialCategory != "");
 		}
 
 		await global.redeemList.getByName("Flip a Coin").setCooldown(30); // can't do this on the twitch dashboard, so we do it here
 		await rulerOfTheRedeem.enable(true);
 
 		initVNyanSocket();
-		initSpinRequestsSocket();
-		initSpinStatusSocket();
+		initBejeweledLiveSocket();
+
+		if(global.initialCategory === "Spin Rhythm XD") {
+			initSpinRequestsSocket();
+			initSpinStatusSocket();
+		}
 
 		await say(global.broadcasterUser.name, `${helloEmotes[Math.floor(Math.random() * helloEmotes.length)]} ${helloMessages[Math.floor(Math.random() * helloMessages.length)]}`);
 	}
@@ -2345,6 +2381,10 @@ async function onChannelShoutedOut(event) {
 	await say(global.broadcasterUser.name, `👉👉 Check out https://twitch.tv/${event.shoutedOutBroadcasterName} ! 👈👈 They were last seen streaming ${channelInfo.gameName}!`)
 }
 async function onOutgoingRaid(event) {
+	if(global.initialCategory == "") {
+		return;
+	}
+
 	let gameInfo = await global.apiClient.games.getGameByName(global.initialCategory);
 
 	if(gameInfo != null) {
@@ -2607,7 +2647,7 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 		});
 	}
 
-	if(global.initialCategory != "Resonite") {
+	if(global.initialCategory != "Resonite" && global.initialCategory != "") {
 		//await axios.post(`http://${global.settings.foobar.address}/api/player/${isIntermission ? "play" : "pause"}`).catch((err) => {});
 		foobar2000volume.targetVolume = isIntermission ? -32 : -100;
 	} else {
@@ -2753,7 +2793,7 @@ async function getInfoToDetermineOBSStatus() {
 var vnyanSocket;
 
 function initVNyanSocket() {
-	if(global.initialCategory != "Resonite") {
+	if(global.initialCategory != "Resonite" && global.initialCategory != "") {
 		vnyanSocket = new WebSocketListener(`ws://${global.settings.vnyan.socket.address}:${global.settings.vnyan.socket.port}/vnyan`);
 	}
 }
