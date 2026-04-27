@@ -2439,6 +2439,11 @@ const eventSubListener = new EventSubWsListener({
 
 var streamIsOnline = false;
 function startEventSub() {
+	if(eventSubListener.isActive) {
+		log("SYSTEM", "Not starting EventSub listeners, we're already listening");
+		return;
+	}
+	
 	eventSubListener.onChannelBitsUse(global.broadcasterUser.id, (event) => {
 		try { onBitsCheered(event.bits, event); } catch(err) { console.error(err); }
 	});
