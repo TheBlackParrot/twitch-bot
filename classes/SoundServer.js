@@ -93,7 +93,12 @@ export class SoundServer {
 		const which = data.toString();
 
 		global.log("SOUNDS", `Client wants sound ${which}`, false, ['gray']);
-		await this.broadcastAudioData(which);
+		try {
+			await this.broadcastAudioData(which);
+		} catch(err) {
+			global.log("SOUNDS", "Failed to broadcast audio data", false, ['yellowBright']);
+			global.logException(err);
+		}
 	}
 
 	broadcast(event, data = {}) {
@@ -124,11 +129,16 @@ export class SoundServer {
 			return;
 		}
 
-		this.broadcast("sound", {
-			type: sound.type,
-			name: sound.realName,
-			volume: volume,
-			pitchRange: pitch
-		});
+		try {
+			this.broadcast("sound", {
+				type: sound.type,
+				name: sound.realName,
+				volume: volume,
+				pitchRange: pitch
+			});
+		} catch(err) {
+			global.log("SOUNDS", "Failed to play sound", false, ['yellowBright']);
+			global.logException(err);
+		}
 	}
 }

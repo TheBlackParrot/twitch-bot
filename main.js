@@ -60,6 +60,12 @@ function log(type, data, showTrace = false, style = []) {
 }
 global.log = log;
 
+function logException(exception) {
+	console.warn(exception);
+	logWriter.warn(exception);
+}
+global.logException = logException;
+
 global.setOBSMusicBarState = async function (state) {
 	try {
 		await callOBS('SetSourceFilterEnabled', {
@@ -355,6 +361,21 @@ function handleBejeweledLiveMessage(data) {
 
 // ====== TRIGGER COMMANDS ======
 
+async function getUserByName(name) {
+	let userCheck;
+	try {
+		userCheck = await global.apiClient.users.getUserByName(name.replace("@", "").toLowerCase());
+	} catch {
+		return null;
+	}
+
+	if(!userCheck) {
+		return null;
+	}
+
+	return userCheck;
+}
+
 async function getTargetedUser(channel, target, msg, sendMessage = true) {
 	if(!target || target.length === 0) {
 		if(sendMessage) {
@@ -363,7 +384,7 @@ async function getTargetedUser(channel, target, msg, sendMessage = true) {
 		return null;
 	}
 
-	const userCheck = await global.apiClient.users.getUserByName(target.replace("@", "").toLowerCase());
+	const userCheck = await getUserByName(target);
 
 	if(!userCheck) {
 		if(sendMessage) {
@@ -380,7 +401,7 @@ async function getLeaderboardValueFromUserTarget(channel, args, msg, user, key) 
 	let wantedName = user.displayName;
 
 	if(args.length) {
-		const userCheck = await global.apiClient.users.getUserByName(args[0].replace("@", "").toLowerCase());
+		const userCheck = await getUserByName(args[0]);
 
 		if(!userCheck) {
 			await reply(channel, msg, "⚠️ Could not find any users matching that username");
@@ -1580,11 +1601,21 @@ global.initialCategory = null;
 var seenUsers = [];
 
 async function say(channel, text) {
-	await chatClient.say(channel, text);
+	try {
+		await chatClient.say(channel, text);
+	} catch(err) {
+		global.log("CHAT", "Could not send message", false, ['redBright']);
+		global.logException(err);
+	}
 }
 global.say = say;
 async function reply(channel, originalMsg, text) {
-	await chatClient.say(channel, text, { replyTo: originalMsg });
+	try {
+		await chatClient.say(channel, text, { replyTo: originalMsg });
+	} catch(err) {
+		global.log("CHAT", "Could not send reply", false, ['redBright']);
+		global.logException(err);
+	}
 }
 global.reply = reply;
 
@@ -1600,10 +1631,17 @@ function hypeEmoteString(amount = 5) {
 }
 
 function ensureEnglishName(user) {
-	const displayName = "displayName" in user ? user.displayName : user.userDisplayName;
-	const userName = "name" in user ? user.name : user.userName;
+	try {
+		const displayName = "displayName" in user ? user.displayName : user.userDisplayName;
+		const userName = "name" in user ? user.name : user.userName;
 
-	return displayName.replace(/[0-9a-z\-\_]/gi, '').length ? userName : displayName;
+		return displayName.replace(/[0-9a-z\-\_]/gi, '').length ? userName : displayName;
+	} catch(err) {
+		global.log("SYSTEM", "Failed to determine English name", false, ['redBright']);
+		global.logException(err);
+
+		return undefined;
+	}
 }
 
 function getReadableTimeLeft(seconds) {
@@ -1667,6 +1705,7 @@ async function messageHandler(channel, userString, text, msg) {
 					await command.trigger(channel, args.slice(1), msg, msg.userInfo);
 				} catch(err) {
 					console.error(err);
+					global.logException(err);
 				}
 			} else {
 				log("COMMANDS", `Command ${triggerName} is on global cooldown`);
@@ -1830,8 +1869,25 @@ function clearPreviousMessageOwner() {
 const helloEmotes = ["ARISE", "FridayAwake", "PatArrive", "ARRIVE", "revUpThoseFryers"];
 const helloMessages = ["hello chat!", "hi chat!", "omg hai :3", "i am awake", "hi there!", "hello there!", "(i enter the room)", "(i walk in)"];
 
+async function sendHelloMessage() {
+	try {
+		await say(global.broadcasterUser.name, `${helloEmotes[Math.floor(Math.random() * helloEmotes.length)]} ${helloMessages[Math.floor(Math.random() * helloMessages.length)]}`);
+	} catch {
+		return;
+	}
+}
+
+var hasJoinedBefore = false;
 chatClient.onJoin(async (channel, user) => {
 	log("CHAT", `Joined channel #${channel} as ${user}`, false, ['whiteBright']);
+	
+	if(hasJoinedBefore) {
+		log("CHAT", `Not executing onJoin contents, this is a reconnect`);
+		await sendHelloMessage();
+		return;
+	}
+	hasJoinedBefore = true;
+
 	global.botUserName = user;
 
 	log("COMMANDS", `There are ${commandList.length} registered commands, ${commandList.uniqueLength} of which are unique`, false, ['whiteBright']);
@@ -1862,6 +1918,7 @@ chatClient.onJoin(async (channel, user) => {
 
 			global.log("SYSTEM", `Defined channel point redeem "${safeRedeemName}" does not exist, creating it`, false, ['gray']);
 
+			// don't wrap this in a try/catch, i want it to fail out as this not having rewards will break things further up the chain
 			const initialData = global.initialRedeemList[safeRedeemName];
 			const redeem = await global.apiClient.channelPoints.createCustomReward(global.broadcasterUser.id, {
 				autoFulfill: "autoFulfill" in initialData ? initialData.autoFulfill : true,
@@ -1896,7 +1953,7 @@ chatClient.onJoin(async (channel, user) => {
 			initSpinStatusSocket();
 		}
 
-		await say(global.broadcasterUser.name, `${helloEmotes[Math.floor(Math.random() * helloEmotes.length)]} ${helloMessages[Math.floor(Math.random() * helloMessages.length)]}`);
+		await sendHelloMessage();
 	}
 });
 
@@ -1926,98 +1983,118 @@ async function processShoutoutQueue() {
 }
 
 chatClient.onRaid(async (channel, user, raidInfo, msg) => {
-	let raiderInfo = await global.apiClient.users.getUserByName(user);
-	let channelInfo = await global.apiClient.channels.getChannelInfoById(raiderInfo.id);
-	
-	const userData = users.getUser(raiderInfo.id);
-	const ttsName = userData.getPersistentData("ttsName");
+	try {
+		let raiderInfo = await global.apiClient.users.getUserByName(user);
+		let channelInfo = await global.apiClient.channels.getChannelInfoById(raiderInfo.id);
+		
+		const userData = users.getUser(raiderInfo.id);
+		const ttsName = userData.getPersistentData("ttsName");
 
-	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(raiderInfo)} raided the stream with ${raidInfo.viewerCount} ${raidInfo.viewerCount != 1 ? "viewers": "viewer"}! They were streaming ${channelInfo.gameName}.`);
+		tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(raiderInfo)} raided the stream with ${raidInfo.viewerCount} ${raidInfo.viewerCount != 1 ? "viewers": "viewer"}! They were streaming ${channelInfo.gameName}.`);
 
-	let hypeString = hypeEmoteString(2);
-	say(channel, `${hypeString} Thank you @${ensureEnglishName(raiderInfo)} for the raid of ${raidInfo.viewerCount}! Also, hello raiders! SmileWave`);
+		let hypeString = hypeEmoteString(2);
+		say(channel, `${hypeString} Thank you @${ensureEnglishName(raiderInfo)} for the raid of ${raidInfo.viewerCount}! Also, hello raiders! SmileWave`);
 
-	shoutoutQueue.push({
-		id: raiderInfo.id,
-		name: user
-	});
+		shoutoutQueue.push({
+			id: raiderInfo.id,
+			name: user
+		});
 
-	if(Date.now() > nextShoutoutAvailable) {
-		await processShoutoutQueue();
-		say(channel, '⚠️⚠️⚠️ THIS STREAM CONTAINS LOTS OF FLASHING AND POTENTIALLY STROBING LIGHTS. If you are sensitive to flashing lights I would advise switching the stream to audio-only mode or closing the stream. Viewer discretion is advised. ⚠️⚠️⚠️');
-	}
+		if(Date.now() > nextShoutoutAvailable) {
+			await processShoutoutQueue();
+			say(channel, '⚠️⚠️⚠️ THIS STREAM CONTAINS LOTS OF FLASHING AND POTENTIALLY STROBING LIGHTS. If you are sensitive to flashing lights I would advise switching the stream to audio-only mode or closing the stream. Viewer discretion is advised. ⚠️⚠️⚠️');
+		}
 
-	if(initialCategory != "Resonite") {
-		// for now
-		await updateLeaderboardValues(raiderInfo.id, "Items Thrown", raidInfo.viewerCount);
+		if(initialCategory != "Resonite") {
+			// for now
+			await updateLeaderboardValues(raiderInfo.id, "Items Thrown", raidInfo.viewerCount);
+		}
+	} catch(err) {
+		global.logException(err);
 	}
 });
 chatClient.onRaidCancel((channel, msg) => { 
 	say(channel, "wait nevermind...");
 });
 chatClient.onSub((channel, user, subInfo, msg) => {
-	if(seenUsers.indexOf(msg.userInfo.userName) === -1) {
-		seenUsers.push(msg.userInfo.userName);
-		onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
+	try {
+		if(seenUsers.indexOf(msg.userInfo.userName) === -1) {
+			seenUsers.push(msg.userInfo.userName);
+			onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
+		}
+
+		const userData = users.getUser(subInfo.userId);
+		const ttsName = userData.getPersistentData("ttsName");
+
+		tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
+		if(subInfo.message) {
+			onStandardMessage(channel, msg, subInfo.message);
+		}
+
+		say(channel, hypeEmoteString());
+	} catch(err) {
+		global.logException(err);
 	}
-
-	const userData = users.getUser(subInfo.userId);
-	const ttsName = userData.getPersistentData("ttsName");
-
-	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
-	if(subInfo.message) {
-		onStandardMessage(channel, msg, subInfo.message);
-	}
-
-	say(channel, hypeEmoteString());
 })
 chatClient.onResub((channel, user, subInfo, msg) => {
-	if(seenUsers.indexOf(msg.userInfo.userName) === -1) {
-		seenUsers.push(msg.userInfo.userName);
-		onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
+	try {
+		if(seenUsers.indexOf(msg.userInfo.userName) === -1) {
+			seenUsers.push(msg.userInfo.userName);
+			onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
+		}
+
+		const userData = users.getUser(subInfo.userId);
+		const ttsName = userData.getPersistentData("ttsName");
+
+		tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} re-subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
+		if(subInfo.message) {
+			onStandardMessage(channel, msg, subInfo.message);
+		}
+
+		say(channel, hypeEmoteString());
+	} catch(err) {
+		global.logException(err);
 	}
-
-	const userData = users.getUser(subInfo.userId);
-	const ttsName = userData.getPersistentData("ttsName");
-
-	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} re-subscribed ${subInfo.isPrime ? "with Prime" : `at Tier ${Math.floor(subInfo.plan / 1000)}`} for ${subInfo.months} ${subInfo.months != 1 ? "months" : "month"}`);
-	if(subInfo.message) {
-		onStandardMessage(channel, msg, subInfo.message);
-	}
-
-	say(channel, hypeEmoteString());
 })
 
 // undefined is a possible key because of anonymous gifts
 const giftCounts = new Map();
 
 chatClient.onCommunitySub((channel, user, subInfo, msg) => {
-	const previousGiftCount = giftCounts.get(user) ?? 0;
-	giftCounts.set(user, previousGiftCount + subInfo.count);
+	try {
+		const previousGiftCount = giftCounts.get(user) ?? 0;
+		giftCounts.set(user, previousGiftCount + subInfo.count);
 
-	const userData = users.getUser(subInfo.gifterUserId);
-	const ttsName = userData.getPersistentData("ttsName");
-	
-	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} gifted ${subInfo.count != 1 ? `${subInfo.count} subs` : 'a sub'}`);
+		const userData = users.getUser(subInfo.gifterUserId);
+		const ttsName = userData.getPersistentData("ttsName");
+		
+		tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} gifted ${subInfo.count != 1 ? `${subInfo.count} subs` : 'a sub'}`);
 
-	say(channel, hypeEmoteString());
+		say(channel, hypeEmoteString());
+	} catch(err) {
+		global.logException(err);
+	}
 });
 
 chatClient.onSubGift((channel, user, subInfo, msg) => {
-	const gifterName = subInfo.gifter;
-	const previousGiftCount = giftCounts.get(gifterName) ?? 0;
+	try {
+		const gifterName = subInfo.gifter;
+		const previousGiftCount = giftCounts.get(gifterName) ?? 0;
 
-	if (previousGiftCount > 0) {
-		giftCounts.set(gifterName, previousGiftCount - 1);
-	} else {
-		const userData = users.getUser(subInfo.gifterUserId);
-		const ttsName = userData.getPersistentData("ttsName");
+		if (previousGiftCount > 0) {
+			giftCounts.set(gifterName, previousGiftCount - 1);
+		} else {
+			const userData = users.getUser(subInfo.gifterUserId);
+			const ttsName = userData.getPersistentData("ttsName");
 
-		const receipientData = users.getUser(subInfo.userId);
-		const receipientTTSName = receipientData.getPersistentData("ttsName");
+			const receipientData = users.getUser(subInfo.userId);
+			const receipientTTSName = receipientData.getPersistentData("ttsName");
 
-		tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} gifted a sub to ${receipientTTSName ? receipientTTSName : ensureEnglishName({name: user, displayName: subInfo.displayName})}`);
-		say(channel, hypeEmoteString());
+			tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(msg.userInfo)} gifted a sub to ${receipientTTSName ? receipientTTSName : ensureEnglishName({name: user, displayName: subInfo.displayName})}`);
+			say(channel, hypeEmoteString());
+		}
+	} catch(err) {
+		global.logException(err);
 	}
 });
 
@@ -2088,7 +2165,7 @@ async function updateRedemptionStatus(rewardId, redemptionId, accept) {
 	try {
 		await global.apiClient.channelPoints.updateRedemptionStatusByIds(global.broadcasterUser.id, rewardId, [redemptionId], (accept ? "FULFILLED" : "CANCELED"));
 	} catch(err) {
-		console.error(err);
+		global.logException(err);
 	}
 }
 
@@ -2312,7 +2389,12 @@ async function onChannelRewardRedemption(event) {
 	log("EVENTSUB", `Reward redeemed: ${redeem == null ? "<unknown>" : redeem.name} (${event.rewardId})`, false, ['whiteBright']);
 
 	if(redeem.name in redeemFunctions) {
-		await redeemFunctions[redeem.name](event);
+		try {
+			await redeemFunctions[redeem.name](event);
+		} catch(err) {
+			global.log("REWARD", `Failed to run events for ${redeem.name}`, false, ['redBright']);
+			global.logException(err);
+		}
 	}
 }
 
@@ -2345,6 +2427,7 @@ async function onAdsEnded(event) {
 
 var hasSetFirstRedeem = false;
 async function onTwitchStreamOnline(event) {
+	// no try/catch here, if something here fails something is Very Wrong
 	const channelInfo = await global.apiClient.channels.getChannelInfoById(event.broadcasterId);
 
 	say(global.broadcasterUser.name, `SmileArrive Parrot is now live with ${channelInfo.gameName}! If this was an interruption and the stream does not resume automatically within the next few seconds, refresh the page or reload your app! SmileArrive`);
@@ -2377,23 +2460,33 @@ async function onTwitchStreamOffline(event) {
 	rulerOfTheRedeem.updateTime();
 }
 async function onChannelShoutedOut(event) {
-	const channelInfo = await global.apiClient.channels.getChannelInfoById(event.shoutedOutBroadcasterId);
-	await say(global.broadcasterUser.name, `👉👉 Check out https://twitch.tv/${event.shoutedOutBroadcasterName} ! 👈👈 They were last seen streaming ${channelInfo.gameName}!`)
+	try {
+		const channelInfo = await global.apiClient.channels.getChannelInfoById(event.shoutedOutBroadcasterId);
+		await say(global.broadcasterUser.name, `👉👉 Check out https://twitch.tv/${event.shoutedOutBroadcasterName} ! 👈👈 They were last seen streaming ${channelInfo.gameName}!`)
+	} catch(err) {
+		global.log("EVENTSUB", "Could not send shoutout message in chat", false, ['yellowBright']);
+		global.logException(err);
+	}
 }
 async function onOutgoingRaid(event) {
 	if(global.initialCategory == "") {
 		return;
 	}
 
-	let gameInfo = await global.apiClient.games.getGameByName(global.initialCategory);
+	try {
+		let gameInfo = await global.apiClient.games.getGameByName(global.initialCategory);
 
-	if(gameInfo != null) {
-		await global.apiClient.channels.updateChannelInfo(global.broadcasterUser.id, {
-			gameId: gameInfo.id
-		});
+		if(gameInfo != null) {
+			await global.apiClient.channels.updateChannelInfo(global.broadcasterUser.id, {
+				gameId: gameInfo.id
+			});
+		}
+
+		await say(global.broadcasterUser.name, `We have sent the stream over to https://twitch.tv/${event.raidedBroadcasterName} ! See you next time! SmileWave`);
+	} catch(err) {
+		global.log("EVENTSUB", "Could not send raid-out message in chat", false, ['yellowBright']);
+		global.logException(err);
 	}
-
-	await say(global.broadcasterUser.name, `We have sent the stream over to https://twitch.tv/${event.raidedBroadcasterName} ! See you next time! SmileWave`);
 }
 
 var previousCategory = null;
@@ -2417,7 +2510,7 @@ async function onChannelMetadataUpdate(event) {
 		try {
 			await onTitleChanged(event);
 		} catch(err) {
-			console.error(err);
+			global.logException(err);
 		}
 	}
 
@@ -2425,7 +2518,7 @@ async function onChannelMetadataUpdate(event) {
 		try {
 			await onCategoryChanged(event);
 		} catch(err) {
-			console.error(err);
+			global.logException(err);
 		}
 	}
 
@@ -2443,19 +2536,25 @@ function startEventSub() {
 		log("SYSTEM", "Not starting EventSub listeners, we're already listening");
 		return;
 	}
-	
+
 	eventSubListener.onChannelBitsUse(global.broadcasterUser.id, (event) => {
-		try { onBitsCheered(event.bits, event); } catch(err) { console.error(err); }
+		try { onBitsCheered(event.bits, event); } catch(err) { global.logException(err); }
 	});
 
 	eventSubListener.onChannelFollow(global.broadcasterUser.id, global.broadcasterUser.id, (follow) => {
-		try { onChannelFollowed(follow); } catch(err) { console.error(err); }
+		try { onChannelFollowed(follow); } catch(err) { global.logException(err); }
 	});
 
 	eventSubListener.onChannelAdBreakBegin(global.broadcasterUser.id, (event) => {
-		try { onAdsStarted(event); } catch(err) { console.error(err); }
+		try { onAdsStarted(event); } catch(err) { global.logException(err); }
 
-		setTimeout(() => { onAdsEnded(event) }, event.durationSeconds * 1000);
+		setTimeout(() => {
+			try {
+				onAdsEnded(event)
+			} catch(err) {
+				global.logException(err);
+			}
+		}, event.durationSeconds * 1000);
 	});
 
 	eventSubListener.onStreamOnline(global.broadcasterUser.id, (event) => {
@@ -2464,7 +2563,7 @@ function startEventSub() {
 		}
 
 		streamIsOnline = true;
-		try { onTwitchStreamOnline(event) } catch(err) { console.error(err); }
+		try { onTwitchStreamOnline(event) } catch(err) { global.logException(err); }
 	});
 	eventSubListener.onStreamOffline(global.broadcasterUser.id, (event) => {
 		if(!streamIsOnline) {
@@ -2472,27 +2571,27 @@ function startEventSub() {
 		}
 
 		streamIsOnline = false;
-		try { onTwitchStreamOffline(event) } catch(err) { console.error(err); }
+		try { onTwitchStreamOffline(event) } catch(err) { global.logException(err); }
 	});
 
 	eventSubListener.onChannelRewardUpdate(global.broadcasterUser.id, (redeem) => {
-		global.redeemList.getByID(redeem.id).update(redeem, false);
+		try { global.redeemList.getByID(redeem.id).update(redeem, false); } catch(err) { global.logException(err); }
 	});
 
 	eventSubListener.onChannelRedemptionAdd(global.broadcasterUser.id, (event) => {
-		try { onChannelRewardRedemption(event); } catch(err) { console.error(err); }
+		try { onChannelRewardRedemption(event); } catch(err) { global.logException(err); }
 	});
 
 	eventSubListener.onChannelShoutoutCreate(global.broadcasterUser.id, global.broadcasterUser.id, (event) => {
-		try { onChannelShoutedOut(event); } catch(err) { console.error(err); }
+		try { onChannelShoutedOut(event); } catch(err) { global.logException(err); }
 	});
 
 	eventSubListener.onChannelRaidFrom(global.broadcasterUser.id, (event) => {
-		try { onOutgoingRaid(event); } catch(err) { console.error(err); }
+		try { onOutgoingRaid(event); } catch(err) { global.logException(err); }
 	});
 
 	eventSubListener.onChannelUpdate(global.broadcasterUser.id, (event) => {
-		try { onChannelMetadataUpdate(event); } catch(err) { console.error(err); }
+		try { onChannelMetadataUpdate(event); } catch(err) { global.logException(err); }
 	});
 
 	eventSubListener.start();
@@ -2512,23 +2611,28 @@ async function adTimer() {
 
 	adTimerTimeout = setTimeout(adTimer, global.settings.twitch.adTimerRefreshInterval * 1000);
 
-	const adSchedule = await global.apiClient.channels.getAdSchedule(global.broadcasterUser.id);
-	if(adSchedule == null) {
-		// no ads or stream is not live
-		return;
-	}
+	try {
+		const adSchedule = await global.apiClient.channels.getAdSchedule(global.broadcasterUser.id);
+		if(adSchedule == null) {
+			// no ads or stream is not live
+			return;
+		}
 
-	if(adSchedule.nextAdDate == null) {
-		// no ads or stream is not live
-		return;
-	}
+		if(adSchedule.nextAdDate == null) {
+			// no ads or stream is not live
+			return;
+		}
 
-	if(adSchedule.nextAdDate.getTime() < Date.now()) {
-		// or twitch is just fucking broken half the time who cares
-		return;
-	}
+		if(adSchedule.nextAdDate.getTime() < Date.now()) {
+			// or twitch is just fucking broken half the time who cares
+			return;
+		}
 
-	onAdTimerRefreshed(adSchedule.nextAdDate.getTime());
+		onAdTimerRefreshed(adSchedule.nextAdDate.getTime());
+	} catch(err) {
+		global.log("SYSTEM", "Ad timer events failed", false, ['yellowBright']);
+		global.logException(err);
+	}
 }
 
 var previousMinutesLeft = -1;
@@ -2561,7 +2665,8 @@ async function initOBS() {
 			await obs.connect(address);
 		}
 	} catch(err) {
-		// ignored
+		global.log("OBS", "Could not initialize connection to OBS", false, ['redBright']);
+		global.logException(err);
 	}
 }
 
@@ -2754,17 +2859,22 @@ async function swapCategoryInSRXD() {
 		return;
 	}
 
-	let channelInfo = await global.apiClient.channels.getChannelInfoById(global.broadcasterUser.id);
-	let wantedGameName = channelInfo.gameName == "Spin Rhythm XD" ? "Games + Demos" : "Spin Rhythm XD";
+	try {
+		let channelInfo = await global.apiClient.channels.getChannelInfoById(global.broadcasterUser.id);
+		let wantedGameName = channelInfo.gameName == "Spin Rhythm XD" ? "Games + Demos" : "Spin Rhythm XD";
 
-	let gameInfo = await global.apiClient.games.getGameByName(wantedGameName);
-	if(gameInfo == null) {
-		return;
+		let gameInfo = await global.apiClient.games.getGameByName(wantedGameName);
+		if(gameInfo == null) {
+			return;
+		}
+
+		await global.apiClient.channels.updateChannelInfo(global.broadcasterUser.id, {
+			gameId: gameInfo.id
+		});
+	} catch(err) {
+		global.log("TIMERS", "Could not swap channel categories", false, ['yellowBright']);
+		global.logException(err);
 	}
-
-	await global.apiClient.channels.updateChannelInfo(global.broadcasterUser.id, {
-		gameId: gameInfo.id
-	});
 }
 
 var obsBitrateInterval;
@@ -2774,6 +2884,9 @@ var obsDroppedFramesHistory = [];
 
 async function getInfoToDetermineOBSStatus() {
 	const data = await callOBS('GetStreamStatus');
+	if(!data) {
+		return;
+	}
 	
 	obsBytesSentData[0] = obsBytesSentData[1];
 	obsBytesSentData[1] = data.outputBytes;
@@ -2806,7 +2919,7 @@ function initVNyanSocket() {
 // ====== WEBHOOKS ======
 
 async function postToWebhook(which, data) {
-	await axios.post(global.settings.webhooks[which], data).catch((err) => { console.error(err); });
+	await axios.post(global.settings.webhooks[which], data).catch((err) => { global.logException(err); });
 	global.log("WEBHOOK", `Posted to the ${which} webhook`);
 }
 

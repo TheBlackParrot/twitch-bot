@@ -61,9 +61,14 @@ class ChannelRedeem {
 			return;
 		}
 
-		await global.apiClient.channelPoints.updateCustomReward(global.broadcasterUser.id, this.id, {
-			isEnabled: status
-		});
+		try {
+			await global.apiClient.channelPoints.updateCustomReward(global.broadcasterUser.id, this.id, {
+				isEnabled: status
+			});
+		} catch(err) {
+			global.log("REDEEM", `Could not toggle ${this.name}'s enabled state`, false, ['yellowBright']);
+			global.logException(err);
+		}
 	}
 
 	async pause(status) {
@@ -71,9 +76,14 @@ class ChannelRedeem {
 			return;
 		}
 
-		await global.apiClient.channelPoints.updateCustomReward(global.broadcasterUser.id, this.id, {
-			isPaused: status
-		});
+		try {
+			await global.apiClient.channelPoints.updateCustomReward(global.broadcasterUser.id, this.id, {
+				isPaused: status
+			});
+		} catch(err) {
+			global.log("REDEEM", `Could not toggle ${this.name}'s paused state`, false, ['yellowBright']);
+			global.logException(err);
+		}
 	}
 
 	async setCooldown(seconds) {
@@ -81,9 +91,14 @@ class ChannelRedeem {
 			return;
 		}
 
-		await global.apiClient.channelPoints.updateCustomReward(global.broadcasterUser.id, this.id, {
-			globalCooldown: seconds
-		});
+		try {
+			await global.apiClient.channelPoints.updateCustomReward(global.broadcasterUser.id, this.id, {
+				globalCooldown: seconds
+			});
+		} catch(err) {
+			global.log("REDEEM", `Could not change ${this.name}'s cooldown length`, false, ['yellowBright']);
+			global.logException(err);
+		}
 	}
 
 	update(redeemObject, silent = true) {

@@ -62,8 +62,14 @@ export class Foobar2000Volume {
 	}
 
 	initEventSource() {
-		this.events = new EventSource(`http://${global.settings.foobar.address}/api/query/updates?player=true`);
-		this.events.addEventListener('message', this.onEventMessage.bind(this));
+		try {
+			this.events = new EventSource(`http://${global.settings.foobar.address}/api/query/updates?player=true`);
+			this.events.addEventListener('message', this.onEventMessage.bind(this));
+		} catch(err) {
+			global.log("FB2KVOL", "Failed to initiate EventSource", false, ['redBright']);
+			global.logException(err);
+		}
+		
 		this.onAudibleStateChanged();
 	}
 

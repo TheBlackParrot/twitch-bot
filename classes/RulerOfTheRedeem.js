@@ -76,9 +76,17 @@ export class RulerOfTheRedeem {
 			await delay(1000);
 		}
 		
-		await global.apiClient.channelPoints.updateCustomReward(global.broadcasterUser.id, redeem.id, {
-			prompt: prompt
-		});
+		try {
+			await global.apiClient.channelPoints.updateCustomReward(global.broadcasterUser.id, redeem.id, {
+				prompt: prompt
+			});
+		} catch(err) {
+			global.log("ROTR", "Could not update prompt, trying again in 15 seconds...", false, ['redBright']);
+			global.logException(err);
+			
+			setTimeout(this.updatePrompt, 15000);
+			return;
+		}
 
 		global.log("ROTR", "Updated prompt", false, ['gray']);
 	}

@@ -18,12 +18,20 @@ export class User {
 	constructor(userId) {
 		this.userId = userId;
 
+		this.allowPersistence = true;
 		this.persistentData = {};
 		this.lastUsedCommand = {};
 
-		const persistenceFilename = `./data/persistence/${userId}.json`;
-		if(fs.existsSync(persistenceFilename)) {
-			this.persistentData = JSON.parse(fs.readFileSync(persistenceFilename));
+		try {
+			const persistenceFilename = `./data/persistence/${userId}.json`;
+			if(fs.existsSync(persistenceFilename)) {
+				this.persistentData = JSON.parse(fs.readFileSync(persistenceFilename));
+			}
+		} catch(err) {
+			this.allowPersistence = false; // prevent data loss in case this is just malformed data
+
+			global.log("USER", `Could not load persistent data for ${userId}`, false, ['redBright']);
+			global.logException(err);
 		}
 	}
 
@@ -39,9 +47,17 @@ export class User {
 		const persistenceFilename = `./data/persistence/${this.userId}.json`;
 
 		this.persistentData[key] = value;
-		fs.writeFileSync(persistenceFilename, JSON.stringify(this.persistentData));
+		if(this.allowPersistence) {
+			try {
+				fs.writeFileSync(persistenceFilename, JSON.stringify(this.persistentData));
+			} catch(err) {
+				global.log("USER", `Could not save persistent data for ${this.userId}`, false, ['yellowBright']);
+				global.logException(err);
+				return;
+			}
 
-		global.log("USER", `Saved persistent data for ${this.userId}`, false, ['gray']);
+			global.log("USER", `Saved persistent data for ${this.userId}`, false, ['gray']);
+		}
 	}
 
 	usedCommand(command) {

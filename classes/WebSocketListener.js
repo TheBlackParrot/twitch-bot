@@ -78,7 +78,14 @@ export class WebSocketListener {
 
 		this.socket.on('open', () => { this.onOpen(); });
 		this.socket.on('close', () => { this.onClose(); });
-		this.socket.on('message', (data) => { this.onMessage(data); });
+		this.socket.on('message', (data) => {
+			try {
+				this.onMessage(data);
+			} catch(err) {
+				global.log("SOCKET", "Failed to trigger message events", false, ['redBright']);
+				global.logException(err);
+			}
+		});
 		this.socket.on('error', (error) => { this.onError(error); });
 	}
 }

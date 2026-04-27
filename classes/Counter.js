@@ -11,7 +11,12 @@ export class Counter {
 	}
 
 	save() {
-		fs.writeFileSync(`./data/counters.json`, JSON.stringify(this.persistentData));
+		try {
+			fs.writeFileSync(`./data/counters.json`, JSON.stringify(this.persistentData));
+		} catch(err) {
+			global.log("COUNTER", `Could not save persistent counter data`, false, ['redBright']);
+			global.logException(err);
+		}
 	}
 
 	increment(key, value) {
