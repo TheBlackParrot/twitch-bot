@@ -1760,6 +1760,13 @@ function onUserFirstSeenForSession(channel, user, isFirst) {
 	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(user)} has entered the chat${isFirst ? " for the first time." : "."}`);
 }
 
+function checkInputIsAdjacent(inputs) {
+	let diffA = Math.abs(inputs[0][0] - inputs[1][0]);
+	let diffB = Math.abs(inputs[0][1] - inputs[1][1]);
+
+	return (diffA <= 1 && diffB <= 1 && diffA != diffB);
+}
+
 function normalizeGemSwapInput(input) {
 	let parts = input.toLowerCase().split(" ");
 	if(parts.length == 1 && input.length == 4) {
@@ -1768,9 +1775,10 @@ function normalizeGemSwapInput(input) {
 	}
 
 	let isSwapValid = false;
+	let inputs = [];
 
 	if(parts.length == 2) {
-		let isSwapValid = true;
+		isSwapValid = true;
 
 		for(const position of parts) {
 			const row = position.charCodeAt(0);
@@ -1779,13 +1787,15 @@ function normalizeGemSwapInput(input) {
 			if(row < 97 || row > 104 || column < 49 || column > 56) {
 				isSwapValid = false;
 			}
+
+			inputs.push([row, column]);
 		}
 
 		if(isSwapValid) {
-			return parts.join("\t");
+			return (checkInputIsAdjacent(inputs) ? parts.join("\t") : null);
 		} else {
 			// check if it's backwards
-
+			inputs = [];
 			isSwapValid = true;
 
 			for(const position of parts) {
@@ -1793,15 +1803,19 @@ function normalizeGemSwapInput(input) {
 				const column = position.charCodeAt(0);
 
 				if(row < 97 || row > 104 || column < 49 || column > 56) {
+					console.log(row);
+					console.log(column);
 					isSwapValid = false;
 				}
+
+				inputs.push([row, column]);
 			}
 		}
 	}
 
 	// can only get to here if it's backwards
 	const reversed = parts.join("").split("").reverse().join("");
-	return (isSwapValid ? `${reversed.substr(0, 2)}\t${reversed.substr(2, 2)}` : null);
+	return (isSwapValid ? (checkInputIsAdjacent(inputs) ? `${reversed.substr(0, 2)}\t${reversed.substr(2, 2)}` : null) : null);
 }
 
 var previousMessageOwner = null;
