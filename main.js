@@ -2411,6 +2411,7 @@ const redeemFunctions = {
 		}
 
 		bejeweledLiveSocket.send(`forceswap\t${normalizedInput}`);
+		await updateRedemptionStatus(event.rewardId, event.id, true);
 	}
 };
 redeemFunctions["second"] = redeemFunctions["first"];
