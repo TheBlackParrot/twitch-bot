@@ -350,7 +350,7 @@ const bejeweledLiveFunctions = {
 	"hypercubeUsed": async function() {
 		const side = Math.floor(Math.random() * 2);
 		const part = `COOB ${hypercubeExplodeOverlayEmotes[Math.floor(Math.random() * hypercubeExplodeOverlayEmotes.length)]}`;
-		
+
 		await global.say(global.broadcasterUser.name, (side ? `NOOO ${part}` : `${part} NOOO`));
 	}
 }
@@ -1823,7 +1823,7 @@ async function onStandardMessage(channel, msgObject, message) {
 			if(isSwapValid) {
 				wasGemSwap = true;
 				//exec(`${global.settings.bot.bejeweledSwapperLocation} ${parts.join(" ")}`, { windowsHide: true });
-				bejeweledLiveSocket.send(parts.join(" "));
+				bejeweledLiveSocket.send(`swap\t${parts.join("\t")}`);
 			} else {
 				// check if it's backwards
 
@@ -1842,7 +1842,7 @@ async function onStandardMessage(channel, msgObject, message) {
 					wasGemSwap = true;
 					const reversed = parts.join("").split("").reverse().join("");
 					//exec(`${global.settings.bot.bejeweledSwapperLocation} ${reversed.substr(0, 2)} ${reversed.substr(2, 2)}`, { windowsHide: true });
-					bejeweledLiveSocket.send(`${reversed.substr(0, 2)} ${reversed.substr(2, 2)}`);
+					bejeweledLiveSocket.send(`swap\t${reversed.substr(0, 2)}\t${reversed.substr(2, 2)}`);
 				}
 			}
 		}
