@@ -339,11 +339,19 @@ function initBejeweledLiveSocket() {
 
 const pointLeftEmotes = ["POINT", "EYYY"];
 const pointRightEmotes = ["POINTING", "SoyPoint", "GetALoadOfThisGuy"];
+const hypercubeExplodeOverlayEmotes = ["MISSLE0", "MISSLESTRIKE0", "TNT0", "Not0", "ANTI0", "Erase0", "Denied0"]
 
 const bejeweledLiveFunctions = {
 	"hypercubeCreated": async function() {
 		const side = Math.floor(Math.random() * 2);
 		await global.say(global.broadcasterUser.name, (side ? `${pointLeftEmotes[Math.floor(Math.random() * pointLeftEmotes.length)]} COOB` : `COOB ${pointRightEmotes[Math.floor(Math.random() * pointRightEmotes.length)]}`));
+	},
+
+	"hypercubeUsed": async function() {
+		const side = Math.floor(Math.random() * 2);
+		const part = `COOB ${hypercubeExplodeOverlayEmotes[Math.floor(Math.random() * hypercubeExplodeOverlayEmotes.length)]}`;
+		
+		await global.say(global.broadcasterUser.name, (side ? `NOOO ${part}` : `${part} NOOO`));
 	}
 }
 
