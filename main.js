@@ -2991,6 +2991,12 @@ const byeEmotes = ["Sleepo", "sleepofdog", "VirtualLeave"];
 const byeMessages = ["alright bye", "i'm out bye", "bye bye", "ok bye", "cya later", "(i leave the room)", "goodbye chat"];
 
 process.on('SIGINT', async function() {
+	try {
+		bejeweledLiveSocket.send(`close`);
+	} catch {
+		// ignored
+	}
+	
 	await say(global.broadcasterUser.name, `${byeMessages[Math.floor(Math.random() * byeMessages.length)]} ${byeEmotes[Math.floor(Math.random() * byeEmotes.length)]}`);
 	//await foobar2000.saveQueue();
 	process.exit();
