@@ -1760,6 +1760,50 @@ function onUserFirstSeenForSession(channel, user, isFirst) {
 	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(user)} has entered the chat${isFirst ? " for the first time." : "."}`);
 }
 
+function normalizeGemSwapInput(input) {
+	let parts = input.toLowerCase().split(" ");
+	if(parts.length == 1 && input.length == 4) {
+		parts[0] = input.toLowerCase().substr(0, 2);
+		parts[1] = input.toLowerCase().substr(2, 2);
+	}
+
+	let isSwapValid = false;
+
+	if(parts.length == 2) {
+		let isSwapValid = true;
+
+		for(const position of parts) {
+			const row = position.charCodeAt(0);
+			const column = position.charCodeAt(1);
+
+			if(row < 97 || row > 104 || column < 49 || column > 56) {
+				isSwapValid = false;
+			}
+		}
+
+		if(isSwapValid) {
+			return parts.join("\t");
+		} else {
+			// check if it's backwards
+
+			isSwapValid = true;
+
+			for(const position of parts) {
+				const row = position.charCodeAt(1);
+				const column = position.charCodeAt(0);
+
+				if(row < 97 || row > 104 || column < 49 || column > 56) {
+					isSwapValid = false;
+				}
+			}
+		}
+	}
+
+	// can only get to here if it's backwards
+	const reversed = parts.join("").split("").reverse().join("");
+	return (isSwapValid ? `${reversed.substr(0, 2)}\t${reversed.substr(2, 2)}` : null);
+}
+
 var previousMessageOwner = null;
 var clearPreviousMessageOwnerTimeout;
 async function onStandardMessage(channel, msgObject, message) {
@@ -1813,49 +1857,11 @@ async function onStandardMessage(channel, msgObject, message) {
 
 	let wasGemSwap = false;
 	if(allowBejeweled) {
-		let parts = filtered.toLowerCase().split(" ");
-		if(parts.length == 1 && filtered.length == 4) {
-			parts[0] = filtered.toLowerCase().substr(0, 2);
-			parts[1] = filtered.toLowerCase().substr(2, 2);
-		}
+		const normalizedInput = normalizeGemSwapInput(filtered);
 
-		if(parts.length == 2) {
-			let isSwapValid = true;
-
-			for(const position of parts) {
-				const row = position.charCodeAt(0);
-				const column = position.charCodeAt(1);
-
-				if(row < 97 || row > 104 || column < 49 || column > 56) {
-					isSwapValid = false;
-				}
-			}
-
-			if(isSwapValid) {
-				wasGemSwap = true;
-				//exec(`${global.settings.bot.bejeweledSwapperLocation} ${parts.join(" ")}`, { windowsHide: true });
-				bejeweledLiveSocket.send(`swap\t${parts.join("\t")}`);
-			} else {
-				// check if it's backwards
-
-				isSwapValid = true;
-
-				for(const position of parts) {
-					const row = position.charCodeAt(1);
-					const column = position.charCodeAt(0);
-
-					if(row < 97 || row > 104 || column < 49 || column > 56) {
-						isSwapValid = false;
-					}
-				}
-
-				if(isSwapValid) {
-					wasGemSwap = true;
-					const reversed = parts.join("").split("").reverse().join("");
-					//exec(`${global.settings.bot.bejeweledSwapperLocation} ${reversed.substr(0, 2)} ${reversed.substr(2, 2)}`, { windowsHide: true });
-					bejeweledLiveSocket.send(`swap\t${reversed.substr(0, 2)}\t${reversed.substr(2, 2)}`);
-				}
-			}
+		if(normalizedInput) {
+			wasGemSwap = true;
+			bejeweledLiveSocket.send(`swap\t${normalizedInput}`);
 		}
 	}
 
@@ -2376,9 +2382,21 @@ const redeemFunctions = {
 		await say(global.broadcasterUser.name, "🥤 Remember to get something to drink! This goes for everyone! Sip sip! 🥤");
 		await updateRedemptionStatus(event.rewardId, event.id, false);
 	},
+
 	"Diffuse Bejeweled Gem": async function(event) {
 		awaitingDiffusalEvent = event;
 		bejeweledLiveSocket.send(`diffuse\t${event.input}`);
+	},
+
+	"Force Bejeweled Swap": async function(event) {
+		const normalizedInput = normalizeGemSwapInput(event.input);
+		if(!normalizedInput) {
+			await say(global.broadcasterUser.name, `⚠️ This is not a valid input, swaps must still be adjacent!`);
+			await updateRedemptionStatus(event.rewardId, event.id, false);
+			return;
+		}
+
+		bejeweledLiveSocket.send(`forceswap\t${normalizedInput}`);
 	}
 };
 redeemFunctions["second"] = redeemFunctions["first"];

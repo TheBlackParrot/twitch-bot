@@ -248,5 +248,17 @@
 		"tags": [
 			"bejeweled"
 		]
+	},
+
+	"Force Bejeweled Swap": {
+		"description": "Allows any valid swap input, even if a match is not created",
+		"cost": 2000,
+		"color": "66BBFF",
+		"autoFulfill": false,
+		"userInputRequired": true,
+		"globalCooldown": 10,
+		"tags": [
+			"bejeweled"
+		]
 	}
 }
