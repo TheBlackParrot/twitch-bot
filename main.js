@@ -2768,6 +2768,10 @@ async function onOBSSceneChanged(sceneObject) {
 
 	allowBejeweled = (currentOBSSceneName === "Ad Wall");
 
+	for(const redeem of global.redeemList.getTaggedRedeems("bejeweled")) {
+		await redeem.pause(allowBejeweled);
+	}
+
 	if(global.initialCategory == "Spin Rhythm XD") {
 		for(const redeem of global.redeemList.getTaggedRedeems("vnyan")) {
 			if(redeem.name == "Throw stuff at me") {
