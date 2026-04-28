@@ -236,5 +236,17 @@
 		"color": "2a2da1",
 		"autoFulfill": true,
 		"userInputRequired": true
+	},
+
+	"Diffuse Bejeweled Gem": {
+		"description": "Diffuses Flame and Star gems, returning them back to normal gems",
+		"cost": 500,
+		"color": "66BBFF",
+		"autoFulfill": false,
+		"userInputRequired": true,
+		"globalCooldown": 10,
+		"tags": [
+			"bejeweled"
+		]
 	}
 }

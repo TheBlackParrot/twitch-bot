@@ -352,6 +352,17 @@ const bejeweledLiveFunctions = {
 		const part = `COOB ${hypercubeExplodeOverlayEmotes[Math.floor(Math.random() * hypercubeExplodeOverlayEmotes.length)]}`;
 
 		await global.say(global.broadcasterUser.name, (side ? `NOOO ${part}` : `${part} NOOO`));
+	},
+
+	"powerupDiffused": async function(success) {
+		if(!awaitingDiffusalEvent) {
+			return;
+		}
+		
+		const position = (`${awaitingDiffusalEvent.input[0]}${awaitingDiffusalEvent.input[1]}`).toUpperCase();
+
+		await global.say(global.broadcasterUser.name, (success ? `🆗 Successfully diffused ${position}` : `⚠️ Could not diffuse ${position}, your points were refunded`));
+		await updateRedemptionStatus(awaitingDiffusalEvent.rewardId, awaitingDiffusalEvent.id, success);
 	}
 }
 
@@ -2361,13 +2372,19 @@ const redeemFunctions = {
 		await say(global.broadcasterUser.name, `Current Coin Flip odds: ${readableOdds}% heads, ${100 - readableOdds}% tails EZ`);
 	},
 
-	"Hydrate": async function(event) {
+	"Hydrate!": async function(event) {
 		await say(global.broadcasterUser.name, "🥤 Remember to get something to drink! This goes for everyone! Sip sip! 🥤");
 		await updateRedemptionStatus(event.rewardId, event.id, false);
+	},
+	"Diffuse Bejeweled Gem": async function(event) {
+		awaitingDiffusalEvent = event;
+		bejeweledLiveSocket.send(`diffuse\t${event.input}`);
 	}
 };
 redeemFunctions["second"] = redeemFunctions["first"];
 redeemFunctions["third"] = redeemFunctions["first"];
+
+var awaitingDiffusalEvent;
 
 // ====== EVENTSUB STUFF ======
 
