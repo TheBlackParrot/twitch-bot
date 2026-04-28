@@ -6,6 +6,7 @@ export class Counter {
 
 		const persistenceFilename = `./data/counters.json`;
 		if(fs.existsSync(persistenceFilename)) {
+			// don't add a try/catch here, if this is malformed something is Very Very Wrong
 			this.persistentData = JSON.parse(fs.readFileSync(persistenceFilename));
 		}
 	}

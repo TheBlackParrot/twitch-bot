@@ -85,6 +85,7 @@ import { EmoteList, SevenTV, BetterTTV, FrankerFaceZ } from "./classes/Emote.js"
 import { ChannelRedeemList } from "./classes/ChannelRedeem.js";
 import { RulerOfTheRedeem } from "./classes/RulerOfTheRedeem.js";
 import { Counter } from "./classes/Counter.js";
+import { PersistentData } from "./classes/PersistentData.js";
 import { SoundServer } from "./classes/SoundServer.js";
 import { CreditRaffle } from "./classes/CreditRaffle.js";
 //import { Foobar2000 } from "./classes/Foobar2000.js";
@@ -120,7 +121,9 @@ const users = new UserList();
 const commandList = new CommandList();
 global.redeemList = new ChannelRedeemList();
 global.broadcasterUser = null;
+global.streamData = null;
 global.counter = new Counter();
+global.hasSeen = null;
 global.remoteSound = new SoundServer();
 const creditRaffle = new CreditRaffle();
 //const foobar2000 = new Foobar2000("safe");
@@ -1756,6 +1759,12 @@ const commandListener = chatClient.onMessage(messageHandler);
 function onUserFirstSeenForSession(channel, user, isFirst) {
 	const userData = users.getUser(user.userId);
 
+	if(global.hasSeen.get(user.userId)) {
+		return;
+	}
+
+	global.hasSeen.set(user.userId, true);
+
 	const ttsName = userData.getPersistentData("ttsName");
 	tts(global.settings.tts.voices.system, `${ttsName ? ttsName : ensureEnglishName(user)} has entered the chat${isFirst ? " for the first time." : "."}`);
 }
@@ -1935,6 +1944,20 @@ chatClient.onJoin(async (channel, user) => {
 	global.broadcasterUser = await global.apiClient.users.getUserByName(channel);
 	if(global.broadcasterUser != null) {
 		log("SYSTEM", `Got broadcaster information for ${channel}`);
+
+		global.streamData = await global.apiClient.streams.getStreamByUserId(global.broadcasterUser);
+		if(global.streamData) {
+			global.hasSeen = new PersistentData("hasSeen");
+
+			if(global.hasSeen.get("streamId") != global.streamData.id) {
+				global.hasSeen = new PersistentData("hasSeen", false);
+				global.hasSeen.set("streamId", global.streamData.id);
+			}
+		} else {
+			global.hasSeen = new PersistentData("hasSeen", false);
+			global.hasSeen.set("streamId", "NotLive");
+		}
+
 		startEventSub();
 
 		let channelInfo = await global.apiClient.channels.getChannelInfoById(global.broadcasterUser.id);
@@ -2996,7 +3019,7 @@ process.on('SIGINT', async function() {
 	} catch {
 		// ignored
 	}
-	
+
 	await say(global.broadcasterUser.name, `${byeMessages[Math.floor(Math.random() * byeMessages.length)]} ${byeEmotes[Math.floor(Math.random() * byeEmotes.length)]}`);
 	//await foobar2000.saveQueue();
 	process.exit();
