@@ -38,6 +38,31 @@
 		"droppedFramesHistoryLength": 100
 	},
 
+	"processes": {
+		"bejeweled": {
+			"path": "C:\\Users\\TheBlackParrot\\RiderProjects\\BejeweledLivePlusDecomp-MonoGame\\BejeweledLivePlus\\bin\\Release\\net6.0\\BejeweledLivePlus.exe",
+			"shell": false
+		},
+		"element": {
+			"path": "C:\\Program Files\\Kushview\\Element\\bin\\element.exe",
+			"shell": false,
+			"categoryBlacklist": ["Resonite"]
+		},
+		"foobar": {
+			"path": "C:\\Program Files\\foobar2000\\foobar2000.exe",
+			"shell": false
+		},
+		"tts": {
+			"path": "C:\\Utils\\TTSButSpecificAudioDevice\\TTSButSpecificAudioDevice.exe",
+			"shell": true
+		},
+		"vnyan": {
+			"path": "C:\\Utils\\VNyan\\NewCombinedProfile.cmd",
+			"shell": true,
+			"categoryBlacklist": ["Resonite"]
+		}
+	},
+
 	"sounds": {
 		"directory": "./data/sounds",
 		"server": {

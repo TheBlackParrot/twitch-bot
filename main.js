@@ -1,7 +1,9 @@
 import { promises as fs } from 'fs';
 import { Console } from 'node:console';
 import { styleText } from 'node:util';
-import { exec } from 'node:child_process';
+import { execFile } from 'node:child_process';
+import { getProcesses } from 'node-processlist';
+import fkill from 'fkill';
 import axios from 'axios';
 import { OBSWebSocket } from 'obs-websocket-js';
 const obs = new OBSWebSocket();
@@ -1966,6 +1968,8 @@ chatClient.onJoin(async (channel, user) => {
 		previousTitle = channelInfo.title;
 		log("SYSTEM", `Initial category is ${global.initialCategory}`);
 
+		await spawnStuff();
+
 		let allRedeems = await global.apiClient.channelPoints.getCustomRewards(global.broadcasterUser.id);
 		for(const redeem of allRedeems) {
 			global.redeemList.add(redeem);
@@ -3022,5 +3026,71 @@ process.on('SIGINT', async function() {
 
 	await say(global.broadcasterUser.name, `${byeMessages[Math.floor(Math.random() * byeMessages.length)]} ${byeEmotes[Math.floor(Math.random() * byeEmotes.length)]}`);
 	//await foobar2000.saveQueue();
+	await killStuff();
 	process.exit();
 });
+
+// ====== EXTERNAL PROCESS SPAWNING ======
+var spawnedProcesses = {};
+var processNames = Object.keys(global.settings.processes);
+
+function isProcessRunning(processList, wantedProcessName) {
+	return processList.some((processRow) => wantedProcessName === processRow.name);
+}
+
+async function killStuff() {
+	global.log("SYSTEM", `Closing stream-related processes...`, false, ['gray']);
+
+	const processes = await getProcesses();
+
+	for(let processName of processNames) {
+		const path = global.settings.processes[processName].path;
+		const parts = path.split("\\");
+		const executableFileName = parts[parts.length - 1].replaceAll("\\", "");
+
+		if(!isProcessRunning(processes, executableFileName)) {
+			global.log("SYSTEM", `${path} isn't running, obviously we can't kill it`, false, ['gray']);
+			continue;
+		}
+
+		global.log("SYSTEM", `Closing ${path}`, false, ['gray']);
+		try {
+			await fkill(executableFileName);
+		} catch {
+			// ignored
+		}
+	}
+}
+
+async function spawnStuff() {
+	global.log("SYSTEM", `Spawning stream-related processes...`);
+
+	const processes = await getProcesses();
+
+	for(let processName of processNames) {
+		const executableData = global.settings.processes[processName];
+
+		const path = executableData.path;
+		const parts = path.split("\\");
+		const executableFileName = parts[parts.length - 1].replaceAll("\\", "");
+		const executableFolder = parts.slice(0, -1).join("\\");
+
+		if(isProcessRunning(processes, executableFileName)) {
+			global.log("SYSTEM", `Not running ${path}, it's already running`, false, ['gray']);
+			continue;
+		}
+
+		if("categoryBlacklist" in executableData) {
+			if(executableData.categoryBlacklist.indexOf(global.initialCategory) !== -1) {
+				global.log("SYSTEM", `Not running ${path}, it's blacklisted for this category`, false, ['gray']);
+				continue;
+			}
+		}
+
+		global.log("SYSTEM", `Running ${path}`, false, ['gray']);
+		spawnedProcesses[processName] = execFile(`${executableData.shell ? "start " : ""}${executableData.path}`, [], {
+			cwd: executableFolder,
+			shell: executableData.shell
+		});
+	}
+}
