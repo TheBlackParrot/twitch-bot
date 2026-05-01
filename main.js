@@ -3020,12 +3020,6 @@ const byeEmotes = ["Sleepo", "sleepofdog", "VirtualLeave"];
 const byeMessages = ["alright bye", "i'm out bye", "bye bye", "ok bye", "cya later", "(i leave the room)", "goodbye chat"];
 
 process.on('SIGINT', async function() {
-	try {
-		bejeweledLiveSocket.send(`close`);
-	} catch {
-		// ignored
-	}
-
 	await say(global.broadcasterUser.name, `${byeMessages[Math.floor(Math.random() * byeMessages.length)]} ${byeEmotes[Math.floor(Math.random() * byeEmotes.length)]}`);
 	//await foobar2000.saveQueue();
 	await killStuff();
@@ -3041,7 +3035,12 @@ function isProcessRunning(processList, wantedProcessName) {
 }
 
 async function killStuff() {
-	global.log("SYSTEM", `Closing stream-related processes...`, false, ['gray']);
+	if(process.argv[2] == "skip") {
+		global.log("SYSTEM", `Not handling closing extra processes, asked to skip`, false, ['yellow']);
+		return;
+	}
+
+	global.log("SYSTEM", `Closing stream-related processes...`);
 
 	const processes = await getProcesses();
 
@@ -3065,6 +3064,11 @@ async function killStuff() {
 }
 
 async function spawnStuff() {
+	if(process.argv[2] == "skip") {
+		global.log("SYSTEM", `Not handling spawning extra processes, asked to skip`, false, ['yellow']);
+		return;
+	}
+
 	global.log("SYSTEM", `Spawning stream-related processes...`);
 
 	const processes = await getProcesses();
