@@ -2796,7 +2796,7 @@ async function onOBSSceneChanged(sceneObject) {
 	const isMenu = (currentOBSSceneName === "SRXD Menu");
 	const isGameplay = (currentOBSSceneName === "SRXD Gameplay");
 
-	allowBejeweled = (currentOBSSceneName === "Ad Wall");
+	allowBejeweled = isIntermission;
 
 	for(const redeem of global.redeemList.getTaggedRedeems("bejeweled")) {
 		await redeem.pause(!allowBejeweled);
