@@ -1690,7 +1690,7 @@ async function messageHandler(channel, userString, text, msg) {
 
 	if(seenUsers.indexOf(msg.userInfo.userName) === -1) {
 		seenUsers.push(msg.userInfo.userName);
-		onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
+		onUserFirstSeenForSession(msg.userInfo, msg.isFirst);
 	}
 
 	if(msg.isRedemption) {
@@ -1758,7 +1758,7 @@ async function messageHandler(channel, userString, text, msg) {
 }
 const commandListener = chatClient.onMessage(messageHandler);
 
-function onUserFirstSeenForSession(channel, user, isFirst) {
+function onUserFirstSeenForSession(user, isFirst = false) {
 	const userData = users.getUser(user.userId);
 
 	if(global.hasSeen.get(user.userId)) {
@@ -2086,7 +2086,7 @@ chatClient.onSub((channel, user, subInfo, msg) => {
 	try {
 		if(seenUsers.indexOf(msg.userInfo.userName) === -1) {
 			seenUsers.push(msg.userInfo.userName);
-			onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
+			onUserFirstSeenForSession(msg.userInfo, msg.isFirst);
 		}
 
 		const userData = users.getUser(subInfo.userId);
@@ -2106,7 +2106,7 @@ chatClient.onResub((channel, user, subInfo, msg) => {
 	try {
 		if(seenUsers.indexOf(msg.userInfo.userName) === -1) {
 			seenUsers.push(msg.userInfo.userName);
-			onUserFirstSeenForSession(channel, msg.userInfo, msg.isFirst);
+			onUserFirstSeenForSession(msg.userInfo, msg.isFirst);
 		}
 
 		const userData = users.getUser(subInfo.userId);
@@ -2472,6 +2472,8 @@ async function onChannelRewardRedemption(event) {
 	const redeem = global.redeemList.getByID(event.rewardId);
 
 	log("EVENTSUB", `Reward redeemed: ${redeem == null ? "<unknown>" : redeem.name} (${event.rewardId})`, false, ['whiteBright']);
+
+	onUserFirstSeenForSession(event);
 
 	if(redeem.name in redeemFunctions) {
 		try {
