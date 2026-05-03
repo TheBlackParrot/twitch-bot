@@ -337,6 +337,8 @@ function handleSpinStatusMessage(data) {
 // ====== BEJEWELED ======
 
 var bejeweledLiveSocket;
+var bejeweledCreditForMove = {};
+var bejeweledScores = new PersistentData("bejeweledScores");
 
 function initBejeweledLiveSocket() {
 	bejeweledLiveSocket = new WebSocketListener('ws://127.0.0.1:6677/', { "onMessage": handleBejeweledLiveMessage });
@@ -368,6 +370,14 @@ const bejeweledLiveFunctions = {
 
 		await global.say(global.broadcasterUser.name, (success ? `🆗 Successfully diffused ${position}` : `⚠️ Could not diffuse ${position}, your points were refunded`));
 		await updateRedemptionStatus(awaitingDiffusalEvent.rewardId, awaitingDiffusalEvent.id, success);
+	},
+
+	"credit": function(data) {
+		bejeweledCreditForMove[data.moveId] = data.userId;
+	},
+
+	"movePoints": function(data) {
+		bejeweledScores.increment(bejeweledCreditForMove[data.moveId], data.points);
 	}
 }
 

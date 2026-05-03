@@ -21,6 +21,8 @@ export class PersistentData {
 		} else if(!loadPreviousData) {
 			this.allowSaving = true;
 			global.log("PERSISTENCE", `Skipping loading persistent data (${this.name})`);
+		} else {
+			this.allowSaving = true;
 		}
 	}
 
@@ -33,7 +35,8 @@ export class PersistentData {
 			clearTimeout(this.savingTimeout);
 		}
 
-		this.savingTimeout = setTimeout(this.actuallySave, 100);
+		console.log(this.actuallySave);
+		this.savingTimeout = setTimeout(this.actuallySave.bind(this), 100);
 	}
 
 	actuallySave() {
@@ -57,8 +60,12 @@ export class PersistentData {
 	}
 
 	increment(key, amount) {
-		this.data[key] += value;
-		global.log("PERSISTENCE", `Added ${value} to ${key} in ${this.name}`, false, ['gray']);
+		if(!(key in this.data)) {
+			this.data[key] = 0;
+		}
+
+		this.data[key] += amount;
+		global.log("PERSISTENCE", `Added ${amount} to ${key} in ${this.name}`, false, ['gray']);
 
 		this.save();
 	}
