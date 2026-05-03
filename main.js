@@ -1886,7 +1886,7 @@ async function onStandardMessage(channel, msgObject, message) {
 
 		if(normalizedInput) {
 			wasGemSwap = true;
-			bejeweledLiveSocket.send(`swap\t${normalizedInput}`);
+			bejeweledLiveSocket.send(`swap\t${normalizedInput}\t${user.userId}`);
 		}
 	}
 
@@ -2437,7 +2437,7 @@ const redeemFunctions = {
 			return;
 		}
 
-		bejeweledLiveSocket.send(`forceswap\t${normalizedInput}`);
+		bejeweledLiveSocket.send(`forceswap\t${normalizedInput}\t${event.userId}`);
 		await updateRedemptionStatus(event.rewardId, event.id, true);
 	}
 };
