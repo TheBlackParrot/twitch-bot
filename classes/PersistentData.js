@@ -5,6 +5,7 @@ export class PersistentData {
 		this.name = name;
 		this.data = {};
 		this.allowSaving = false;
+		this.savingTimeout = null;
 
 		const persistenceFilename = `./data/${this.name}.json`;
 
@@ -28,6 +29,18 @@ export class PersistentData {
 			return;
 		}
 
+		if(this.savingTimeout) {
+			clearTimeout(this.savingTimeout);
+		}
+
+		this.savingTimeout = setTimeout(this.actuallySave, 100);
+	}
+
+	actuallySave() {
+		if(!this.allowSaving) {
+			return;
+		}
+
 		try {
 			fs.writeFileSync(`./data/${this.name}.json`, JSON.stringify(this.data));
 		} catch(err) {
@@ -39,6 +52,13 @@ export class PersistentData {
 	set(key, value) {
 		this.data[key] = value;
 		global.log("PERSISTENCE", `Set ${key} to ${value} in ${this.name}`, false, ['gray']);
+
+		this.save();
+	}
+
+	increment(key, amount) {
+		this.data[key] += value;
+		global.log("PERSISTENCE", `Added ${value} to ${key} in ${this.name}`, false, ['gray']);
 
 		this.save();
 	}
