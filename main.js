@@ -2870,6 +2870,9 @@ async function onOBSConnectionOpened() {
 	const sceneObject = await callOBS('GetCurrentProgramScene');
 	currentOBSSceneName = sceneObject.sceneName;
 
+	const isIntermission = (currentOBSSceneName === "Ad Wall" || currentOBSSceneName === "Starting Soon");
+	allowBejeweled = isIntermission;
+
 	await foobar2000volume.onAudibleStateChanged();
 }
 
