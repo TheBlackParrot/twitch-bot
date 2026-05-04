@@ -1873,9 +1873,12 @@ function onUserFirstSeenForSession(user, isFirst = false) {
 		return;
 	}
 
+	const displayName = "displayName" in user ? user.displayName : user.userDisplayName;
+	const userName = "name" in user ? user.name : user.userName;
+
 	global.usernameCache.set(user.userId, {
-		username: user.userName,
-		displayName: user.displayName
+		username: userName,
+		displayName: displayName
 	});
 
 	global.hasSeen.set(user.userId, true);
