@@ -478,6 +478,7 @@ const bejeweledLiveFunctions = {
 		const out = {
 			event: "incrementScore",
 			data: {
+				moveId: data.moveId,
 				userId: userId,
 				names: names,
 				points: data.points
