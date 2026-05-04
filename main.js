@@ -83,6 +83,7 @@ global.setOBSMusicBarState = async function (state) {
 import { UserList } from "./classes/User.js";
 import { CommandList, RegexCommand } from "./classes/Command.js";
 import { WebSocketListener } from "./classes/WebSocketListener.js";
+import { WebSocketServer } from "./classes/WebSocketServer.js";
 import { EmoteList, SevenTV, BetterTTV, FrankerFaceZ } from "./classes/Emote.js";
 import { ChannelRedeemList } from "./classes/ChannelRedeem.js";
 import { RulerOfTheRedeem } from "./classes/RulerOfTheRedeem.js";
@@ -130,6 +131,10 @@ global.remoteSound = new SoundServer();
 const creditRaffle = new CreditRaffle();
 //const foobar2000 = new Foobar2000("safe");
 const foobar2000volume = new Foobar2000Volume();
+global.socketServer = new WebSocketServer({
+	"onMessage": handleBotSocketMessage
+});
+global.usernameCache = new PersistentData("usernameCache");
 
 global.apiClient = new ApiClient({
 	authProvider
@@ -213,6 +218,67 @@ async function refreshHandler(userId, newTokenData) {
 authProvider.onRefresh(refreshHandler);
 await authProvider.addUserForToken(botTokenData, ['chat', 'user']);
 await authProvider.addUserForToken(streamerTokenData, ['channel']);
+
+// ====== BOT WEBSOCKET ======
+
+const botSocketFunctions = {
+	"getBejeweledScores": function() {
+		let scores = {};
+
+		for(const userId in bejeweledScores.data) {
+			let names = usernameCache.get(userId);
+			if(typeof names === "undefined") {
+				names = {
+					username: `unknown_twitch${userId}`,
+					displayName: `Twitch ID ${userId}`
+				};
+			}
+
+			scores[userId] = {
+				names: names,
+				points: bejeweledScores.data[userId]
+			};
+		}
+
+		const out = {
+			event: "bejeweledScores",
+			data: scores
+		};
+
+		global.socketServer.send(JSON.stringify(out));
+	}
+}
+
+async function handleBotSocketMessage(data) {
+	try {
+		data = JSON.parse(data.toString());
+	} catch(err) {
+		global.logException(err);
+		return;
+	}
+
+	while(!global.broadcasterUser) {
+		await delay(500);
+	}
+
+	if(!("action" in data)) {
+		return;
+	}
+
+	if(data.action in botSocketFunctions) {
+		try {
+			if("data" in data) {
+				botSocketFunctions[data.action](data.data);
+			} else {
+				botSocketFunctions[data.action]();
+			}
+		} catch(err) {
+			global.logException(err);
+		}
+	} else {
+		global.log("SERVER", `Unknown action "${data.action}"`);
+	}
+}
 
 // ====== SRXD ======
 
@@ -377,7 +443,26 @@ const bejeweledLiveFunctions = {
 	},
 
 	"movePoints": function(data) {
-		bejeweledScores.increment(bejeweledCreditForMove[data.moveId], data.points);
+		const userId = bejeweledCreditForMove[data.moveId];
+		let names = usernameCache.get(userId);
+		if(typeof names === "undefined") {
+			names = {
+				username: `unknown_twitch${userId}`,
+				displayName: `Twitch ID ${userId}`
+			};
+		}
+
+		bejeweledScores.increment(userId, data.points);
+		
+		const out = {
+			event: "incrementScore",
+			data: {
+				userId: userId,
+				names: names,
+				points: data.points
+			}
+		};
+		global.socketServer.send(JSON.stringify(out));
 	}
 }
 
@@ -1774,6 +1859,11 @@ function onUserFirstSeenForSession(user, isFirst = false) {
 	if(global.hasSeen.get(user.userId)) {
 		return;
 	}
+
+	global.usernameCache.set(user.userId, {
+		username: user.userName,
+		displayName: user.displayName
+	});
 
 	global.hasSeen.set(user.userId, true);
 

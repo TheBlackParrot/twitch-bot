@@ -35,7 +35,6 @@ export class PersistentData {
 			clearTimeout(this.savingTimeout);
 		}
 
-		console.log(this.actuallySave);
 		this.savingTimeout = setTimeout(this.actuallySave.bind(this), 100);
 	}
 
