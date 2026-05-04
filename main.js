@@ -405,6 +405,7 @@ function handleSpinStatusMessage(data) {
 var bejeweledLiveSocket;
 var bejeweledCreditForMove = {};
 var bejeweledScores = new PersistentData("bejeweledScores");
+var lastBejeweledCredit;
 
 function initBejeweledLiveSocket() {
 	bejeweledLiveSocket = new WebSocketListener('ws://127.0.0.1:6677/', { "onMessage": handleBejeweledLiveMessage });
@@ -412,7 +413,7 @@ function initBejeweledLiveSocket() {
 
 const pointLeftEmotes = ["POINT", "EYYY"];
 const pointRightEmotes = ["POINTING", "SoyPoint", "GetALoadOfThisGuy"];
-const hypercubeExplodeOverlayEmotes = ["MISSLE0", "MISSLESTRIKE0", "TNT0", "Not0", "ANTI0", "Erase0", "Denied0"]
+const hypercubeExplodeOverlayEmotes = ["MISSLE0", "MISSLESTRIKE0", "TNT0", "Not0", "ANTI0", "Erase0", "Denied0"];
 
 const bejeweledLiveFunctions = {
 	"hypercubeCreated": async function() {
@@ -442,8 +443,20 @@ const bejeweledLiveFunctions = {
 		bejeweledCreditForMove[data.moveId] = data.userId;
 	},
 
-	"movePoints": function(data) {
-		const userId = bejeweledCreditForMove[data.moveId];
+	"movePoints": async function(data) {
+		let tries = 0;
+		while(!(data.moveId in bejeweledCreditForMove) && tries < 10) {
+			await delay(100);
+			tries++;
+		}
+
+		let userId = bejeweledCreditForMove[data.moveId];
+		if(typeof userId === "undefined") {
+			userId = lastBejeweledCredit;
+		} else {
+			lastBejeweledCredit = userId;
+		}
+
 		let names = usernameCache.get(userId);
 		if(typeof names === "undefined") {
 			names = {
