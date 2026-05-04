@@ -415,6 +415,14 @@ const pointLeftEmotes = ["POINT", "EYYY"];
 const pointRightEmotes = ["POINTING", "SoyPoint", "GetALoadOfThisGuy"];
 const hypercubeExplodeOverlayEmotes = ["MISSLE0", "MISSLESTRIKE0", "TNT0", "Not0", "ANTI0", "Erase0", "Denied0"];
 
+async function setBejeweledAllowed(state) {
+	allowBejeweled = state;
+
+	for(const redeem of global.redeemList.getTaggedRedeems("bejeweled")) {
+		await redeem.pause(!allowBejeweled);
+	}
+}
+
 const bejeweledLiveFunctions = {
 	"hypercubeCreated": async function() {
 		const side = Math.floor(Math.random() * 2);
@@ -1480,7 +1488,7 @@ commandList.addTrigger("title", async(channel, args, msg, user) => {
 
 // --- !toggleswapping ---
 commandList.addTrigger("toggleswapping", async(channel, args, msg, user) => {
-	allowBejeweled = !allowBejeweled;
+	setBejeweledAllowed(!allowBejeweled);
 	await reply(channel, msg, `Gem swapping is now ${allowBejeweled ? "enabled SkeletonPls" : "disabled SkeletonPause"}`);
 }, {
 	aliases: ["togglegemswapping"],
@@ -2887,7 +2895,7 @@ async function onOBSConnectionOpened() {
 	currentOBSSceneName = sceneObject.sceneName;
 
 	const isIntermission = (currentOBSSceneName === "Ad Wall" || currentOBSSceneName === "Starting Soon");
-	allowBejeweled = isIntermission;
+	setBejeweledAllowed(isIntermission);
 
 	await foobar2000volume.onAudibleStateChanged();
 }
@@ -2915,11 +2923,7 @@ async function onOBSSceneChanged(sceneObject) {
 	const isMenu = (currentOBSSceneName === "SRXD Menu");
 	const isGameplay = (currentOBSSceneName === "SRXD Gameplay");
 
-	allowBejeweled = isIntermission;
-
-	for(const redeem of global.redeemList.getTaggedRedeems("bejeweled")) {
-		await redeem.pause(!allowBejeweled);
-	}
+	setBejeweledAllowed(isIntermission);
 
 	if(global.initialCategory == "Spin Rhythm XD") {
 		for(const redeem of global.redeemList.getTaggedRedeems("vnyan")) {
