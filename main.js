@@ -146,7 +146,12 @@ var allowBejeweled = false;
 
 // ====== SYSTEM STUFF ======
 
+var allowTTS = true;
 async function tts(voice, string, rate = 0) {
+	if(!allowTTS) {
+		return;
+	}
+
 	let url = new URL('/', global.settings.tts.URL);
 	let data = {
 		voice: voice,
@@ -1493,6 +1498,15 @@ commandList.addTrigger("toggleswapping", async(channel, args, msg, user) => {
 	await reply(channel, msg, `Gem swapping is now ${allowBejeweled ? "enabled SkeletonPls" : "disabled SkeletonPause"}`);
 }, {
 	aliases: ["togglegemswapping"],
+	whitelist: ["broadcaster", "mod"]
+});
+
+// --- !toggletts ---
+commandList.addTrigger("toggletts", async(channel, args, msg, user) => {
+	allowTTS = !allowTTS;
+	await reply(channel, msg, `TTS is now ${allowTTS ? "enabled" : "disabled"}`);
+}, {
+	aliases: ["shush", "shutup", "quiet", "ttstoggle"],
 	whitelist: ["broadcaster", "mod"]
 });
 
