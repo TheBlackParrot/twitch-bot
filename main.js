@@ -418,7 +418,7 @@ function initBejeweledLiveSocket() {
 
 const pointLeftEmotes = ["POINT", "EYYY"];
 const pointRightEmotes = ["POINTING", "SoyPoint", "GetALoadOfThisGuy"];
-const hypercubeExplodeOverlayEmotes = ["MISSLE0", "MISSLESTRIKE0", "TNT0", "Not0", "ANTI0", "Erase0", "Denied0"];
+const hypercubeExplodeOverlayEmotes = ["MISSLE0", "MISSILESTRIKE0", "TNT0", "Not0", "ANTI0", "Erase0", "Denied0"];
 
 async function setBejeweledAllowed(state) {
 	allowBejeweled = state;
