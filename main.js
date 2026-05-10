@@ -1917,6 +1917,36 @@ function checkInputIsAdjacent(inputs) {
 	return (diffA <= 1 && diffB <= 1 && diffA != diffB);
 }
 
+const directionalBejeweledTransforms = {
+	"up": function(row, column) {
+		if(row <= 97 || row > 104 || column < 49 || column > 56) {
+			return "xx";
+		}
+		return String.fromCharCode(row - 1, column);
+	},
+
+	"do": function(row, column) {
+		if(row < 97 || row >= 104 || column < 49 || column > 56) {
+			return "xx";
+		}
+		return String.fromCharCode(row + 1, column);
+	},
+
+	"le": function(row, column) {
+		if(row < 97 || row > 104 || column <= 49 || column > 56) {
+			return "xx";
+		}
+		return String.fromCharCode(row, column - 1);
+	},
+
+	"ri": function(row, column) {
+		if(row < 97 || row > 104 || column < 49 || column >= 56) {
+			return "xx";
+		}
+		return String.fromCharCode(row, column + 1);
+	}
+};
+
 function normalizeGemSwapInput(input) {
 	let parts = input.toLowerCase().split(" ");
 	if(parts.length == 1 && input.length == 4) {
@@ -1929,6 +1959,15 @@ function normalizeGemSwapInput(input) {
 
 	if(parts.length == 2) {
 		isSwapValid = true;
+
+		// allow "up", "down", "left", "right" inputs as second input and parse them normally aftering figuring out the move
+		const directionalTest = parts[1].substr(0, 2);
+		if(directionalTest in directionalBejeweledTransforms) {
+			const row = parts[0].charCodeAt(0);
+			const column = parts[0].charCodeAt(1);
+
+			parts[1] = directionalBejeweledTransforms[directionalTest](row, column);
+		}
 
 		for(const position of parts) {
 			const row = position.charCodeAt(0);
@@ -1953,8 +1992,6 @@ function normalizeGemSwapInput(input) {
 				const column = position.charCodeAt(0);
 
 				if(row < 97 || row > 104 || column < 49 || column > 56) {
-					console.log(row);
-					console.log(column);
 					isSwapValid = false;
 				}
 
