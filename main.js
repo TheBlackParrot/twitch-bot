@@ -1918,28 +1918,28 @@ function checkInputIsAdjacent(inputs) {
 }
 
 const directionalBejeweledTransforms = {
-	"up": function(row, column) {
+	"u": function(row, column) {
 		if(row <= 97 || row > 104 || column < 49 || column > 56) {
 			return "xx";
 		}
 		return String.fromCharCode(row - 1, column);
 	},
 
-	"do": function(row, column) {
+	"d": function(row, column) {
 		if(row < 97 || row >= 104 || column < 49 || column > 56) {
 			return "xx";
 		}
 		return String.fromCharCode(row + 1, column);
 	},
 
-	"le": function(row, column) {
+	"l": function(row, column) {
 		if(row < 97 || row > 104 || column <= 49 || column > 56) {
 			return "xx";
 		}
 		return String.fromCharCode(row, column - 1);
 	},
 
-	"ri": function(row, column) {
+	"r": function(row, column) {
 		if(row < 97 || row > 104 || column < 49 || column >= 56) {
 			return "xx";
 		}
@@ -1949,7 +1949,7 @@ const directionalBejeweledTransforms = {
 
 function normalizeGemSwapInput(input) {
 	let parts = input.toLowerCase().split(" ");
-	if(parts.length == 1 && input.length == 4) {
+	if(parts.length == 1 && input.length >= 3) {
 		parts[0] = input.toLowerCase().substr(0, 2);
 		parts[1] = input.toLowerCase().substr(2, 2);
 	}
@@ -1961,12 +1961,17 @@ function normalizeGemSwapInput(input) {
 		isSwapValid = true;
 
 		// allow "up", "down", "left", "right" inputs as second input and parse them normally aftering figuring out the move
-		const directionalTest = parts[1].substr(0, 2);
-		if(directionalTest in directionalBejeweledTransforms) {
-			const row = parts[0].charCodeAt(0);
-			const column = parts[0].charCodeAt(1);
+		const columnCheck = parts[1].charCodeAt(1);
 
-			parts[1] = directionalBejeweledTransforms[directionalTest](row, column);
+		// "d" is a valid row input, so we need to make sure the column isn't a number
+		if(!(columnCheck < 49 || columnCheck > 56)) {
+			const directionalTest = parts[1].substr(0, 1);
+			if(directionalTest in directionalBejeweledTransforms) {
+				const row = parts[0].charCodeAt(0);
+				const column = parts[0].charCodeAt(1);
+
+				parts[1] = directionalBejeweledTransforms[directionalTest](row, column);
+			}
 		}
 
 		for(const position of parts) {
