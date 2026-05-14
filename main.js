@@ -1730,7 +1730,7 @@ commandList.addRegex(`(audio|music)\\s.*\\s(choppy|crackly|chopping|crackling|cr
 });
 
 // funny ghost friend
-commandList.addRegex(`^(oOOo)$`, async(channel, args, msg, user) => {
+commandList.addRegex(`\\b(oOOo)`, async(channel, args, msg, user) => {
 	global.remoteSound.broadcast("ghost");
 }, {
 	caseInsensitive: false
