@@ -1964,7 +1964,7 @@ function normalizeGemSwapInput(input) {
 		const columnCheck = parts[1].charCodeAt(1);
 
 		// "d" is a valid row input, so we need to make sure the column isn't a number
-		if(!(columnCheck < 49 || columnCheck > 56)) {
+		if((columnCheck < 49 || columnCheck > 56) || isNaN(columnCheck)) {
 			const directionalTest = parts[1].substr(0, 1);
 			if(directionalTest in directionalBejeweledTransforms) {
 				const row = parts[0].charCodeAt(0);
