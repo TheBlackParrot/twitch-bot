@@ -2806,6 +2806,28 @@ async function onChannelMetadataUpdate(event) {
 	previousCategory = event.categoryName;
 }
 
+async function onChannelPollBegin(event) {
+	await say(global.broadcasterUser.name, `ALERTA ALERTA ℹ️ POLL STARTED -- "${event.title}" ℹ️ ALERTA ALERTA`);
+}
+async function onChannelPollEnd(event) {
+	const choices = event.choices.toSorted((a, b) => {
+		return a.totalVotes - b.totalVotes
+	}).reverse();
+
+	// this feels ugly
+	const winner = choices[0];
+	const alsoWinners = event.choices.filter((choice) => choice.totalVotes == winner.totalVotes && choice.id != winner.id).flatMap((choice) => choice.title);
+	const winnerText = `"${winner.title}"${(alsoWinners.length > 0 ? `, "${alsoWinners.join('", "')}"` : "")}`;
+	const totalVotes = event.choices.reduce((accumulator, choice) => accumulator + choice.totalVotes, 0);
+	const percentage = parseFloat(((winner.totalVotes / totalVotes) * 100).toFixed(2));
+
+	if(winner.totalVotes > 0) {
+		await say(global.broadcasterUser.name, `Poll "${event.title}" has ended! NOTED Winning result was ${winnerText} with ${winner.totalVotes} ${(winner.totalVotes != 1 ? "votes" : "vote")} (${percentage}% of all votes)`);
+	} else {
+		await say(global.broadcasterUser.name, `Poll "${event.title}" has ended, but no one voted! D:`);
+	}
+}
+
 const eventSubListener = new EventSubWsListener({
 	apiClient: global.apiClient
 });
@@ -2872,6 +2894,13 @@ function startEventSub() {
 
 	eventSubListener.onChannelUpdate(global.broadcasterUser.id, (event) => {
 		try { onChannelMetadataUpdate(event); } catch(err) { global.logException(err); }
+	});
+
+	eventSubListener.onChannelPollBegin(global.broadcasterUser.id, (event) => {
+		try { onChannelPollBegin(event); } catch(err) { global.logException(err); }
+	});
+	eventSubListener.onChannelPollEnd(global.broadcasterUser.id, (event) => {
+		try { onChannelPollEnd(event); } catch(err) { global.logException(err); }
 	});
 
 	eventSubListener.start();
