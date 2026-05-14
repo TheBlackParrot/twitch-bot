@@ -1918,29 +1918,41 @@ function checkInputIsAdjacent(inputs) {
 }
 
 const directionalBejeweledTransforms = {
-	"u": function(row, column) {
+	"u": function(row, column, checkBackwards = true) {
 		if(row <= 97 || row > 104 || column < 49 || column > 56) {
+			if(checkBackwards) {
+				return directionalBejeweledTransforms.u(column, row, false);
+			}
 			return "xx";
 		}
 		return String.fromCharCode(row - 1, column);
 	},
 
-	"d": function(row, column) {
+	"d": function(row, column, checkBackwards = true) {
 		if(row < 97 || row >= 104 || column < 49 || column > 56) {
+			if(checkBackwards) {
+				return directionalBejeweledTransforms.d(column, row, false);
+			}
 			return "xx";
 		}
 		return String.fromCharCode(row + 1, column);
 	},
 
-	"l": function(row, column) {
+	"l": function(row, column, checkBackwards = true) {
 		if(row < 97 || row > 104 || column <= 49 || column > 56) {
+			if(checkBackwards) {
+				return directionalBejeweledTransforms.l(column, row, false);
+			}
 			return "xx";
 		}
 		return String.fromCharCode(row, column - 1);
 	},
 
-	"r": function(row, column) {
+	"r": function(row, column, checkBackwards = true) {
 		if(row < 97 || row > 104 || column < 49 || column >= 56) {
+			if(checkBackwards) {
+				return directionalBejeweledTransforms.r(column, row, false);
+			}
 			return "xx";
 		}
 		return String.fromCharCode(row, column + 1);
