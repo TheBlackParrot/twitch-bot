@@ -920,6 +920,63 @@ commandList.addTrigger("give", async(channel, args, msg, user) => {
 	respondWithCooldownMessage: true
 });
 
+// --- !goal ---
+commandList.addTrigger("goal", async(channel, args, msg, user) => {
+	const currentDonationTotal = (global.counter.get("donations") ?? 0);
+	let currentDonationGoalIdx = 0;
+	let donationGoalTargetSum = 0;
+
+	for(let idx = 0; idx < global.settings.goals.targets.length; idx++) {
+		let goalData = global.settings.goals.targets[idx];
+		donationGoalTargetSum += goalData.target;
+
+		if(currentDonationTotal >= donationGoalTargetSum) {
+			currentDonationGoalIdx++;
+		} else {
+			break;
+		}
+	}
+
+	const currentGoalData = global.settings.goals.targets[currentDonationGoalIdx];
+	switch(args[0]) {
+		case "add":
+		case "set":
+			if(!(user.isMod || user.isBroadcaster)) {
+				return;
+			}
+
+			const value = parseFloat(args[1]);
+			if(isNaN(value)) {
+				return;
+			}
+
+			if(args[0] === "set") {
+				global.counter.set("donations", value);
+			} else {
+				global.counter.increment("donations", value);
+			}
+
+			await reply(channel, msg, `Current donation goal is now ${global.counter.get("donations").toFixed(2)} (${global.settings.goals.currency})`);
+			break;
+
+		case "all":
+			donationGoalTargetSum = 0;
+			for(let idx = 0; idx < global.settings.goals.targets.length; idx++) {
+				let goalData = global.settings.goals.targets[idx];
+				donationGoalTargetSum += goalData.target;
+			}
+
+			await reply(channel, msg, `All donation goals: ${currentDonationTotal.toFixed(2)} / ${donationGoalTargetSum.toFixed(2)} (${global.settings.goals.currency})`);
+			break;
+
+		case undefined:
+			await reply(channel, msg, `Current donation goal (${currentGoalData.description}): ${Math.abs(currentDonationTotal - (donationGoalTargetSum - currentGoalData.target)).toFixed(2)} / ${(currentGoalData.target).toFixed(2)} (${global.settings.goals.currency})`);
+			break;
+	}
+}, {
+	cooldown: 5
+});
+
 // --- !insulin ---
 commandList.addTrigger("insulin", async(channel, args, msg, user) => {
 	await say(channel, 'Insulin helps regulate blood-sugar levels throughout the day and night, a key to managing diabetes. People with type 1 diabetes (T1D) rely on insulin therapy to help manage their blood-glucose levels. While insulin therapy keeps people with T1D alive, it is not a cure, nor does it prevent the possibility of T1D’s serious side effects. Learn more: https://www.breakthrought1d.org/t1d-basics/insulin/');
