@@ -1588,6 +1588,14 @@ commandList.addTrigger("title", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+// --- !togglecategoryswapping ---
+commandList.addTrigger("togglecategoryswapping", async(channel, args, msg, user) => {
+	allowCategorySwapping = !allowCategorySwapping;
+	await reply(channel, msg, `Category swapping is now ${allowCategorySwapping ? "enabled" : "disabled"}`);
+}, {
+	whitelist: ["broadcaster", "mod"]
+});
+
 // --- !toggleswapping ---
 commandList.addTrigger("toggleswapping", async(channel, args, msg, user) => {
 	setBejeweledAllowed(!allowBejeweled);
@@ -3264,8 +3272,9 @@ function doRotatingMessage() {
 }
 
 var swapCategoryInterval;
+var allowCategorySwapping = true;
 async function swapCategoryInSRXD() {
-	if(global.initialCategory != "Spin Rhythm XD") {
+	if(global.initialCategory != "Spin Rhythm XD" || !allowCategorySwapping) {
 		return;
 	}
 
