@@ -251,6 +251,35 @@ const botSocketFunctions = {
 		};
 
 		global.socketServer.send(JSON.stringify(out));
+	},
+
+	"getGoalStatus": function() {
+		const currentDonationTotal = (global.counter.get("donations") ?? 0);
+		let currentDonationGoalIdx = 0;
+		let donationGoalTargetSum = 0;
+
+		for(let idx = 0; idx < global.settings.goals.targets.length; idx++) {
+			let goalData = global.settings.goals.targets[idx];
+			donationGoalTargetSum += goalData.target;
+
+			if(currentDonationTotal >= donationGoalTargetSum) {
+				currentDonationGoalIdx++;
+			} else {
+				break;
+			}
+		}
+
+		const currentGoalData = global.settings.goals.targets[currentDonationGoalIdx];
+
+		const out = {
+			event: "goalUpdate",
+			data: {
+				value: Math.abs(currentDonationTotal - (donationGoalTargetSum - currentGoalData.target)),
+				target: currentGoalData.target
+			}
+		};
+
+		global.socketServer.send(JSON.stringify(out));
 	}
 }
 
@@ -955,6 +984,8 @@ commandList.addTrigger("goal", async(channel, args, msg, user) => {
 			} else {
 				global.counter.increment("donations", value);
 			}
+
+			botSocketFunctions.getGoalStatus();
 
 			await reply(channel, msg, `Current donation goal is now ${global.counter.get("donations").toFixed(2)} (${global.settings.goals.currency})`);
 			break;
