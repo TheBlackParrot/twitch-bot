@@ -2109,6 +2109,14 @@ const directionalBejeweledTransforms = {
 	}
 };
 
+function parseBejeweledInputs(inputs) {
+	if(inputs.length != 2) {
+		return null;
+	}
+
+	return [String.fromCharCode(inputs[0][0], inputs[0][1]), String.fromCharCode(inputs[1][0], inputs[1][1])];
+}
+
 function normalizeGemSwapInput(input) {
 	let parts = input.toLowerCase().split(" ");
 	if(parts.length == 1 && input.length >= 3) {
@@ -2133,9 +2141,6 @@ function normalizeGemSwapInput(input) {
 				const column = parts[0].charCodeAt(1);
 
 				parts[1] = directionalBejeweledTransforms[directionalTest](row, column);
-				if(parts[1] == "xx") {
-					parts[1] = directionalBejeweledTransforms[directionalTest](column, row);
-				}
 			}
 		}
 
@@ -2147,32 +2152,15 @@ function normalizeGemSwapInput(input) {
 				isSwapValid = false;
 			}
 
-			inputs.push([row, column]);
+			inputs.push(row < column ? [column, row] : [row, column]);
 		}
 
-		if(isSwapValid) {
-			return (checkInputIsAdjacent(inputs) ? parts.join("\t") : null);
-		} else {
-			// check if it's backwards
-			inputs = [];
-			isSwapValid = true;
-
-			for(const position of parts) {
-				const row = position.charCodeAt(1);
-				const column = position.charCodeAt(0);
-
-				if(row < 97 || row > 104 || column < 49 || column > 56) {
-					isSwapValid = false;
-				}
-
-				inputs.push([row, column]);
-			}
-		}
+		return (checkInputIsAdjacent(inputs) ? parseBejeweledInputs(inputs).join("\t") : null);
 	}
 
 	// can only get to here if it's backwards
-	const reversed = parts.join("").split("").reverse().join("");
-	return (isSwapValid ? (checkInputIsAdjacent(inputs) ? `${reversed.substr(0, 2)}\t${reversed.substr(2, 2)}` : null) : null);
+	//const reversed = parts.join("").split("").reverse().join("");
+	//return (isSwapValid ? (checkInputIsAdjacent(inputs) ? `${reversed.substr(0, 2)}\t${reversed.substr(2, 2)}` : null) : null);
 }
 
 var previousMessageOwner = null;
