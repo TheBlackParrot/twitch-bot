@@ -2181,7 +2181,7 @@ async function onStandardMessage(channel, msgObject, message) {
 
 	let wasGemSwap = false;
 	if(allowBejeweled) {
-		const normalizedInput = normalizeGemSwapInput(filtered);
+		const normalizedInput = normalizeGemSwapInput(filtered.trim());
 
 		if(normalizedInput) {
 			wasGemSwap = true;
