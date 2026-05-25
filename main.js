@@ -319,9 +319,10 @@ async function handleBotSocketMessage(data) {
 var spinRequestsSocket;
 
 function initSpinRequestsSocket() {
-	if(global.initialCategory == "Spin Rhythm XD") {
-		spinRequestsSocket = new WebSocketListener('ws://127.0.0.1:6970/', { "onMessage": handleSpinRequestsMessage });
-	}
+	spinRequestsSocket = new WebSocketListener('ws://127.0.0.1:6970/',
+		{ "onMessage": handleSpinRequestsMessage },
+		{ "allowInitialization": global.initialCategory == "Spin Rhythm XD" }
+	);
 }
 
 const spinRequestsFunctions = {
@@ -376,9 +377,10 @@ async function querySRXD(endpoint, args, opts) {
 var spinStatusSocket;
 
 function initSpinStatusSocket() {
-	if(global.initialCategory == "Spin Rhythm XD") {
-		spinStatusSocket = new WebSocketListener(`ws://${global.settings.srxd.spinStatusSocket.address}:${global.settings.srxd.spinStatusSocket.port}`, { "onMessage": handleSpinStatusMessage });
-	}
+	spinStatusSocket = new WebSocketListener(`ws://${global.settings.srxd.spinStatusSocket.address}:${global.settings.srxd.spinStatusSocket.port}`,
+		{ "onMessage": handleSpinStatusMessage },
+		{ "allowInitialization": global.initialCategory == "Spin Rhythm XD" }
+	);
 }
 
 var srxdState = {
@@ -1596,6 +1598,48 @@ commandList.addTrigger("togglecategoryswapping", async(channel, args, msg, user)
 	whitelist: ["broadcaster", "mod"]
 });
 
+// --- !togglesocket ---
+const socketTogglers = {
+	"srxd": async function(channel, args, msg, user) {
+		spinRequestsSocket.allowInitialization = !spinRequestsSocket.allowInitialization;
+
+		if(spinRequestsSocket.allowInitialization) {
+			spinRequestsSocket.initializeWebsocket();
+		} else {
+			spinRequestsSocket.socket.close();
+		}
+
+		spinStatusSocket.allowInitialization = !spinStatusSocket.allowInitialization;
+		
+		if(spinStatusSocket.allowInitialization) {
+			spinStatusSocket.initializeWebsocket();
+		} else {
+			spinStatusSocket.socket.close();
+		}
+	},
+
+	"vnyan": async function(channel, args, msg, user) {
+		vnyanSocket.allowInitialization = !vnyanSocket.allowInitialization;
+
+		if(vnyanSocket.allowInitialization) {
+			vnyanSocket.initializeWebsocket();
+		} else {
+			vnyanSocket.socket.close();
+		}
+	}
+}
+commandList.addTrigger("togglesocket", async(channel, args, msg, user) => {
+	if(args[0] in socketTogglers) {
+		await socketTogglers[args[0]](channel, args, msg, user);
+	} else {
+		await reply(channel, msg, `Valid socket toggles: ${Object.keys(socketTogglers).join(", ")}`);
+	}
+}, {
+	cooldown: 5,
+	aliases: ["togglewebsocket"],
+	whitelist: ["broadcaster", "mod"]
+});
+
 // --- !toggleswapping ---
 commandList.addTrigger("toggleswapping", async(channel, args, msg, user) => {
 	setBejeweledAllowed(!allowBejeweled);
@@ -2315,11 +2359,8 @@ chatClient.onJoin(async (channel, user) => {
 
 		initVNyanSocket();
 		initBejeweledLiveSocket();
-
-		if(global.initialCategory === "Spin Rhythm XD") {
-			initSpinRequestsSocket();
-			initSpinStatusSocket();
-		}
+		initSpinRequestsSocket();
+		initSpinStatusSocket();
 
 		await sendHelloMessage();
 	}
@@ -3333,9 +3374,9 @@ async function getInfoToDetermineOBSStatus() {
 var vnyanSocket;
 
 function initVNyanSocket() {
-	if(global.initialCategory != "Resonite" && global.initialCategory != "") {
-		vnyanSocket = new WebSocketListener(`ws://${global.settings.vnyan.socket.address}:${global.settings.vnyan.socket.port}/vnyan`);
-	}
+	vnyanSocket = new WebSocketListener(`ws://${global.settings.vnyan.socket.address}:${global.settings.vnyan.socket.port}/vnyan`, {},
+		{ "allowInitialization": global.initialCategory != "Resonite" && global.initialCategory != "" }
+	);
 }
 
 // ====== WEBHOOKS ======

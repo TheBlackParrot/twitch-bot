@@ -9,6 +9,8 @@ export class WebSocketListener {
 		this.restart = "restart" in opts ? opts.restart : true;
 		this.restartDelay = "restartDelay" in opts ? opts.restartDelay : 15;
 
+		this.allowInitialization = "allowInitialization" in opts ? opts.allowInitialization : true;
+
 		this.restartTimeout = null;
 		this.triggers = triggers;
 
@@ -74,6 +76,10 @@ export class WebSocketListener {
 	}
 
 	initializeWebsocket() {
+		if(!this.allowInitialization) {
+			return;
+		}
+
 		this.socket = new WebSocket(this.url);
 
 		this.socket.on('open', () => { this.onOpen(); });
