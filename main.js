@@ -2089,6 +2089,9 @@ function normalizeGemSwapInput(input) {
 				const column = parts[0].charCodeAt(1);
 
 				parts[1] = directionalBejeweledTransforms[directionalTest](row, column);
+				if(parts[1] == "xx") {
+					parts[1] = directionalBejeweledTransforms[directionalTest](column, row);
+				}
 			}
 		}
 
