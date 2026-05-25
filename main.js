@@ -1663,14 +1663,14 @@ commandList.addTrigger("vnyandeath", async(channel, args, msg, user) => {
 
 // --- !weather ---
 commandList.addTrigger("weather", async(channel, args, msg, user) => {
-	let unit = "f";
+	/*let unit = "f";
 	let windUnit = "mph";
 	if(args.length) {
 		if(args[0].toLowerCase().startsWith("c") || args[0].toLowerCase().startsWith("m")) {
 			unit = "c";
 			windUnit = "kph";
 		}
-	}
+	}*/
 
 	let url = new URL('/v1/current.json', 'https://api.weatherapi.com/');
 	let params = new URLSearchParams({
@@ -1688,11 +1688,11 @@ commandList.addTrigger("weather", async(channel, args, msg, user) => {
 	let parts = [
 		`Current weather for ${response.data.location.name}, ${response.data.location.region}:`,
 		`${weatherConditionCodes[response.data.current.condition.code]} ${response.data.current.condition.text},`,
-		`${Math.round(response.data.current[`temp_${unit}`])}°${unit.toUpperCase()}`,
-		`(feels like ${Math.round(response.data.current[`feelslike_${unit}`])}°${unit.toUpperCase()}).`,
-		`${response.data.current.wind_dir} winds of around ${Math.round(response.data.current[`wind_${windUnit}`])}${windUnit}`,
-		`with gusts up to ${Math.round(response.data.current[`gust_${windUnit}`])}${windUnit}.`,
-		`${Math.round(response.data.current.humidity)}% relative humidity with a dew point of ${Math.round(response.data.current[`dewpoint_${unit}`])}°${unit.toUpperCase()}.`
+		`${Math.round(response.data.current[`temp_c`])}°C (${Math.round(response.data.current[`temp_f`])}°F)`,
+		`(feels like ${Math.round(response.data.current[`feelslike_c`])}°C (${Math.round(response.data.current[`feelslike_f`])}°F)).`,
+		`${response.data.current.wind_dir} winds of around ${Math.round(response.data.current[`wind_kph`])}kph (${Math.round(response.data.current[`wind_mph`])}mph)`,
+		`with gusts up to ${Math.round(response.data.current[`gust_kph`])}kph (${Math.round(response.data.current[`gust_mph`])}mph).`,
+		`${Math.round(response.data.current.humidity)}% relative humidity with a dew point of ${Math.round(response.data.current[`dewpoint_c`])}°C (${Math.round(response.data.current[`dewpoint_f`])}°F).`
 	];
 
 	await reply(channel, msg, parts.join(" "));
