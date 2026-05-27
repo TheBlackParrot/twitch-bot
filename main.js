@@ -1616,6 +1616,8 @@ const socketTogglers = {
 		} else {
 			spinStatusSocket.socket.close();
 		}
+
+		return spinRequestsSocket.allowInitialization;
 	},
 
 	"vnyan": async function(channel, args, msg, user) {
@@ -1626,11 +1628,14 @@ const socketTogglers = {
 		} else {
 			vnyanSocket.socket.close();
 		}
+
+		return vnyanSocket.allowInitialization;
 	}
 }
 commandList.addTrigger("togglesocket", async(channel, args, msg, user) => {
 	if(args[0] in socketTogglers) {
-		await socketTogglers[args[0]](channel, args, msg, user);
+		let gateStatus = await socketTogglers[args[0]](channel, args, msg, user);
+		await reply(channel, msg, `${(gateStatus ? "Opened" : "Closed")} socket connection for "${args[0]}"`);
 	} else {
 		await reply(channel, msg, `Valid socket toggles: ${Object.keys(socketTogglers).join(", ")}`);
 	}
