@@ -1579,7 +1579,7 @@ commandList.addTrigger("title", async(channel, args, msg, user) => {
 		return;
 	}
 
-	if(!user.isMod) {
+	if(!(user.isMod || user.isBroadcaster)) {
 		return;
 	}
 
