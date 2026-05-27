@@ -2431,6 +2431,18 @@ chatClient.onRaid(async (channel, user, raidInfo, msg) => {
 	} catch(err) {
 		global.logException(err);
 	}
+
+	if(global.settings.twitch.snoozeAdsOnRaidsWhenMinutesRemaining && (previousMinutesLeft <= global.settings.twitch.snoozeAdsOnRaidsWhenMinutesRemaining && previousMinutesLeft > 0)) {
+		try {
+			await global.apiClient.channels.snoozeNextAd(global.broadcasterUser.id);
+		} catch(err) {
+			console.error(err);
+			await say(channel, "⚠️ Failed to snooze ads");
+			return;
+		}
+
+		await say(channel, "🆗 Snoozed the next scheduled ad break for 5 minutes");
+	}
 });
 chatClient.onRaidCancel((channel, msg) => { 
 	say(channel, "wait nevermind...");
