@@ -2118,6 +2118,8 @@ function parseBejeweledInputs(inputs) {
 	return [String.fromCharCode(inputs[0][0], inputs[0][1]), String.fromCharCode(inputs[1][0], inputs[1][1])];
 }
 
+var duplicateSwapInputCheck;
+var duplicateSwapInputCheckTimeout;
 function normalizeGemSwapInput(input) {
 	let parts = input.toLowerCase().split(" ");
 	if(parts.length == 1 && input.length >= 3) {
@@ -2156,12 +2158,24 @@ function normalizeGemSwapInput(input) {
 			inputs.push(row < column ? [column, row] : [row, column]);
 		}
 
-		return (checkInputIsAdjacent(inputs) ? parseBejeweledInputs(inputs).join("\t") : null);
+		if(checkInputIsAdjacent(inputs)) {
+			const parsed = parseBejeweledInputs(inputs).join("\t");
+
+			if(parsed == duplicateSwapInputCheck) {
+				say(global.broadcasterUser.name, "Yoink");
+			}
+			duplicateSwapInputCheck = parsed;
+
+			clearTimeout(duplicateSwapInputCheckTimeout);
+			duplicateSwapInputCheckTimeout = setTimeout(() => {
+				duplicateSwapInputCheck = "";
+			}, 2000);
+
+			return parsed;
+		}
 	}
 
-	// can only get to here if it's backwards
-	//const reversed = parts.join("").split("").reverse().join("");
-	//return (isSwapValid ? (checkInputIsAdjacent(inputs) ? `${reversed.substr(0, 2)}\t${reversed.substr(2, 2)}` : null) : null);
+	return null;
 }
 
 var previousMessageOwner = null;
