@@ -1523,6 +1523,8 @@ commandList.addTrigger("discord", async(channel, args, msg, user) => {
 
 // --- !streamonline ---
 commandList.addTrigger("streamonline", async(channel, args, msg, user) => {
+	haveAdsRunBefore = true;
+	
 	triggerTwitchStreamOnlineEvents();
 	await reply(channel, msg, 'sorry for crashing... PLEAD');
 }, {
