@@ -22,12 +22,30 @@
 				"root": "https://1.1.1.1/",
 				"path": "/value-tracking/public/api/getValueForUser.php"
 			}
+		},
+		"socket": {
+			"ip": "127.0.0.1",
+			"port": "6676"
 		}
 	},
 
 	"foobar": {
 		"address": "127.0.0.1:8880",
 		"exportLocation": "./data/foobarLibrary.json"
+	},
+
+	"goals": {
+		"currency": "USD",
+		"targets": [
+			{
+				"description": "Wow look money!",
+				"target": 20
+			},
+			{
+				"description": "Wow look money! Again",
+				"target": 69
+			}
+		]
 	},
 
 	"obs": {
@@ -92,7 +110,8 @@
 
 	"twitch": {
 		"adTimerRefreshInterval": 15,
-		"scheduledAdBreakLength": 180
+		"scheduledAdBreakLength": 180,
+		"snoozeAdsOnRaidsWhenMinutesRemaining": 10
 	},
 
 	"vnyan": {
