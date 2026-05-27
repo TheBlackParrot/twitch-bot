@@ -1783,8 +1783,9 @@ const frfrStrings = ["yeah", "oh yeah", "so true", "sooo true", "omg", "mhm", "i
 					"i concur", "uh-huh", "i can agree with that", "for sure", "true", "very true", "you're so right"];
 const frfrEmotes = ["mhmyep", "NODDERS", "catYep", "kermitNod", "pikaSquish", "Periodt", "Mhmmm", "TRUE"];
 
-// matches any instance of "crazy"
-commandList.addRegex("crazy", async(channel, args, msg, user) => {
+// matches any instance of "crazy", except when used in mentions (and replies), must also be a separate word
+// note-to-self a "look behind" is essentially a negate operation in regex
+commandList.addRegex("\b(?<!@)crazy", async(channel, args, msg, user) => {
 	await say(channel, crazyStrings[Math.floor(Math.random() * crazyStrings.length)]);
 });
 
