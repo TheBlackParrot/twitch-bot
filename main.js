@@ -687,7 +687,7 @@ commandList.addTrigger("addrotr", async(channel, args, msg, user) => {
 // --- !amhere ---
 commandList.addTrigger("amhere", async(channel, args, msg, user) => {
 	await updateLeaderboardValues(user.userId, "Gamba Credits", 20);
-	await reply(channel, msg, '20 Gamba Credits to you! Okayge');
+	await reply(channel, msg, '20 Raffle Credits to you! Okayge');
 }, {
 	userCooldown: 1800,
 	respondWithCooldownMessage: true
@@ -711,7 +711,7 @@ commandList.addTrigger("bitrate", async(channel, args, msg, user) => {
 // --- !cancelraffle ---
 commandList.addTrigger("cancelraffle", async(channel, args, msg, user) => {
 	if(!creditRaffle.active) {
-		await reply(channel, msg, '⚠️ No Gamba Credit raffle is in progress. Use !startraffle to start one.');
+		await reply(channel, msg, '⚠️ No credit raffle is in progress. Use !startraffle to start one.');
 		return;
 	}
 	
@@ -797,7 +797,7 @@ commandList.addTrigger("convert", async(channel, args, msg, user) => {
 commandList.addTrigger("credits", async(channel, args, msg, user) => {
 	const value = await getLeaderboardValueFromUserTarget(channel, args, msg, user, "Gamba Credits");
 	if(value != null) {
-		await reply(channel, msg, `${value.userId == user.userId ? "You have" : `${value.userDisplayName} has`} ${value.value.toLocaleString()} Gamba ${value.value != 1 ? "Credits" : "Credit"}`);
+		await reply(channel, msg, `${value.userId == user.userId ? "You have" : `${value.userDisplayName} has`} ${value.value.toLocaleString()} Raffle ${value.value != 1 ? "Credits" : "Credit"}`);
 	}
 }, {
 	userCooldown: 5,
@@ -836,7 +836,7 @@ commandList.addTrigger("donothon", async(channel, args, msg, user) => {
 // --- !endraffle ---
 commandList.addTrigger("endraffle", async(channel, args, msg, user) => {
 	if(!creditRaffle.active) {
-		await reply(channel, msg, '⚠️ No Gamba Credit raffle is in progress. Use !startraffle to start one.');
+		await reply(channel, msg, '⚠️ No credit raffle is in progress. Use !startraffle to start one.');
 		return;
 	}
 	
@@ -1324,12 +1324,12 @@ commandList.addTrigger("random", async(channel, args, msg, user) => {
 // --- !rafjoin ---
 commandList.addTrigger("rafjoin", async(channel, args, msg, user) => {
 	if(!creditRaffle.active) {
-		await reply(channel, msg, "No Gamba Credit raffle is going on right now!");
+		await reply(channel, msg, "No credit raffle is going on right now!");
 		return;
 	}
 
 	if(!creditRaffle.addUser(user)) {
-		await reply(channel, msg, "You've already joined the Gamba Credit raffle!");
+		await reply(channel, msg, "You've already joined the credit raffle!");
 		return;
 	}
 
@@ -1496,7 +1496,7 @@ commandList.addTrigger("specs", async(channel, args, msg, user) => {
 // --- !startraffle ---
 commandList.addTrigger("startraffle", async(channel, args, msg, user) => {
 	if(creditRaffle.active) {
-		await reply(channel, msg, '⚠️ A Gamba Credit raffle is already in progress. Use !endraffle to end it, or !cancelraffle to cancel it.');
+		await reply(channel, msg, '⚠️ A credit raffle is already in progress. Use !endraffle to end it, or !cancelraffle to cancel it.');
 		return;
 	}
 
@@ -2671,9 +2671,9 @@ const redeemFunctions = {
 		await updateLeaderboardValues(event.userId, "Gamba Credits", 100);
 		
 		const newAmount = await getLeaderboardValue(event.userId, "Gamba Credits");
-		await say(global.broadcasterUser.name, `@${event.userDisplayName} You now have ${newAmount.toLocaleString()} Gamba Credits`);
+		await say(global.broadcasterUser.name, `@${event.userDisplayName} You now have ${newAmount.toLocaleString()} Raffle Credits`);
 	},
-	"Flip a Coin": async function(event) {
+	/*"Flip a Coin": async function(event) {
 		const args = event.input.split(" ");
 		if(!args.length) {
 			await say(global.broadcasterUser.name, `@${event.userDisplayName} ⚠️ Please input a wager as the first word/argument, and then "h" or "t" as the second word/argument (or anything starting with those letters, e.g. "200 h").`);
@@ -2748,7 +2748,7 @@ const redeemFunctions = {
 	"gib coin hint pls?": async function(event) {
 		const readableOdds = Math.floor(coinFlipOdds * 100);
 		await say(global.broadcasterUser.name, `Current Coin Flip odds: ${readableOdds}% heads, ${100 - readableOdds}% tails EZ`);
-	},
+	},*/
 
 	"Hydrate!": async function(event) {
 		await say(global.broadcasterUser.name, "🥤 Remember to get something to drink! This goes for everyone! Sip sip! 🥤");

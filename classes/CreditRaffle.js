@@ -20,7 +20,7 @@ export class CreditRaffle {
 
 		global.counter.increment("RaffleCredits", this.incrementAmount);
 
-		await global.say(global.broadcasterUser.name, `TWISTED Raffle time! TWISTED Send "!rafjoin" in chat to enter a raffle for ${global.counter.get("RaffleCredits")} Gamba Credits! catChat`);
+		await global.say(global.broadcasterUser.name, `catChat Raffle time! Send "!rafjoin" in chat to enter a raffle for ${global.counter.get("RaffleCredits")} Raffle Credits! catChat`);
 	}
 
 	async end() {
@@ -57,7 +57,7 @@ export class CreditRaffle {
 		await global.say(global.broadcasterUser.name, `Alright, time to draw the raffle winner out of ${ids.length} entrants... jermaYou`);
 		await delay(6000 + (Math.random() * 1500));
 
-		await global.say(global.broadcasterUser.name, `And the winner of ${amount} Gamba Credits is... PauseChamp`);
+		await global.say(global.broadcasterUser.name, `And the winner of ${amount} Raffle Credits is... PauseChamp`);
 		await delay(3500 + (Math.random() * 2500));
 
 		this.active = false;
@@ -74,7 +74,7 @@ export class CreditRaffle {
 		this.active = false;
 		this.entries = {};
 
-		await global.say(global.broadcasterUser.name, `The Gamba Credit raffle was cancelled.`);
+		await global.say(global.broadcasterUser.name, `The credit raffle was cancelled.`);
 	}
 
 	addUser(user) {
@@ -88,11 +88,11 @@ export class CreditRaffle {
 
 	async addCredits(amount) {
 		global.counter.increment("RaffleCredits", Math.floor(amount));
-		await global.say(global.broadcasterUser.name, `The Gamba Credit raffle is now at ${global.counter.get("RaffleCredits")} credits.`);
+		await global.say(global.broadcasterUser.name, `The credit raffle is now at ${global.counter.get("RaffleCredits")} credits.`);
 	}
 
 	async setCredits(amount) {
 		global.counter.set("RaffleCredits", Math.floor(amount));
-		await global.say(global.broadcasterUser.name, `The Gamba Credit raffle is now at ${global.counter.get("RaffleCredits")} credits.`);
+		await global.say(global.broadcasterUser.name, `The credit raffle is now at ${global.counter.get("RaffleCredits")} credits.`);
 	}
 }
