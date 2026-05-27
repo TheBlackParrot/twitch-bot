@@ -2364,7 +2364,7 @@ chatClient.onJoin(async (channel, user) => {
 			await redeem.enable(global.initialCategory != "Resonite" && global.initialCategory != "");
 		}
 
-		await global.redeemList.getByName("Flip a Coin").setCooldown(30); // can't do this on the twitch dashboard, so we do it here
+		//await global.redeemList.getByName("Flip a Coin").setCooldown(30); // can't do this on the twitch dashboard, so we do it here
 		await rulerOfTheRedeem.enable(true);
 
 		initVNyanSocket();
@@ -3205,8 +3205,8 @@ async function onOBSSceneChanged(sceneObject) {
 		}
 	}
 
-	await global.redeemList.getByName("Flip a Coin").enable(isIntermission);
-	await global.redeemList.getByName("gib coin hint pls?").enable(isIntermission);
+	//await global.redeemList.getByName("Flip a Coin").enable(isIntermission);
+	//await global.redeemList.getByName("gib coin hint pls?").enable(isIntermission);
 }
 async function onOBSSceneTransitionStarted(transitionObject) {
 	const sceneObject = await callOBS('GetCurrentProgramScene');
@@ -3301,8 +3301,8 @@ async function onStreamStarted() {
 		await global.redeemList.getByName("second").enable(false);
 		await global.redeemList.getByName("third").enable(false);
 
-		await global.redeemList.getByName("Flip a Coin").enable(true);
-		await global.redeemList.getByName("gib coin hint pls?").enable(true);
+		//await global.redeemList.getByName("Flip a Coin").enable(true);
+		//await global.redeemList.getByName("gib coin hint pls?").enable(true);
 	} else if(currentOBSSceneName.indexOf("SRXD") == -1) {
 		await axios.post(`http://${global.settings.foobar.address}/api/player/play`).catch((err) => {});
 	}
