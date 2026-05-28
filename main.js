@@ -254,6 +254,10 @@ const botSocketFunctions = {
 	},
 
 	"getGoalStatus": function() {
+		if(!global.settings.goals.targets.length) {
+			return;
+		}
+		
 		const currentDonationTotal = (global.counter.get("donations") ?? 0);
 		let currentDonationGoalIdx = 0;
 		let donationGoalTargetSum = 0;
@@ -269,7 +273,7 @@ const botSocketFunctions = {
 			}
 		}
 
-		const currentGoalData = global.settings.goals.targets[currentDonationGoalIdx];
+		const currentGoalData = global.settings.goals.targets[Math.min(currentDonationGoalIdx, global.settings.goals.targets.length - 1)];
 
 		const out = {
 			event: "goalUpdate",
