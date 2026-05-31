@@ -690,8 +690,8 @@ commandList.addTrigger("addrotr", async(channel, args, msg, user) => {
 
 // --- !amhere ---
 commandList.addTrigger("amhere", async(channel, args, msg, user) => {
-	await updateLeaderboardValues(user.userId, "Gamba Credits", 20);
-	await reply(channel, msg, '20 Raffle Credits to you! Okayge');
+	await updateLeaderboardValues(user.userId, "Idle Credits", 20);
+	await reply(channel, msg, '20 Idle Credits to you! Okayge');
 }, {
 	userCooldown: 1800,
 	respondWithCooldownMessage: true
@@ -799,9 +799,9 @@ commandList.addTrigger("convert", async(channel, args, msg, user) => {
 
 // --- !credits ---
 commandList.addTrigger("credits", async(channel, args, msg, user) => {
-	const value = await getLeaderboardValueFromUserTarget(channel, args, msg, user, "Gamba Credits");
+	const value = await getLeaderboardValueFromUserTarget(channel, args, msg, user, "Idle Credits");
 	if(value != null) {
-		await reply(channel, msg, `${value.userId == user.userId ? "You have" : `${value.userDisplayName} has`} ${value.value.toLocaleString()} Raffle ${value.value != 1 ? "Credits" : "Credit"}`);
+		await reply(channel, msg, `${value.userId == user.userId ? "You have" : `${value.userDisplayName} has`} ${value.value.toLocaleString()} Idle ${value.value != 1 ? "Credits" : "Credit"}`);
 	}
 }, {
 	userCooldown: 5,
@@ -2710,10 +2710,10 @@ const redeemFunctions = {
 	},
 
 	"Credit Exchange": async function(event) {
-		await updateLeaderboardValues(event.userId, "Gamba Credits", 100);
+		await updateLeaderboardValues(event.userId, "Idle Credits", 100);
 		
-		const newAmount = await getLeaderboardValue(event.userId, "Gamba Credits");
-		await say(global.broadcasterUser.name, `@${event.userDisplayName} You now have ${newAmount.toLocaleString()} Raffle Credits`);
+		const newAmount = await getLeaderboardValue(event.userId, "Idle Credits");
+		await say(global.broadcasterUser.name, `@${event.userDisplayName} You now have ${newAmount.toLocaleString()} Idle Credits`);
 	},
 
 	"Hydrate!": async function(event) {

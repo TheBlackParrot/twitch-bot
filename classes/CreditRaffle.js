@@ -18,9 +18,9 @@ export class CreditRaffle {
 		this.active = true;
 		this.entries = {};
 
-		global.counter.increment("RaffleCredits", this.incrementAmount);
+		global.counter.increment("IdleCredits", this.incrementAmount);
 
-		await global.say(global.broadcasterUser.name, `catChat Raffle time! Send "!rafjoin" in chat to enter a raffle for ${global.counter.get("RaffleCredits")} Raffle Credits! catChat`);
+		await global.say(global.broadcasterUser.name, `catChat Raffle time! Send "!rafjoin" in chat to enter a raffle for ${global.counter.get("IdleCredits")} Idle Credits! catChat`);
 	}
 
 	async end() {
@@ -28,7 +28,7 @@ export class CreditRaffle {
 			return;
 		}
 
-		const amount = global.counter.get("RaffleCredits");
+		const amount = global.counter.get("IdleCredits");
 
 		let winner;
 		const ids = Object.keys(this.entries);
@@ -40,7 +40,7 @@ export class CreditRaffle {
 			return;
 		}
 
-		global.counter.set("RaffleCredits", 0);
+		global.counter.set("IdleCredits", 0);
 
 		if(ids.length == 1) {
 			this.active = false;
@@ -57,7 +57,7 @@ export class CreditRaffle {
 		await global.say(global.broadcasterUser.name, `Alright, time to draw the raffle winner out of ${ids.length} entrants... jermaYou`);
 		await delay(6000 + (Math.random() * 1500));
 
-		await global.say(global.broadcasterUser.name, `And the winner of ${amount} Raffle Credits is... PauseChamp`);
+		await global.say(global.broadcasterUser.name, `And the winner of ${amount} Idle Credits is... PauseChamp`);
 		await delay(3500 + (Math.random() * 2500));
 
 		this.active = false;
@@ -87,12 +87,12 @@ export class CreditRaffle {
 	}
 
 	async addCredits(amount) {
-		global.counter.increment("RaffleCredits", Math.floor(amount));
-		await global.say(global.broadcasterUser.name, `The credit raffle is now at ${global.counter.get("RaffleCredits")} credits.`);
+		global.counter.increment("IdleCredits", Math.floor(amount));
+		await global.say(global.broadcasterUser.name, `The credit raffle is now at ${global.counter.get("IdleCredits")} credits.`);
 	}
 
 	async setCredits(amount) {
-		global.counter.set("RaffleCredits", Math.floor(amount));
-		await global.say(global.broadcasterUser.name, `The credit raffle is now at ${global.counter.get("RaffleCredits")} credits.`);
+		global.counter.set("IdleCredits", Math.floor(amount));
+		await global.say(global.broadcasterUser.name, `The credit raffle is now at ${global.counter.get("IdleCredits")} credits.`);
 	}
 }
