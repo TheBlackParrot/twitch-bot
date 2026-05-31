@@ -829,6 +829,7 @@ commandList.addTrigger("dka", async(channel, args, msg, user) => {
 	cooldown: 30
 });
 
+/*
 // --- !donothon ---
 commandList.addTrigger("donothon", async(channel, args, msg, user) => {
 	await say(channel, "I'm raising funds to ward off medical debt, both from insulin pump supplies and from recent and upcoming surgeries I need performed due to recently being diagnosed with achalasia. The stream will run 24/7 until I hit the overall goal; bits and subscriptions do not count towards the goals. Goals are updated manually. Use '!goal' or '!goal all' for status updates, and '!tipping' for help with donating/tipping.");
@@ -836,6 +837,7 @@ commandList.addTrigger("donothon", async(channel, args, msg, user) => {
 }, {
 	cooldown: 30
 });
+*/
 
 // --- !endraffle ---
 commandList.addTrigger("endraffle", async(channel, args, msg, user) => {
@@ -963,6 +965,7 @@ commandList.addTrigger("give", async(channel, args, msg, user) => {
 	respondWithCooldownMessage: true
 });
 
+/*
 // --- !goal ---
 commandList.addTrigger("goal", async(channel, args, msg, user) => {
 	const currentDonationTotal = (global.counter.get("donations") ?? 0);
@@ -1021,6 +1024,7 @@ commandList.addTrigger("goal", async(channel, args, msg, user) => {
 }, {
 	cooldown: 5
 });
+*/
 
 // --- !insulin ---
 commandList.addTrigger("insulin", async(channel, args, msg, user) => {
