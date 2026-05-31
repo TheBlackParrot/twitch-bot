@@ -2270,7 +2270,7 @@ async function onStandardMessage(channel, msgObject, message) {
 		await tts(voice == null ? global.settings.tts.voices.messages : voice, filtered);
 	}
 
-	if(Math.floor(Math.random() * 1000) == 69) {
+	if(Math.floor(Math.random() * 1000) == 69 && !wasGemSwap) {
 		say(channel, uniEmotes[Math.floor(Math.random() * uniEmotes.length)]);
 	}
 }
