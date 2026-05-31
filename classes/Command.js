@@ -231,7 +231,7 @@ export class RegexCommand extends BaseCommand {
 		if("aliases" in opts) {
 			for(const aliasedRegex of opts.aliases) {
 				this.regexStrings.push(aliasedRegex);
-				this.validRegex.push(new RegExp(aliasedRegex, "i"));
+				this.validRegex.push(new RegExp(aliasedRegex, caseInsensitive ? "i" : ""));
 			}
 		}
 

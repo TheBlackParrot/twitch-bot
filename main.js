@@ -1800,33 +1800,33 @@ const frfrEmotes = ["mhmyep", "NODDERS", "catYep", "kermitNod", "pikaSquish", "P
 
 // matches any instance of "crazy", except when used in mentions (and replies), must also be a separate word
 // note-to-self a "look behind" is essentially a negate operation in regex
-commandList.addRegex("\b(?<!@)crazy", async(channel, args, msg, user) => {
+commandList.addRegex(/\b(?<!@)crazy/, async(channel, args, msg, user) => {
 	await say(channel, crazyStrings[Math.floor(Math.random() * crazyStrings.length)]);
 });
 
 // matches anyone asking why the category changes on an interval
-commandList.addRegex(`why\\s.*\\s(change|swap)\\s.*(category|categories|game|games)`, async(channel, args, msg, user) => {
+commandList.addRegex(/why\s.*\s(change|swap)\s.*(category|categories|game|games)/, async(channel, args, msg, user) => {
 	await reply(channel, msg, 'I swap categories between Spin Rhythm XD and Games + Demos in order to get more eyes on the game and the stream while in Games + Demos, and to appear in the Spin Rhythm category for those browsing via categories.');
 }, {
 	allowedCategories: ["Spin Rhythm XD"],
 	cooldown: 30,
 	aliases: [
-		`why\\s(change|swap)\\s.*(category|categories|game|games)`,
-		`why\\s.*\\scategory\\sgames`,
-		`why\\s.*\\scategory\\s(currently|set\\sto)\\sgames`
+		/why\s(change|swap)\s.*(category|categories|game|games)/,
+		/why\s.*\scategory\sgames/,
+		/why\s.*\scategory\s(currently|set\sto)\sgames/
 	],
 	blacklist: ["broadcaster", "mod", "vip"]
 });
 
 // i don't like being called this
-commandList.addRegex("blacky", async(channel, args, msg, user) => {
+commandList.addRegex(/\bblacky/, async(channel, args, msg, user) => {
 	await reply(channel, msg, 'Please call me Parrot, thanks! This term has some racial connotations I\'m uncomfortable with. Parrot doesn\'t, it\'s merely a bird. 🦜');
 }, {
-	aliases: ["blackie"]
+	aliases: [/blackie/]
 });
 
 // matches people complaining about ads
-commandList.addRegex(`[0-9]\\sads`, async(channel, args, msg, user) => {
+commandList.addRegex(/[0-9]\sads/, async(channel, args, msg, user) => {
 	await reply(channel, msg, 'Instead of complaining, take care of yourself a little bit! Get a snack, hydrate, use the restroom, take your meds, do tiny things you need to do! You won\'t miss anything, nothing\'s going on for the next few minutes! DonoWall');
 }, {
 	userCooldown: 30,
@@ -1834,7 +1834,7 @@ commandList.addRegex(`[0-9]\\sads`, async(channel, args, msg, user) => {
 });
 
 // matches people asking about the overlays
-commandList.addRegex(`(where|can i)\\s.*\\s(get|find)\\s.*\\s(overlay|overlays)`, async(channel, args, msg, user) => {
+commandList.addRegex(/(where|can i)\s.*\s(get|find)\s.*\s(overlay|overlays)/, async(channel, args, msg, user) => {
 	commandList.get("overlays").trigger(channel, args, msg, user);
 }, {
 	cooldown: 30,
@@ -1842,28 +1842,28 @@ commandList.addRegex(`(where|can i)\\s.*\\s(get|find)\\s.*\\s(overlay|overlays)`
 });
 
 // matches people asking about vnyan
-commandList.addRegex(`(wat|what)\\s.*\\s(use)\\s.*\\s(show|render)\\s.*\\s(avatar|oc|character|fursona|yourself|urself|model)`, async(channel, args, msg, user) => {
+commandList.addRegex(/(wat|what)\s.*\s(use)\s.*\s(show|render)\s.*\s(avatar|oc|character|fursona|yourself|urself|model)/, async(channel, args, msg, user) => {
 	commandList.get("vnyan").trigger(channel, args, msg, user);
 }, {
-	aliases: [`how\\s(do|do\syou|you)\\s.*\\s(show|render)\\s.*\\s(avatar|oc|character|fursona|yourself|urself|model)`],
+	aliases: [/how\s(do|do\syou|you)\s.*\s(show|render)\s.*\s(avatar|oc|character|fursona|yourself|urself|model)/],
 	cooldown: 30,
 	blacklist: ["broadcaster", "mod", "vip"]
 });
 
 // automatically agrees with any instance of people flattering me
-commandList.addRegex(`^(parrot|null|tox|septi)\\s.*(cute|adorable|pretty|handsome|beautiful)`, async(channel, args, msg, user) => {
+commandList.addRegex(/^(parrot|null|tox|septi)\s.*(cute|adorable|pretty|handsome|beautiful)/, async(channel, args, msg, user) => {
 	const exclaim = (Math.floor(Math.random() * 12) == 10 ? "!" : "");
 	await say(channel, `${frfrStrings[Math.floor(Math.random() * frfrStrings.length)]}${exclaim} ${frfrStrings[Math.floor(Math.random() * frfrStrings.length)]}${exclaim} ${frfrEmotes[Math.floor(Math.random() * frfrEmotes.length)]}`);
 }, {
 	aliases: [
-		`^(parrot|null|tox|septi)s\\s.*(cute|adorable|pretty|handsome|beautiful)`,
-		`^(parrot|null|tox|septi)'s\\s.*(cute|adorable|pretty|handsome|beautiful)`
+		/^(parrot|null|tox|septi)s\s.*(cute|adorable|pretty|handsome|beautiful)/,
+		/^(parrot|null|tox|septi)'s\s.*(cute|adorable|pretty|handsome|beautiful)/
 	],
 	userCooldown: 10
 });
 
 // condescendingly replies to people asking if i'm a furry
-commandList.addRegex(`^(are|r)\\s(you|u)\\s.*(fur|fury|furry|furrie|furre)`, async(channel, args, msg, user) => {
+commandList.addRegex(/^(are|r)\s(you|u)\s.*(fur|fury|furry|furrie|furre)/, async(channel, args, msg, user) => {
 	await reply(channel, msg, 'no of course not, what makes you think such a thing? FlatEricHuh');
 }, {
 	cooldown: 30,
@@ -1871,30 +1871,30 @@ commandList.addRegex(`^(are|r)\\s(you|u)\\s.*(fur|fury|furry|furrie|furre)`, asy
 });
 
 // tells people how to request maps
-commandList.addRegex(`^(do|play|try)\\s.*\\s(song|pls|please|plz|plx)`, async(channel, args, msg, user) => {
+commandList.addRegex(/^(do|play|try)\s.*\s(song|pls|please|plz|plx)/, async(channel, args, msg, user) => {
 	commandList.get("r").trigger(channel, args, msg, user);
 }, {
 	aliases: [
-		`^can\\syou\\s(do|play|try)\\s.*`,
-		`how\\s.*\\s(request|add)\\s`
+		/^can\syou\s(do|play|try)\s.*/,
+		/how\s.*\s(request|add)\s/
 	],
 	cooldown: 30,
 	blacklist: ["broadcaster", "mod", "vip"]
 });
 
 // choppy audio response
-commandList.addRegex(`(audio|music)\\s.*\\s(choppy|crackly|chopping|crackling|crunchy)`, async(channel, args, msg, user) => {
+commandList.addRegex(/(audio|music)\s.*\s(choppy|crackly|chopping|crackling|crunchy)/, async(channel, args, msg, user) => {
 	await reply(channel, msg, "It's a Windows audio bug. It will fix itself shortly, give it a minute!");
 }, {
 	aliases: [
-		`(choppy|crackly|chopping|crackling|crunchy|crunching)\\s(audio|music)`,
-		`(audio|music)\\s(choppy|crackly|chopping|crackling|crunching)`
+		/(choppy|crackly|chopping|crackling|crunchy|crunching)\s(audio|music)/,
+		/(audio|music)\s(choppy|crackly|chopping|crackling|crunching)/
 	],
 	cooldown: 30
 });
 
 // funny ghost friend
-commandList.addRegex(`\\b(oOOo)`, async(channel, args, msg, user) => {
+commandList.addRegex(/\b(oOOo)/, async(channel, args, msg, user) => {
 	global.remoteSound.broadcast("ghost");
 }, {
 	caseInsensitive: false
