@@ -1274,17 +1274,28 @@ commandList.addTrigger("radiosong", async(channel, args, msg, user) => {
 	}
 
 	if(metadata) {
-		let spotifyURL;
+		let sourceURL;
+		
 		if("custom_fields" in metadata) {
-			if("comment" in metadata.custom_fields) {
-				if(metadata.custom_fields.comment.length == 22 && metadata.custom_fields.comment.split(" ").length == 1) {
-					// spotify code
-					spotifyURL = `https://open.spotify.com/track/${metadata.custom_fields.comment}`;
+			if("url" in metadata.custom_fields) {
+				if(metadata.custom_fields.url) {
+					sourceURL = metadata.custom_fields.url;
+				}
+			}
+
+			if(!sourceURL) {
+				if("comment" in metadata.custom_fields) {
+					if(metadata.custom_fields.comment) {
+						if(metadata.custom_fields.comment.length == 22 && metadata.custom_fields.comment.split(" ").length == 1) {
+							// spotify code
+							sourceURL = `https://open.spotify.com/track/${metadata.custom_fields.comment}`;
+						}
+					}
 				}
 			}
 		}
 
-		await reply(channel, msg, `Current song: "${metadata.title}" by ${metadata.artist} (from "${metadata.album}")${spotifyURL ? ` -- ${spotifyURL}` : ""}`);
+		await reply(channel, msg, `Current song: "${metadata.title}" by ${metadata.artist} (from "${metadata.album}")${sourceURL ? ` -- ${sourceURL}` : ""}`);
 	} else {
 		await reply(channel, msg, `⚠️ AzuraCast instance returned no now playing data.`);
 	}
