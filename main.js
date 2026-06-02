@@ -3098,7 +3098,12 @@ async function onOBSConnectionOpened() {
 
 	obsBitrateInterval = setInterval(getInfoToDetermineOBSStatus, global.settings.obs.bitrateInterval * 1000);
 
-	const sceneObject = await callOBS('GetCurrentProgramScene');
+	let sceneObject = await callOBS('GetCurrentProgramScene');
+	while(!sceneObject) {
+		global.log("OBS", "Could not determine current program scene, trying again...", false, ['yellowBright']);
+		await delay(250);
+		sceneObject = await callOBS('GetCurrentProgramScene');
+	}
 	currentOBSSceneName = sceneObject.sceneName;
 
 	const isIntermission = (currentOBSSceneName === "Ad Wall" || currentOBSSceneName === "Starting Soon");
