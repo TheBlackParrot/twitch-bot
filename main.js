@@ -400,11 +400,11 @@ const spinStatusFunctions = {
 		if(data === "Playing") {
 			waitHoldOnSRXD = setTimeout(async function() {
 				await callOBS("SetCurrentProgramScene", {sceneName: "SRXD Gameplay"});
-			}, 100);
+			}, 500);
 		} else {
 			waitHoldOnSRXD = setTimeout(async function() {
 				await callOBS("SetCurrentProgramScene", {sceneName: "SRXD Menu"});
-			}, 100);
+			}, 500);
 		}
 	},
 
