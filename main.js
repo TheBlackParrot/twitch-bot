@@ -1198,34 +1198,7 @@ commandList.addTrigger("prevlink", async(channel, args, msg, user) => {
 
 // --- !prevradiosong ---
 commandList.addTrigger("prevradiosong", async(channel, args, msg, user) => {
-	let response = await axios.get("https://radio.theblackparrot.me/api/nowplaying_static/safe.json").catch((err) => {});
-	if(!("data" in response)) {
-		await reply(channel, msg, "⚠️ Could not query the AzuraCast instance for song history data.");
-		return;
-	}
-
-	let metadata;
-	try {
-		metadata = response.data.song_history[0].song;
-	} catch(err) {
-		// do nothing
-	}
-
-	if(metadata) {
-		let spotifyURL;
-		if("custom_fields" in metadata) {
-			if("comment" in metadata.custom_fields) {
-				if(metadata.custom_fields.comment.length == 22 && metadata.custom_fields.comment.split(" ").length == 1) {
-					// spotify code
-					spotifyURL = `https://open.spotify.com/track/${metadata.custom_fields.comment}`;
-				}
-			}
-		}
-
-		await reply(channel, msg, `Previous song: "${metadata.title}" by ${metadata.artist} (from "${metadata.album}")${spotifyURL ? ` -- ${spotifyURL}` : ""}`);
-	} else {
-		await reply(channel, msg, `⚠️ AzuraCast instance returned no song history data.`);
-	}
+	await commandList.get("radiosong").trigger(channel, ["previous"], msg, user);
 }, {
 	aliases: ["prevsongradio", "prevradio", "radioprev", "previoussongradio", "previousradiosong", "previousradio", "prevrad", "radprev", "prevplayed", "previouslyplayed"],
 	cooldown: 10
@@ -1267,15 +1240,17 @@ commandList.addTrigger("radiosong", async(channel, args, msg, user) => {
 	}
 
 	let metadata;
+	let isPrevious = (args[0] == "previous");
+
 	try {
-		metadata = response.data.now_playing.song;
+		metadata = (isPrevious ? response.data.song_history[0].song : response.data.now_playing.song);
 	} catch(err) {
 		// do nothing
 	}
 
 	if(metadata) {
 		let sourceURL;
-		
+
 		if("custom_fields" in metadata) {
 			if("url" in metadata.custom_fields) {
 				if(metadata.custom_fields.url) {
@@ -1295,9 +1270,9 @@ commandList.addTrigger("radiosong", async(channel, args, msg, user) => {
 			}
 		}
 
-		await reply(channel, msg, `Current song: "${metadata.title}" by ${metadata.artist} (from "${metadata.album}")${sourceURL ? ` -- ${sourceURL}` : ""}`);
+		await reply(channel, msg, `${(isPrevious ? "Previous" : "Current")} song: "${metadata.title}" by ${metadata.artist} (from "${metadata.album}")${sourceURL ? ` -- ${sourceURL}` : ""}`);
 	} else {
-		await reply(channel, msg, `⚠️ AzuraCast instance returned no now playing data.`);
+		await reply(channel, msg, `⚠️ AzuraCast instance returned no ${(isPrevious ? "song history" : "now playing")} data.`);
 	}
 }, {
 	aliases: ["songradio", "radiocurrent", "currentradio", "curradio", "radiocur", "linkradio", "radiolink", "radlink", "linkrad", "nowplaying"],
