@@ -2721,6 +2721,11 @@ const redeemFunctions = {
 		await updateRedemptionStatus(event.rewardId, event.id, false);
 	},
 
+	"Posture check!": async function(event) {
+		await say(global.broadcasterUser.name, "Remember to sit up straight, don't become a shrimp! Get up and stretch, walk around a little too!");
+		await updateRedemptionStatus(event.rewardId, event.id, false);
+	},
+
 	"Diffuse Bejeweled Gem": async function(event) {
 		awaitingDiffusalEvent = event;
 		bejeweledLiveSocket.send(`diffuse\t${event.input}`);
