@@ -1153,6 +1153,47 @@ commandList.addTrigger("overlays", async(channel, args, msg, user) => {
 	cooldown: 10
 });
 
+// --- !pin ---
+commandList.addTrigger("pin", async(channel, args, msg, user) => {
+	if(!msg.isReply) {
+		await reply(channel, msg, "Reply to the message you want to pin with !pin. If you want the pin to expire, specify the amount of minutes as the second argument.");
+		return;
+	}
+
+	let query = {
+		broadcaster_id: global.broadcasterUser.id,
+		moderator_id: global.broadcasterUser.id,
+		message_id: msg.parentMessageId
+	}
+
+	let mins = parseInt(args[0]);
+	if(!isNaN(mins)) {
+		query.duration_seconds = Math.max(30, Math.min(1800, mins * 60));
+	}
+
+	try {
+		await global.apiClient.callApi({
+			method: "PUT",
+			type: "helix",
+			url: "chat/pins",
+			scopes: ["moderator:manage:chat_messages"],
+			query: query,
+			forceUser: true,
+			userId: global.broadcasterUser.id
+		});
+
+		if("duration_seconds" in query) {
+			let clampedMins = Math.floor(query.duration_seconds / 60);
+			await reply(channel, msg, `Pinned message for ${clampedMins} ${(clampedMins != 1 ? "minutes" : "minute")}`);
+		}
+	} catch(err) {
+		global.logException(err);
+	}
+}, {
+	whitelist: ["broadcaster", "mod"],
+	cooldown: 5
+})
+
 /*
 // --- !prevfoobar ---
 commandList.addTrigger("prevfoobar", async(channel, args, msg, user) => {
@@ -1980,15 +2021,18 @@ async function messageHandler(channel, userString, text, msg) {
 		return;
 	}
 
+	// args[0] here will always be the @mention in replies
+	let isReplyCommand = msg.isReply && args[1].startsWith("!");
+
 	let commandName = "";
-	if(!args[0].startsWith("!")) {
+	if(!args[0].startsWith("!") && !isReplyCommand) {
 		if(text.startsWith("https://spinsha.re/song/") || text.startsWith("spinshare://chart/")) {
 			commandName = "request";
 			args[1] = args[0].replace("https://spinsha.re/song/", "");
 			args[1] = args[1].replace("spinshare://chart/", "");
 		}
 	} else {
-		commandName = args[0].substr(1);
+		commandName = (isReplyCommand ? args[1] : args[0]).substr(1);
 	}
 
 	let user = users.getUser(msg.userInfo.userId);
@@ -2009,7 +2053,7 @@ async function messageHandler(channel, userString, text, msg) {
 
 				try {
 					user.usedCommand(command);
-					await command.trigger(channel, args.slice(1), msg, msg.userInfo);
+					await command.trigger(channel, args.slice(isReplyCommand ? 2 : 1), msg, msg.userInfo);
 				} catch(err) {
 					console.error(err);
 					global.logException(err);
