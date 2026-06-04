@@ -144,6 +144,8 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
 var allowBejeweled = false;
 
+const clearStringsInRequest = ["https://spinsha.re/song/", "spinshare://chart/", "https://beatsaver.com", "beatsaver://"];
+
 // ====== SYSTEM STUFF ======
 
 var allowTTS = true;
@@ -316,6 +318,121 @@ async function handleBotSocketMessage(data) {
 	} else {
 		global.log("SERVER", `Unknown action "${data.action}"`);
 	}
+}
+
+// ====== BEAT SABER ======
+
+var beatSaberDRMSocket;
+var beatSaberDataPullerMapSocket;
+var beatSaberDataPullerGameplaySocket;
+
+function initBeatSaberSockets() {
+	beatSaberDataPullerMapSocket = new WebSocketListener(`ws://${global.settings.beatSaber.dataPullerSocket.address}:${global.settings.beatSaber.dataPullerSocket.port}/BSDataPuller/MapData`,
+		{ "onMessage": handleBeatSaberDataPullerMapMessage },
+		{ "allowInitialization": global.initialCategory == "Beat Saber" }
+	);
+
+	beatSaberDataPullerGameplaySocket = new WebSocketListener(`ws://${global.settings.beatSaber.dataPullerSocket.address}:${global.settings.beatSaber.dataPullerSocket.port}/BSDataPuller/LiveData`,
+		{ "onMessage": handleBeatSaberDataPullerGameplayMessage },
+		{ "allowInitialization": global.initialCategory == "Beat Saber" }
+	);
+
+	beatSaberDRMSocket = new WebSocketListener(`ws://${global.settings.beatSaber.drmSocket.address}:${global.settings.beatSaber.drmSocket.port}/`,
+		{ "onMessage": handleBeatSaberDRMMessage },
+		{ "allowInitialization": global.initialCategory == "Beat Saber" }
+	);
+}
+
+const dumbRequestManagerFunctions = {
+	queueOpen: function(value) {
+		say(global.broadcasterUser.name, `The queue is now ${value ? "open! duckKill" : "closed! LetMeIn"}`);
+	},
+
+	pressedPlay: function(data) {
+		if(!data.User.length) {
+			return;
+		}
+
+		say(global.broadcasterUser.name, `@${data.User} Your map (${formatDRMLinkResponse(data, "", true)}) is up next!`);
+	}
+}
+
+function handleBeatSaberDRMMessage(data) {
+	if(global.broadcasterUser == null) {
+		return;
+	}
+
+	data = JSON.parse(data.toString('utf8'));
+	
+	if(data.EventType in dumbRequestManagerFunctions) {
+		dumbRequestManagerFunctions[data.EventType](data.Data);
+	}
+}
+
+function formatDRMLinkResponse(chart, prefix = "", skipLink = false) {
+	let parts = [`${prefix}"${chart.Title}" by ${chart.Artist}`];
+	if(chart.Mapper != null) {
+		parts.push(`(mapped by ${chart.Mapper})`);
+	}
+	if(chart.BsrKey && !skipLink) {
+		parts.push(`- https://beatsaver.com/maps/${chart.BsrKey}`);
+	}
+
+	return parts.join(" ");
+}
+
+async function queryDRM(endpoint, args, opts) {
+	if(args) {
+		if(typeof args === "object") {
+			args = args.join("/");
+		}
+	}
+
+	let url = new URL(`/${endpoint}${args ? `/${args}` : ''}`, global.settings.beatSaber.drmURL);
+	let params = new URLSearchParams(opts);
+	url.search = params.toString();
+
+	return await axios.get(url, { validateStatus: () => { return true } }).catch((err) => {});
+}
+
+var beatSaberState = {
+	scene: "",
+	health: 0
+};
+var activeBeatSaberMapData = null;
+
+async function handleBeatSaberDataPullerMapMessage(data) {
+	if(global.broadcasterUser == null) {
+		return;
+	}
+
+	activeBeatSaberMapData = JSON.parse(data.toString('utf8'));
+
+	if(currentOBSSceneName) {
+		if(currentOBSSceneName.indexOf("Beat Saber") != -1) {
+			if(activeBeatSaberMapData.InLevel) {
+				beatSaberState.scene = "Playing";
+				await callOBS("SetCurrentProgramScene", {sceneName: "Beat Saber Gameplay"});
+			} else {
+				beatSaberState.scene = "Menu";
+				await callOBS("SetCurrentProgramScene", {sceneName: "Beat Saber Menu"});
+			}
+		}
+	}
+}
+
+async function handleBeatSaberDataPullerGameplayMessage(data) {
+	if(global.broadcasterUser == null) {
+		return;
+	}
+
+	data = JSON.parse(data.toString('utf8'));
+
+	if(data.Combo > 0 && data.Combo % global.settings.beatSaber.expressJoyOnCombo == 0) {
+		vnyanSocket.send("Joy");
+	}
+
+	beatSaberState.health = data.PlayerHealth;
 }
 
 // ====== SRXD ======
@@ -753,8 +870,13 @@ commandList.addTrigger("category", async(channel, args, msg, user) => {
 
 // --- !close ---
 commandList.addTrigger("close", async(channel, args, msg, user) => {
-	await querySRXD('queue', 'close');
+	if(global.initialCategory === "Spin Rhythm XD") {
+		await querySRXD('queue', 'close');
+	} else if(global.initialCategory === "Beat Saber") {
+		await queryDRM('queue', ['open', 'false']);
+	}
 }, {
+	allowedCategories: ["Spin Rhythm XD", "Beat Saber"],
 	whitelist: ["broadcaster", "mod", "vip"],
 	cooldown: 3
 });
@@ -929,7 +1051,7 @@ commandList.addTrigger("foobar", async(channel, args, msg, user) => {
 commandList.addTrigger("github", async(channel, args, msg, user) => {
 	await reply(channel, msg, 'https://github.com/TheBlackParrot');
 }, {
-	aliases: ["mods", "srxdmods", "gh", "code"],
+	aliases: ["mods", "srxdmods", "gh", "code", "bsmods"],
 	cooldown: 10
 });
 
@@ -1035,20 +1157,37 @@ commandList.addTrigger("insulin", async(channel, args, msg, user) => {
 
 // --- !link ---
 commandList.addTrigger("link", async(channel, args, msg, user) => {
-	if(currentOBSSceneName.split(" ")[0] == "SRXD") {
-		let response = await querySRXD('history', '', { limit: 1 });
-		if(!response) {
-			await reply(channel, msg, "⚠️ Could not query SpinRequests.");
-		} else if("data" in response) {
-			if(response.data.length) {
-				await reply(channel, msg, formatSRXDLinkResponse(response.data[0], "Current chart: "));
+	let response;
+
+	switch(currentOBSSceneName.split(" ")[0]) {
+		case "SRXD":
+			response = await querySRXD('history', '', { limit: 1 });
+			if(!response) {
+				await reply(channel, msg, "⚠️ Could not query SpinRequests.");
+			} else if("data" in response) {
+				if(response.data.length) {
+					await reply(channel, msg, formatSRXDLinkResponse(response.data[0], "Current chart: "));
+				}
 			}
-		}
-	} else {
-		await commandList.get("radiosong").trigger(channel, args, msg, user);
+			break;
+
+		case "Beat":
+			response = await queryDRM('history', '', { limit: 1 });
+			if(!response) {
+				await reply(channel, msg, "⚠️ Could not query DumbRequestManager.");
+			} else if("data" in response) {
+				if(response.data.length) {
+					await reply(channel, msg, formatDRMLinkResponse(response.data[0].HistoryItem, "Current map: "));
+				}
+			}
+			break;
+
+		default:
+			await commandList.get("radiosong").trigger(channel, args, msg, user);
+			break;
 	}
 }, {
-	aliases: ["song", "chart", "np"],
+	aliases: ["song", "chart", "np", "map", "track"],
 	cooldown: 10
 });
 
@@ -1076,20 +1215,34 @@ commandList.addTrigger("modadd", async(channel, args, msg, user) => {
 		return;
 	}
 
-	let queryString = args.join(" ").replace("https://spinsha.re/song/", "");
-	queryString = queryString.replace("spinshare://chart/", "");
+	let queryString = args.join(" ");
+	for(const replaceString of clearStringsInRequest) {
+		queryString.replace(replaceString, "");
+	}
 
-	let addResponse = await querySRXD('add', queryString, { user: user.displayName, service: "twitch" });
+	if(global.initialCategory === "Spin Rhythm XD") {
+		let addResponse = await querySRXD('add', queryString, { user: user.displayName, service: "twitch" });
 
-	if(!addResponse) {
-		await reply(channel, msg, "⚠️ Could not query SpinRequests.");
-	} else if("data" in addResponse) {
-		if("message" in addResponse.data) { return await reply(channel, msg, `⚠️ Something went wrong: ${addResponse.data.message}`); }
-		await reply(channel, msg, `🆗 ${formatSRXDLinkResponse(addResponse.data, "Added ", true)} to the queue.`);
-		sound.play("sounds/notif.wav", { volume: 0.9 });
+		if(!addResponse) {
+			await reply(channel, msg, "⚠️ Could not query SpinRequests.");
+		} else if("data" in addResponse) {
+			if("message" in addResponse.data) { return await reply(channel, msg, `⚠️ Something went wrong: ${addResponse.data.message}`); }
+			await reply(channel, msg, `🆗 ${formatSRXDLinkResponse(addResponse.data, "Added ", true)} to the queue.`);
+			sound.play("sounds/notif.wav", { volume: 0.9 });
+		}
+	} else if(global.initialCategory === "Beat Saber") {
+		let addResponse = await queryDRM('addKey', queryString, { user: user.displayName, service: "twitch" });
+
+		if(!addResponse) {
+			await reply(channel, msg, "⚠️ Could not query DumbRequestManager.");
+		} else if("data" in addResponse) {
+			if("message" in addResponse.data) { return await reply(channel, msg, `⚠️ Something went wrong: ${addResponse.data.message}`); }
+			await reply(channel, msg, `🆗 ${formatDRMLinkResponse(addResponse.data, "Added ", true)} to the queue.`);
+			sound.play("sounds/notif.wav", { volume: 0.9 });
+		}
 	}
 }, {
-	allowedCategories: ["Spin Rhythm XD"],
+	allowedCategories: ["Spin Rhythm XD", "Beat Saber"],
 	whitelist: ["broadcaster", "mod", "vip"],
 	respondWithCooldownMessage: true
 });
@@ -1140,8 +1293,13 @@ commandList.addTrigger("note", async(channel, args, msg, user) => {
 
 // --- !open ---
 commandList.addTrigger("open", async(channel, args, msg, user) => {
-	await querySRXD('queue', 'open');
+	if(global.initialCategory === "Spin Rhythm XD") {
+		await querySRXD('queue', 'open');
+	} else if(global.initialCategory === "Beat Saber") {
+		await queryDRM('queue', ['open', 'true']);
+	}
 }, {
+	allowedCategories: ["Spin Rhythm XD", "Beat Saber"],
 	whitelist: ["broadcaster", "mod", "vip"],
 	cooldown: 3
 });
@@ -1192,7 +1350,7 @@ commandList.addTrigger("pin", async(channel, args, msg, user) => {
 }, {
 	whitelist: ["broadcaster", "mod"],
 	cooldown: 5
-})
+});
 
 /*
 // --- !prevfoobar ---
@@ -1216,21 +1374,38 @@ commandList.addTrigger("prevfoobar", async(channel, args, msg, user) => {
 
 // --- !prevlink ---
 commandList.addTrigger("prevlink", async(channel, args, msg, user) => {
-	if(currentOBSSceneName.split(" ")[0] == "SRXD") {
-		let response = await querySRXD('history', '', { limit: 2 });
+	let response;
 
-		if(!response) {
-			await reply(channel, msg, "⚠️ Could not query SpinRequests.");
-		} else if("data" in response) {
-			if(response.data.length === 2) {
-				await reply(channel, msg, formatSRXDLinkResponse(response.data[1], "Previous chart: "));
-			} else {
-				await reply(channel, msg, "⚠️ No data");
+	switch(currentOBSSceneName.split(" ")[0]) {
+		case "SRXD":
+			response = await querySRXD('history', '', { limit: 2 });
+			if(!response) {
+				await reply(channel, msg, "⚠️ Could not query SpinRequests.");
+			} else if("data" in response) {
+				if(response.data.length === 2) {
+					await reply(channel, msg, formatSRXDLinkResponse(response.data[1], "Previous chart: "));
+				} else {
+					await reply(channel, msg, "⚠️ No data");
+				}
 			}
-		}
-	} else {
-		await commandList.get("prevradiosong").trigger(channel, args, msg, user);
-		//await commandList.get("prevfoobar").trigger(channel, args, msg, user);
+			break;
+
+		case "Beat":
+			response = await queryDRM('history', '', { limit: 2 });
+			if(!response) {
+				await reply(channel, msg, "⚠️ Could not query DumbRequestManager.");
+			} else if("data" in response) {
+				if(response.data.length === 2) {
+					await reply(channel, msg, formatDRMLinkResponse(response.data[1].HistoryItem, "Previous map: "));
+				} else {
+					await reply(channel, msg, "⚠️ No data");
+				}
+			}
+			break;
+
+		default:
+			await commandList.get("prevradiosong").trigger(channel, args, msg, user);
+			break;
 	}
 }, {
 	aliases: ["prevsong", "prevchart", "prev", "previous"],
@@ -1254,11 +1429,19 @@ commandList.addTrigger("pronouns", async(channel, args, msg, user) => {
 
 // --- !r ---
 commandList.addTrigger("r", async(channel, args, msg, user) => {
-	if(initialCategory == "Spin Rhythm XD") {
-		await reply(channel, msg, 'To request maps, in your Internet browser of choice, navigate to https://spinsha.re and search for the map you want to see me play. Copy the numeric ID at the end of the link or the link itself with "!srxd" before it (e.g. "!srxd 12345"). You can also just paste the link! Or try using search terms!');
-		await reply(channel, msg, 'Base game and DLC maps can also be requested using their identifiers seen in-game. For a list of these maps, see this link: https://github.com/TheBlackParrot/SpinRequests/wiki');
-	} else {
-		await reply(channel, msg, 'To request songs, head to https://radio.theblackparrot.me/public/safe and press the "REQUEST SONG" button!');
+	switch(initialCategory) {
+		case "Spin Rhythm XD":
+			await reply(channel, msg, 'To request charts, in your Internet browser of choice, navigate to https://spinsha.re and search for the chart you want to see me play. Copy the numeric ID at the end of the link or the link itself with "!srxd" before it (e.g. "!srxd 12345"). You can also just paste the link! Or try using search terms!');
+			await reply(channel, msg, 'Base game and DLC charts can also be requested using their identifiers seen in-game. For a list of these charts, see this link: https://github.com/TheBlackParrot/SpinRequests/wiki');
+			break;
+
+		case "Beat Saber":
+			await reply(channel, msg, 'To request maps, in your Internet browser of choice, navigate to https://beatsaver.com and search for the map you want to see me play. Copy the numeric ID at the end of the link or the link itself with "!bsr" before it (e.g. "!bsr 12345"). You can also just paste the link! Or try using search terms!');
+			break;
+
+		default:
+			await reply(channel, msg, 'To request songs, head to https://radio.theblackparrot.me/public/safe and press the "REQUEST SONG" button!');
+			break;
 	}
 }, {
 	aliases: ["rhelp", "requests", "srxdhelp", "helpsrxd", "reqs", "howto"],
@@ -1385,36 +1568,97 @@ commandList.addTrigger("request", async(channel, args, msg, user) => {
 		return;
 	}
 
-	let queryString = args.join(" ").replace("https://spinsha.re/song/", "");
-	queryString = queryString.replace("spinshare://chart/", "");
+	let queryString = args.join(" ");
+	for(const replaceString of clearStringsInRequest) {
+		queryString.replace(replaceString, "");
+	}
 
-	let response = await querySRXD('query', queryString);
+	if(global.initialCategory === "Spin Rhythm XD") {
+		let response = await querySRXD('query', queryString);
 
-	if(!response) {
-		await reply(channel, msg, "⚠️ Could not query SpinRequests.");
-	} else if("data" in response) {
-		if("message" in response.data) { return await reply(channel, msg, `⚠️ Something went wrong: ${response.data.message}`); }
-		if(response.data.HasPlayed) { return await reply(channel, msg, '⚠️ This map has already been played this session!'); }
-		if(response.data.InQueue) { return await reply(channel, msg, '⚠️ This map is already in the queue!'); }
-		if(response.data.UploadTime != null && response.data.IsCustom) {
-			const minimumAgeInSeconds = 43200;
+		if(!response) {
+			await reply(channel, msg, "⚠️ Could not query SpinRequests.");
+		} else if("data" in response) {
+			if("message" in response.data) { return await reply(channel, msg, `⚠️ Something went wrong: ${response.data.message}`); }
+			if(response.data.HasPlayed) { return await reply(channel, msg, '⚠️ This map has already been played this session!'); }
+			if(response.data.InQueue) { return await reply(channel, msg, '⚠️ This map is already in the queue!'); }
+			if(response.data.UploadTime != null && response.data.IsCustom) {
+				const minimumAgeInSeconds = 43200;
 
-			if(Date.now() / 1000 < response.data.UploadTime + minimumAgeInSeconds) {
-				return await reply(channel, msg, `⚠️ This map is too new, it must be at least ${Math.floor(minimumAgeInSeconds / 60 / 60)} hours old. Moderators can manually add the map to the queue if need be.`);
+				if(Date.now() / 1000 < response.data.UploadTime + minimumAgeInSeconds) {
+					return await reply(channel, msg, `⚠️ This map is too new, it must be at least ${Math.floor(minimumAgeInSeconds / 60 / 60)} hours old. Moderators can manually add the map to the queue if need be.`);
+				}
+			}
+
+			let addResponse = await querySRXD('add', queryString, { user: user.displayName, service: "twitch" });
+			if(!addResponse) {
+				await reply(channel, msg, "⚠️ Could not query SpinRequests.");
+			} else if("data" in addResponse) {
+				if("message" in addResponse.data) { return await reply(channel, msg, `⚠️ Something went wrong: ${addResponse.data.message}`); }
+				await reply(channel, msg, `🆗 ${formatSRXDLinkResponse(addResponse.data, "Added ", true)} to the queue.`);
+				sound.play("sounds/notif.wav", { volume: 0.9 });
 			}
 		}
+	} else if(global.initialCategory === "Beat Saber") {
+		let response = await queryDRM('query', queryString);
 
-		let addResponse = await querySRXD('add', queryString, { user: user.displayName, service: "twitch" });
-		if(!addResponse) {
-			await reply(channel, msg, "⚠️ Could not query SpinRequests.");
-		} else if("data" in addResponse) {
-			if("message" in addResponse.data) { return await reply(channel, msg, `⚠️ Something went wrong: ${addResponse.data.message}`); }
-			await reply(channel, msg, `🆗 ${formatSRXDLinkResponse(addResponse.data, "Added ", true)} to the queue.`);
-			sound.play("sounds/notif.wav", { volume: 0.9 });
+		if(!response) {
+			await reply(channel, msg, "⚠️ Could not query DumbRequestManager.");
+		} else if("data" in response) {
+			if("message" in response.data) { return await reply(channel, msg, `⚠️ Something went wrong: ${response.data.message}`); }
+			if(response.data.HasPlayed) { return await reply(channel, msg, '⚠️ This map has already been played this session!'); }
+
+			let queue = await queryDRM('queue');
+			if("data" in queue) {
+				for(const entry of queue.data) {
+					if(entry.Hash === response.data.Hash) {
+						return await reply(channel, msg, '⚠️ This map is already in the queue!');
+					}
+				}
+			}
+
+			if(response.data.UploadTime != null) {
+				const minimumAgeInSeconds = 86400;
+
+				if(Date.now() / 1000 < response.data.UploadTime + minimumAgeInSeconds) {
+					return await reply(channel, msg, `⚠️ This map is too new, it must be at least ${Math.floor(minimumAgeInSeconds / 60 / 60)} hours old. Moderators can manually add the map to the queue if need be.`);
+				}
+			}
+
+			if(response.data.Automapped) {
+				return await reply(channel, msg, '⚠️ Maps generated from auto-mappers are not allowed!');
+			}
+			if(response.data.VoteStatus === 2) {
+				return await reply(channel, msg, '⚠️ The streamer has downvoted the map, it cannot be requested!');
+			}
+			if(response.data.Blacklisted) {
+				return await reply(channel, msg, '⚠️ This map has been blacklisted!');
+			}
+			if(response.data.Rating < 0.5) {
+				return await reply(channel, msg, `⚠️ This map's rating is under 50%!`);
+			}
+			if(response.data.Duration > 330) {
+				return await reply(channel, msg, `⚠️ This map is too long! It must be under 5:30 in length.`);
+			}
+
+			let addResponse = await queryDRM('addKey', queryString, { user: user.displayName, service: "twitch" });
+			if(!addResponse) {
+				await reply(channel, msg, "⚠️ Could not query DumbRequestManager.");
+			} else if("data" in addResponse) {
+				if("message" in addResponse.data) { return await reply(channel, msg, `⚠️ Something went wrong: ${addResponse.data.message}`); }
+
+				if(addResponse.data.CensorTitle || addResponse.data.CensorSubTitle || addResponse.data.CensorArtist || addResponse.data.CensorMapper || addResponse.data.MetadataHasSplicedCensor) {
+					await reply(channel, msg, `🆗 Added this map to the queue.`);
+				} else {
+					await reply(channel, msg, `🆗 ${formatDRMLinkResponse(addResponse.data, "Added ", true)} to the queue.`);
+				}
+
+				sound.play("sounds/notif.wav", { volume: 0.9 });
+			}
 		}
 	}
 }, {
-	allowedCategories: ["Spin Rhythm XD"],
+	allowedCategories: ["Spin Rhythm XD", "Beat Saber"],
 	aliases: ["srxd", "req", "bsr", "sr", "add", "ssr"],
 	userCooldown: 10,
 	respondWithCooldownMessage: true
@@ -1667,6 +1911,34 @@ const socketTogglers = {
 		}
 
 		return vnyanSocket.allowInitialization;
+	},
+
+	"bs": async function(channel, args, msg, user) {
+		beatSaberDRMSocket.allowInitialization = !beatSaberDRMSocket.allowInitialization;
+
+		if(beatSaberDRMSocket.allowInitialization) {
+			beatSaberDRMSocket.initializeWebsocket();
+		} else {
+			beatSaberDRMSocket.socket.close();
+		}
+
+		beatSaberDataPullerMapSocket.allowInitialization = !beatSaberDataPullerMapSocket.allowInitialization;
+
+		if(beatSaberDataPullerMapSocket.allowInitialization) {
+			beatSaberDataPullerMapSocket.initializeWebsocket();
+		} else {
+			beatSaberDataPullerMapSocket.socket.close();
+		}
+
+		beatSaberDataPullerGameplaySocket.allowInitialization = !beatSaberDataPullerGameplaySocket.allowInitialization;
+
+		if(beatSaberDataPullerGameplaySocket.allowInitialization) {
+			beatSaberDataPullerGameplaySocket.initializeWebsocket();
+		} else {
+			beatSaberDataPullerGameplaySocket.socket.close();
+		}
+
+		return beatSaberDRMSocket.allowInitialization;
 	}
 }
 commandList.addTrigger("togglesocket", async(channel, args, msg, user) => {
@@ -1749,15 +2021,6 @@ commandList.addTrigger("vnyandeath", async(channel, args, msg, user) => {
 
 // --- !weather ---
 commandList.addTrigger("weather", async(channel, args, msg, user) => {
-	/*let unit = "f";
-	let windUnit = "mph";
-	if(args.length) {
-		if(args[0].toLowerCase().startsWith("c") || args[0].toLowerCase().startsWith("m")) {
-			unit = "c";
-			windUnit = "kph";
-		}
-	}*/
-
 	let url = new URL('/v1/current.json', 'https://api.weatherapi.com/');
 	let params = new URLSearchParams({
 		key: global.settings.auth.weatherAPI.key,
@@ -2409,6 +2672,7 @@ chatClient.onJoin(async (channel, user) => {
 		initBejeweledLiveSocket();
 		initSpinRequestsSocket();
 		initSpinStatusSocket();
+		initBeatSaberSockets();
 
 		await sendHelloMessage();
 	}
@@ -3162,8 +3426,8 @@ async function onOBSSceneChanged(sceneObject) {
 
 	const isResonite = (currentOBSSceneName === "Resonite");
 	const isIntermission = (currentOBSSceneName === "Ad Wall" || currentOBSSceneName === "Starting Soon");
-	const isMenu = (currentOBSSceneName === "SRXD Menu");
-	const isGameplay = (currentOBSSceneName === "SRXD Gameplay");
+	const isMenu = (currentOBSSceneName === "SRXD Menu" || currentOBSSceneName === "Beat Saber Menu");
+	const isGameplay = (currentOBSSceneName === "SRXD Gameplay" || currentOBSSceneName === "Beat Saber Gameplay");
 
 	setBejeweledAllowed(isIntermission);
 
@@ -3188,8 +3452,8 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 	
 	const isResonite = (name === "Resonite");
 	const isIntermission = (name === "Ad Wall" || name === "Starting Soon");
-	const isMenu = (name === "SRXD Menu");
-	const isGameplay = (name === "SRXD Gameplay");
+	const isMenu = (name === "SRXD Menu" || name === "Beat Saber Menu");
+	const isGameplay = (name === "SRXD Gameplay" || name === "Beat Saber Gameplay");
 
 	await callOBS('SetInputMute', {
 		inputName: 'Microphone',
@@ -3206,7 +3470,7 @@ async function onOBSSceneTransitionStarted(transitionObject) {
 		inputVolumeDb: isResonite ? -4 : 0
 	});
 
-	if(global.initialCategory == "Spin Rhythm XD") {
+	if(global.initialCategory === "Spin Rhythm XD" || global.initialCategory === "Beat Saber") {
 		await callOBS('SetInputMute', {
 			inputName: "TTS",
 			inputMuted: isGameplay
@@ -3275,7 +3539,7 @@ async function onStreamStarted() {
 
 		//await global.redeemList.getByName("Flip a Coin").enable(true);
 		//await global.redeemList.getByName("gib coin hint pls?").enable(true);
-	} else if(currentOBSSceneName.indexOf("SRXD") == -1) {
+	} else if(currentOBSSceneName.indexOf("SRXD") == -1 && currentOBSSceneName.indexOf("Beat Saber") == -1) {
 		await axios.post(`http://${global.settings.foobar.address}/api/player/play`).catch((err) => {});
 	}
 }

@@ -10,6 +10,19 @@
 		}
 	},
 
+	"beatSaber": {
+		"drmURL": "http://127.0.0.1:13337/",
+		"drmSocket": {
+			"address": "127.0.0.1",
+			"port": 13338
+		},
+		"dataPullerSocket": {
+			"address": "127.0.0.1",
+			"port": 2946
+		},
+		"expressJoyOnCombo": 200
+	},
+
 	"bot": {
 		"rotatingMessageInterval": 720,
 		"bejeweledSwapperLocation": "C:\\Utils\\AutoIt\\bj3_swap.exe",
