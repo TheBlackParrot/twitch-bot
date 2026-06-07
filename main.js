@@ -1982,10 +1982,19 @@ commandList.addTrigger("tts", async(channel, args, msg, user) => {
 
 // --- !uptime ---
 commandList.addTrigger("uptime", async(channel, args, msg, user) => {
-	const response = await callOBS('GetStreamStatus');
+	const response = await callOBS('GetStreamStatus', {
+		"outputName": "rtmp multitrack video"
+	});
 
 	if(response.outputActive) {
-		const allSeconds = Math.ceil(response.outputDuration / 1000);
+		/*
+			divide by 3 arbitrarily because obs-websocket is slow to fix this. likely to change if TEB changes my output settings
+			
+			https://github.com/obsproject/obs-websocket/issues/1234
+			https://github.com/obsproject/obs-websocket/issues/1273
+			https://github.com/obsproject/obs-websocket/pull/1274
+		*/
+		const allSeconds = Math.ceil(response.outputDuration / 3 / 1000);
 
 		const hours = Math.floor(allSeconds / 60 / 60);
 		const minutes = Math.floor(allSeconds / 60) % 60;
